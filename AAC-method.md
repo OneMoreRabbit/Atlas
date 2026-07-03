@@ -55,6 +55,13 @@ rather than discovered weeks later.
 
 ## 3. Folder semantics
 
+**Scope rule (decides the home of every document):** a document owned by ONE component
+lives in that component's folders below. A document that *spans two or more components* —
+platform architectures, cross-component designs, shared schemas' rationale — lives in
+`architecture/` at the vault root, beside the constitution and system-context. Components
+then pin thin contracts in `provides/` that *reference* the architecture doc for the
+shared design (never copy it down).
+
 Each component lives at `components/<slug>/`:
 
 ```

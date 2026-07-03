@@ -75,6 +75,7 @@ operational checklist.
 - A contract/interface *I provide* to others → `docs/provides/`
 - A request/need/feedback *I have* of an upstream → `docs/needs/`
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)
+- A design *spanning 2+ components* → `architecture/` (reference it from your contract; never keep a copy)
 - A retired MAJOR/MINOR version of any of the above → its `archive/` sibling
 
 **Never** put another component's document in your folders. Reference it where it lives.
