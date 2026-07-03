@@ -68,6 +68,14 @@ components/<slug>/
     archive/              # retired versions of my asks
 ```
 
+> **Root rule:** `docs/` root holds ONLY component-level reference documents — the
+> architecture doc, the user manual, and a development plan/status. **Every document
+> addressed to or negotiated with another component** (proposal, reply, response, finding,
+> question, handoff, review, schema) **lives in `provides/` or `needs/` — never in the
+> root.** Rule of thumb: *asking side* (proposal, request, finding, question, reply-in-your-
+> own-thread) → `needs/`; *answering/committing side* (response, handover, agreement,
+> published schema) → `provides/`.
+
 > Naming note: the folders are named by **content** (`provides`/`needs`), not by direction
 > (`downstream`/`upstream`), because direction-names invite the inbox misreading —
 > "`upstream/` must be stuff *from* upstream." It isn't; nothing is ever delivered into

@@ -71,7 +71,7 @@ operational checklist.
 
 ## Decision checklist: where does this document go?
 
-- A design brief or user manual *about me* → `docs/`
+- The architecture doc / user manual / development plan *about me* → `docs/` root (NOTHING else lives in the root)
 - A contract/interface *I provide* to others → `docs/provides/`
 - A request/need/feedback *I have* of an upstream → `docs/needs/`
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)
