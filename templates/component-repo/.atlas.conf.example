@@ -12,3 +12,5 @@ ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"
 # Desk layout: ATLAS_VAULT may point at an existing checkout instead of a clone.
 # On Windows, spell it the way your tools report paths (e.g. G:/Projects/Atlas-X,
 # forward slashes) so the write guard's path match agrees with hook payloads.
+# Sharing one checkout is fine for READING only: each publishing component needs
+# its own clone — the atlas/<slug>/<topic> branch is per-checkout state (§9).

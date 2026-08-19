@@ -104,7 +104,18 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
      **commit it** — an uncommitted hook is invisible to any cloned session;
    - append `gitignore.fragment` to the repo's `.gitignore` (ignores `.atlas/`,
      `.atlas-method/`, `ATLAS-CONTEXT.md`);
+   - append `gitattributes.fragment` to the repo's `.gitattributes` — **not optional**:
+     a Windows clone with `core.autocrlf=true` puts CRLF into `scripts/*.sh` (shebang
+     breaks in a Linux container) and `.atlas.conf` (a `\r` in `ATLAS_VAULT` used to
+     fail the write guard open; the scripts now strip `\r` defensively, but the
+     attributes stop the mangling at the source);
    - copy `.claude/` — vendor-specific shims with no logic of their own.
+
+   **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
+   vault, so it needs an authenticated git wherever the session runs. On a desk that is
+   your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
+   credential helper) or mount an SSH agent socket. A session with no credential fails
+   at the first clone, not at publish.
 
    What the pieces do:
 

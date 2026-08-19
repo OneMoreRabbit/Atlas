@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "component-repo"
-GITIGNORE_MARKER = "# --- Atlas ---"
+GITIGNORE_MARKER = "# --- Atlas ---"  # append-once marker for both fragments
 
 
 def derive_project(remote: str) -> str:
@@ -123,18 +123,20 @@ def main() -> int:
               .replace("<slug>", args.slug).replace("<Project>", project))
     install(repo / "AGENTS.md", agents, args.force, written)
 
-    # .gitignore — append the fragment once
-    gi = repo / ".gitignore"
-    existing = read(gi) if gi.exists() else ""
-    if GITIGNORE_MARKER in existing:
-        print(f"  ok     {gi} (Atlas block present)")
-    else:
-        fragment = read(TEMPLATES / "gitignore.fragment")
+    # .gitignore / .gitattributes — append each fragment once (marker-guarded)
+    for fragment_name, dst_name in (("gitignore.fragment", ".gitignore"),
+                                    ("gitattributes.fragment", ".gitattributes")):
+        dst = repo / dst_name
+        existing = read(dst) if dst.exists() else ""
+        if GITIGNORE_MARKER in existing:
+            print(f"  ok     {dst} (Atlas block present)")
+            continue
+        fragment = read(TEMPLATES / fragment_name)
         joined = existing + ("" if not existing or existing.endswith("\n") else "\n") + fragment
-        with gi.open("w", encoding="utf-8", newline="\n") as fh:
+        with dst.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(joined)
-        written.append(gi)
-        print(f"  append {gi}")
+        written.append(dst)
+        print(f"  append {dst}")
 
     # /atlas-publish + hooks
     install(repo / ".claude" / "commands" / "atlas-publish.md",

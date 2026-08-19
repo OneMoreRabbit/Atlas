@@ -304,6 +304,15 @@ principle as the retrieval invariant in §6, applied to the write side:
   commits them after each merge (and nightly), so the compiled manifests reflect merged
   truth rather than the last publisher's local run. In a component session the validator
   runs as a **check only** (a red exit blocks publishing); its local output is discarded.
+- **Guards fail closed.** A guard that cannot parse its inputs — a path, a config value,
+  a hook payload — must **deny, never allow**. Every fail-open found in this subsystem
+  (stdin consumed by a heredoc, an un-normalised Windows path, a CRLF-mangled config)
+  passed unparseable input through as "not in scope"; the correct reading of
+  unparseable is "cannot prove it's in scope", and the burden of proof is on the write.
+- **One vault clone per publishing component.** Several components may *read* one vault
+  checkout, but the publish branch `atlas/<slug>/<topic>` is per-checkout state — two
+  components publishing through one clone fight over `HEAD` and one silently commits
+  onto the other's branch. Default to one clone per component repo.
 - **Ceremony follows path, not habit.** A PR touching only `components/<slug>/**`
   auto-merges once the guard and validator pass — that is publishing to your own outbox,
   and review adds nothing. A PR touching `architecture/proposals/**` or

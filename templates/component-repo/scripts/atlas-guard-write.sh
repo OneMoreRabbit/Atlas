@@ -17,12 +17,25 @@ import json, sys
 try:
     d = json.load(sys.stdin)
 except Exception:
-    print("")
+    print("__ATLAS_PARSE_ERROR__")
     raise SystemExit
 ti = d.get("tool_input") or {}
 print(ti.get("file_path") or ti.get("notebook_path") or "")
 ')
-[ -n "$P" ] || exit 0
+
+# A guard that cannot parse its input denies, never allows (AAC-method §9).
+if [ "$P" = "__ATLAS_PARSE_ERROR__" ]; then
+  "$PY" -c '
+import json
+print(json.dumps({"hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "Atlas write guard could not parse the hook payload - failing closed. Retry the write; if it persists, the guard or harness is broken and needs fixing before vault writes resume.",
+}}))
+'
+  exit 0
+fi
+[ -n "$P" ] || exit 0   # parsed fine, no path field — not a file write
 
 # Normalise Windows paths: Claude Code passes backslash paths on Windows, and an
 # unnormalised path would silently match nothing — allowing every vault write.

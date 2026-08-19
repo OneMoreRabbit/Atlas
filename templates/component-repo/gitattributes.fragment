@@ -1,0 +1,5 @@
+# --- Atlas --- scripts and conf must stay LF everywhere: CRLF breaks the
+# shebang in Linux containers and puts \r into sourced values, which fails
+# the write guard open. Targeted rules only — repo-wide eol policy is yours.
+*.sh text eol=lf
+.atlas.conf text eol=lf

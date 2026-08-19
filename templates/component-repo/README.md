@@ -10,6 +10,7 @@ actually install, and what `atlas-sync.sh` checksums itself against.
 .atlas.conf.example          → copy to .atlas.conf, set SLUG + ATLAS_VAULT_REMOTE
 AGENTS.md.template           → copy to AGENTS.md, substitute <slug> and <Project>
 gitignore.fragment           → append to the repo's .gitignore
+gitattributes.fragment       → append to the repo's .gitattributes (LF for scripts + conf)
 scripts/atlas-common.sh      → shared: repo root, config load, defaults
 scripts/atlas-sync.sh        → clone/ff the vault + method at the pinned tag; self-drift check
 scripts/atlas-context.sh     → emit ATLAS-CONTEXT.md, report injected size

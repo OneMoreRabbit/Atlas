@@ -27,16 +27,16 @@ jobs:
             *) echo "::error::branch must be atlas/<slug>/<topic>"; exit 1 ;;
           esac
           echo "SLUG=$SLUG" >> "$GITHUB_ENV"
-          FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
           FAIL=0
-          for f in $FILES; do
+          while IFS= read -r f; do
             case "$f" in
-              components/$SLUG/*) ;;                  # own subtree — the outbox
+              "components/$SLUG"/*) ;;                # own subtree — the outbox
               architecture/proposals/*) ;;            # additive ADRs, status: proposed
               registry/io-graph.yml) ;;               # ownership checked below
               *) echo "::error file=$f::$SLUG may not write $f"; FAIL=1 ;;
             esac
-          done
+          done < /tmp/changed.txt                     # redirect, not a pipe: FAIL survives
           exit $FAIL
 
       - name: Edge ownership — io-graph.yml edits must name the slug
