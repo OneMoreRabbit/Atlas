@@ -14,6 +14,7 @@ contract drift on each project's dashboard.
 - [`AAC-method.md`](AAC-method.md) — the specification (two planes, outbox folders, versioning, I/O graph, session protocol, ADR flow, git transport).
 - [`component-init.md`](component-init.md) — onboarding brief for a new component in any project vault: registers it, and installs the code-repo hooks (`AGENTS.md`, `scripts/atlas-sync.sh`, `SessionStart` hook, `/atlas-publish`).
 - [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`. Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
+- [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
 
 ## Starting a new project
@@ -26,25 +27,10 @@ contract drift on each project's dashboard.
 2. Write its `constitution.md`; register components per [`component-init.md`](component-init.md),
    which also wires each code repo to resolve the vault via `$ATLAS_VAULT` (a per-session
    clone) and to inject `ATLAS-CONTEXT.md` at session start.
-3. Run the validator; commit and push. Optionally add it as a CI gate on the vault repo
-   (push + nightly) — it exits non-zero on breaking drift, so drift detection runs with no
-   local machine switched on:
-   ```yaml
-   # .github/workflows/atlas-validate.yml
-   name: atlas-validate
-   on:
-     push:
-     workflow_dispatch:
-     schedule: [{ cron: "17 3 * * *" }]
-   jobs:
-     validate:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         - uses: actions/checkout@v4
-           with: { repository: OneMoreRabbit/Atlas, path: .atlas-method }
-         - run: pip install -r .atlas-method/tools/requirements.txt
-         - run: python .atlas-method/tools/atlas_validate.py .
-   ```
-   (If this method repo is private to you, the second checkout needs a `token:` with
-   access to it — the default `GITHUB_TOKEN` only reaches the vault repo itself.)
+3. Copy [`templates/vault-ci/`](templates/vault-ci/) into the vault's `.github/workflows/`
+   — these are **templates**; they run in the vault repo, not here. `atlas-guard.yml`
+   enforces the write model on PRs (branch `atlas/<slug>/<topic>` may only touch its own
+   outbox paths); `atlas-regen.yml` regenerates and commits the derived views on the
+   default branch after each merge and nightly — so the compiled manifests reflect merged
+   truth, and breaking drift is detected with no local machine switched on.
+4. Run the validator once locally as a check; commit the authored seed and push.

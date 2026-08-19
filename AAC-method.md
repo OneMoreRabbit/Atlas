@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.1
+version: 1.2
 status: active
 maturity: 1.0
 updated: 2026-08-19
@@ -13,6 +13,11 @@ updated: 2026-08-19
 #   - session protocol (§6) made mechanical: validator --emit-context compiles the reading
 #     list into one ATLAS-CONTEXT.md, injected by a SessionStart hook
 #   - registry/.compiled/ promoted from scratch artefact to committed, published contract
+# 1.2 (2026-08-19): the write model — golden rule 2 made mechanical, like §6 made the reads.
+#   - vault writes are path-scoped by branch (atlas/<slug>/<topic>); CI guard enforces scope
+#   - components author, main generates: derived views are committed only by CI after merge
+#   - ceremony follows path: outbox-only PRs auto-merge; proposals/io-graph edits get review
+#   - method pin honoured: atlas-sync checks out the method repo at the vault's pinned tag
 ---
 
 # Architecture-Above-Code (AAC)
@@ -65,7 +70,8 @@ lives in that component's folders below. A document that *spans two or more comp
 platform architectures, cross-component designs, shared schemas' rationale — lives in
 `architecture/` at the vault root, beside the constitution and system-context. Components
 then pin thin contracts in `provides/` that *reference* the architecture doc for the
-shared design (never copy it down).
+shared design (never copy it down). **`architecture/` is written by the architecture
+session alone; components contribute to it only via `proposals/`.**
 
 Each component lives at `components/<slug>/`:
 
@@ -150,6 +156,10 @@ edges:
     pinned: 0.2                 # version agent-compile currently builds against
 ```
 
+Component entries may carry an optional `sink: true` flag (terminal downstream sink —
+rendered distinctly in the graph). Note `role:` on a component entry is free prose;
+rendering semantics live in explicit flags, never inferred from slugs or prose.
+
 From the graph, each component's reading list is fully determined:
 - **My inputs** = the `docs/provides/` of every component where `to == me`.
 - **My consumers' feedback** = the `docs/needs/` of every component where `from == me`.
@@ -221,8 +231,8 @@ scope is fixed: it makes the *derived views* genuinely derived. It parses `io-gr
 contract frontmatter and regenerates:
 
 - `registry/graph.md` — the rendered Mermaid graph + edge table;
-- the drift panel in `dashboard.md` (between `atlas:generated` markers);
-- the edge block in each `component.md` (between markers);
+- the drift panel in `dashboard.md` (between `atlas:drift` markers);
+- the edge block in each `component.md` (between `atlas:edges` markers);
 - `registry/.compiled/<slug>/io-manifest.yml` — each component's reading list
   (**committed**, §5);
 
@@ -269,6 +279,40 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
 - **Vault writes from sessions arrive as branches/PRs**, reviewable as diffs from any
   device; generated documents carry provenance frontmatter (`generated_by:`,
   `generated_at:`, `source:`, `status: draft|reviewed`).
+- **The method pin is honoured, not just declared.** `atlas-sync.sh` reads the vault's
+  `method:` pin from `registry/io-graph.yml` and checks out `$ATLAS_METHOD` at the
+  matching tag (`v<pinned>`); method releases are tagged. A session never silently gets
+  whatever the method repo's default branch happens to hold.
+
+### The write model — golden rule 2, mechanical
+
+One vault, many writers, safe because writes are to **disjoint paths**. The same
+principle as the retrieval invariant in §6, applied to the write side:
+
+- **Vault writes are path-scoped by branch.** A component session publishes on
+  `atlas/<slug>/<topic>` and may write only `components/<slug>/**`, an additive
+  `architecture/proposals/` entry (`status: proposed`), and edges in
+  `registry/io-graph.yml` naming itself at one end. A CI guard on the vault repo
+  enforces this from the branch name alone. The architecture session is the exception:
+  it owns `architecture/` and the constitution, works against the vault directly, and is
+  the reviewer, not a PR author.
+- **Components author; `main` generates.** Generated views (`registry/graph.md`,
+  `dashboard.md`, the `component.md` edge blocks, `registry/.compiled/**`) are **never
+  committed by a component PR** — the validator rewrites every component's derived files
+  on each run, so committing them would put cross-component writes in every publish and
+  conflict under concurrency. Instead, CI on the vault's default branch regenerates and
+  commits them after each merge (and nightly), so the compiled manifests reflect merged
+  truth rather than the last publisher's local run. In a component session the validator
+  runs as a **check only** (a red exit blocks publishing); its local output is discarded.
+- **Ceremony follows path, not habit.** A PR touching only `components/<slug>/**`
+  auto-merges once the guard and validator pass — that is publishing to your own outbox,
+  and review adds nothing. A PR touching `architecture/proposals/**` or
+  `registry/io-graph.yml` waits for the architecture session — that is proposing.
+  Without the split, routine contract bumps queue behind a human and the outbox model
+  stops being real-time.
+
+Template workflows for the guard and the regeneration job ship in this repo under
+`templates/vault-ci/` — copy them into the vault's `.github/workflows/`.
 
 ---
 

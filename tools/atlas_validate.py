@@ -119,7 +119,7 @@ def gen_graph_md(graph, rows) -> str:
     ]
     for slug, c in names.items():
         m = c.get("maturity", "?")
-        cls = ":::sink" if slug == "ansible-platform" else ""
+        cls = ":::sink" if c.get("sink") else ""  # `sink: true` on the io-graph entry
         lines.append(f'    {ids[slug]}["{c["name"]}<br/><small>{m}</small>"]{cls}')
     for r in rows:
         arrow = "==>" if r.get("mode") == "collaboration" else "-->"
@@ -195,26 +195,30 @@ def read_doc(path: Path) -> str:
 def contract_at_pin(provides_dir: Path, interface: str, pinned: str):
     """-> (path, version, note) — the contract file for `interface` at `pinned`.
 
-    Live folder first, then archive/. Falls back to the newest live version with an
-    explicit note if the pinned MAJOR.MINOR is gone (drift the session must see).
+    Resolution rule (explicit): on an exact MAJOR.MINOR match, the live folder wins
+    over archive/. If the pin is gone entirely, fall back to the newest **live**
+    version with a note (drift the session must see); archive/ is consulted for the
+    fallback only when the live folder has no candidate at all.
     """
-    candidates = []
-    for folder in (provides_dir, provides_dir / "archive"):
+    def scan(folder: Path):
+        out = []
         for p in sorted(folder.glob("*.md")):
             fm = parse_frontmatter(p)
             if (fm.get("interface") or fm.get("contract")) != interface:
                 continue
             ver = fm.get("version")
-            if ver is None:
-                continue
-            candidates.append((p, str(ver)))
-    if not candidates:
+            if ver is not None:
+                out.append((p, str(ver)))
+        return out
+
+    live, archived = scan(provides_dir), scan(provides_dir / "archive")
+    if not live and not archived:
         return None, None, f"no contract file for `{interface}` under {provides_dir}"
     want = version_tuple(pinned)[:2]
-    for p, ver in candidates:
+    for p, ver in live + archived:  # live listed first — live wins on exact match
         if version_tuple(ver)[:2] == want:
             return p, ver, ""
-    p, ver = max(candidates, key=lambda c: version_tuple(c[1]))
+    p, ver = max(live or archived, key=lambda c: version_tuple(c[1]))
     return p, ver, f"pinned {pinned} not found — showing latest {ver}; re-pin deliberately"
 
 
