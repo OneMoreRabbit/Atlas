@@ -1,13 +1,18 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.0
+version: 1.1
 status: active
 maturity: 1.0
-updated: 2026-07-03
+updated: 2026-08-19
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
+# 1.1 (2026-08-19): transport rework — git is the transport, no shares or machine paths.
+#   - vaults are git repos with remotes; code repos resolve them by cloning ($ATLAS_VAULT)
+#   - session protocol (§6) made mechanical: validator --emit-context compiles the reading
+#     list into one ATLAS-CONTEXT.md, injected by a SessionStart hook
+#   - registry/.compiled/ promoted from scratch artefact to committed, published contract
 ---
 
 # Architecture-Above-Code (AAC)
@@ -86,7 +91,7 @@ components/<slug>/
 > Naming note: the folders are named by **content** (`provides`/`needs`), not by direction
 > (`downstream`/`upstream`), because direction-names invite the inbox misreading —
 > "`upstream/` must be stuff *from* upstream." It isn't; nothing is ever delivered into
-> your folders. *Upstream*/*downstream* remain the terms for the **relationship** (§9).
+> your folders. *Upstream*/*downstream* remain the terms for the **relationship** (§10).
 
 For an edge where **A feeds B** (A is upstream/provider, B is downstream/consumer):
 
@@ -149,28 +154,46 @@ From the graph, each component's reading list is fully determined:
 - **My inputs** = the `docs/provides/` of every component where `to == me`.
 - **My consumers' feedback** = the `docs/needs/` of every component where `from == me`.
 
-This may be hand-resolved by an agent, or mechanically emitted to
-`registry/.compiled/<slug>/io-manifest.yml` by the validator (§8).
+The validator (§8) mechanically resolves this into
+`registry/.compiled/<slug>/io-manifest.yml` — each component's version-pinned reading
+list. The compiled manifests are **committed to the vault repo**: they are the published
+retrieval payload every session builds its context from, not a local scratch artefact.
 
 ---
 
 ## 6. The session protocol (how a component stays aligned)
 
-Every agent session working on a component MUST, before doing work:
+Every agent session working on a component MUST, before doing work, have read:
 
-1. Read `architecture/constitution.md` — the global principles.
-2. Resolve its edges from `registry/io-graph.yml` (or its compiled `io-manifest.yml`).
-3. Read each **upstream provider's** `docs/provides/` at the **pinned** version — these
-   are its inputs. Note any **latest** version ahead of the pin (drift to review).
-4. Read its **own consumers' feedback** in their `docs/needs/` — requests it must answer.
-5. Check `architecture/proposals/` for in-flight changes affecting it.
+1. `architecture/constitution.md` — the global principles.
+2. Its edges, resolved from `registry/io-graph.yml` (compiled: its `io-manifest.yml`).
+3. Each **upstream provider's** `docs/provides/` contract at the **pinned** version —
+   its inputs. Any **latest** version ahead of the pin is drift to review.
+4. Its **own consumers' feedback** in their `docs/needs/` — requests it must answer.
+5. `architecture/proposals/` entries in flight that affect it.
 
-After doing work, it publishes outputs to its own `docs/provides/` (new contracts) and
-`docs/needs/` (new asks), bumping versions per §4.
+These five reads define **what the session's context contains** — but the session does not
+perform them by browsing. The validator's `--emit-context <slug>` mode (§8) compiles all
+five, in that order, into a single **`ATLAS-CONTEXT.md`**, each section headed with its
+source path and version, plus a drift summary. A `SessionStart` hook in the code repo
+syncs the vault and injects this artefact automatically — the protocol is mechanical, not
+trust-based; a session that starts has already "done the reads."
 
-The entry hook lives in each **code repo** as `AGENTS.md`, pointing back to its Atlas
-component folder and the constitution — that is what makes alignment real-time: every
-session pulls current state from Atlas before touching code.
+> **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
+> If the context is insufficient for the work, the io-graph is missing an edge — fix
+> `registry/io-graph.yml` and recompile. Free browsing of the vault is how "dump
+> everything into the window" returns; the single generated artefact is the boundary
+> that keeps retrieval explicit, measurable, and replaceable.
+
+After doing work, the session publishes outputs to its own `docs/provides/` (new
+contracts) and `docs/needs/` (new asks), bumping versions per §4, stamps `updated:` in
+`component.md`, recompiles derived views, and pushes the vault — packaged as the
+`/atlas-publish` command in each code repo (see [[component-init]]).
+
+The entry hook lives in each **code repo** as a **committed** `AGENTS.md`, resolving the
+vault via `$ATLAS_VAULT` (§9) — never a machine path. That is what makes alignment
+real-time *and* portable: every session, on any machine, pulls current state from Atlas
+before touching code.
 
 ---
 
@@ -200,17 +223,56 @@ contract frontmatter and regenerates:
 - `registry/graph.md` — the rendered Mermaid graph + edge table;
 - the drift panel in `dashboard.md` (between `atlas:generated` markers);
 - the edge block in each `component.md` (between markers);
-- `registry/.compiled/<slug>/io-manifest.yml` — each component's reading list;
+- `registry/.compiled/<slug>/io-manifest.yml` — each component's reading list
+  (**committed**, §5);
 
 and prints a **drift report** (every edge where `pinned ≠ latest`; exit non-zero on breaking
-drift, for CI). **Rule: edge facts are edited only in `io-graph.yml`; generated blocks are
+drift — run it as a CI gate on the vault repo, on push and nightly, so drift surfaces with
+no local machine switched on).
+
+A second mode serves the session protocol (§6): **`--emit-context <slug>`** reads the
+component's committed `io-manifest.yml` and concatenates the five protocol reads into one
+`ATLAS-CONTEXT.md` (stdout, or `--out <path>`), each section headed with source path and
+version, ending in a drift summary. It prints a byte/token estimate to stderr — the cost
+of a session's context is a number you can watch. Its dependency is pinned in
+`tools/requirements.txt`; a fresh VM installs it in one line.
+
+**Rule: edge facts are edited only in `io-graph.yml`; generated blocks are
 never edited by hand.** This exists because hand-maintained copies of the graph were found
 drifting within a day of being written — the method applies to itself.
 It mirrors the ecosystem's pattern: read YAML, emit YAML/views, never mutate system state.
 
 ---
 
-## 9. Glossary
+## 9. Transport — git is the substrate, everywhere
+
+The method has **no filesystem assumptions**. Every artefact class lives in a git repo
+with a remote; nothing is ever addressed by a machine path, LAN share, or sibling
+directory. This is what makes a session equivalent whether it runs on the authoring
+desktop, a fresh cloud VM, or a phone-driven remote session.
+
+| Repo | Contents | Access |
+|---|---|---|
+| Method (`Atlas`) | this spec, `component-init`, the validator | cloned per session (`$ATLAS_METHOD`, default `./.atlas-method`) |
+| Project vault (`Atlas-<Project>`) | constitution, ADRs, io-graph, component docs, compiled manifests | cloned per session (`$ATLAS_VAULT`, default `./.atlas`) |
+| Code (one per component) | the code, plus the hooks: `AGENTS.md`, `scripts/atlas-sync.sh`, `.claude/` | where the session runs |
+
+- **Resolution is by env var with a default, never by path.** `scripts/atlas-sync.sh`
+  clones or fast-forwards `$ATLAS_VAULT` and `$ATLAS_METHOD`. A local layout that already
+  has the vault checked out just points the vars at it — same script, no clone.
+- **Publishing is `git push`.** There are no mirrors or copy steps; a "publish to share"
+  step is a smell that the vault lacks a remote.
+- **Vault repo hygiene:** `.gitattributes` with `* text=auto eol=lf` (mixed
+  Windows/Linux/mobile editing otherwise produces CRLF churn in every note), and a
+  `.gitignore` limited to editor workspace cruft (e.g. `.obsidian/workspace*.json`,
+  `.obsidian/cache`, `.trash/`) — **not** `registry/.compiled/`, which is committed (§5).
+- **Vault writes from sessions arrive as branches/PRs**, reviewable as diffs from any
+  device; generated documents carry provenance frontmatter (`generated_by:`,
+  `generated_at:`, `source:`, `status: draft|reviewed`).
+
+---
+
+## 10. Glossary
 
 - **Upstream** — a component you depend on (it provides; you consume). A *relationship*
   term — the folder holding material aimed at your upstreams is `docs/needs/`.
