@@ -85,8 +85,16 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
 4. **Install the code-repo half from `templates/component-repo/`** in the method repo —
    real files, one home, not copies of fenced blocks in this brief (golden rule 1 applies
-   to the method itself). All scripts are POSIX sh and run identically under git-bash on
-   Windows and on a fresh Ubuntu VM:
+   to the method itself). One command, from the code-repo root:
+   ```sh
+   git clone --depth 1 <method-remote> .atlas-method    # bootstrap only; atlas-sync manages it after
+   python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url>
+   ```
+   `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
+   gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
+   re-running skips existing files (`--force` re-copies drifted scripts). Installing by
+   hand is the same set of moves — all scripts are POSIX sh and run identically under
+   git-bash on Windows and on a fresh Ubuntu VM:
    - copy `scripts/` wholesale. The scripts are **byte-identical in every component
      repo**; `atlas-sync.sh` checksums them against the method version the vault pins and
      warns on drift — a hand-edited copy is detected, not trusted (AAC-method §8);

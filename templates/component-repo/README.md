@@ -36,6 +36,15 @@ component driven by an unconfigured agent still cannot merge an out-of-scope dif
 
 ## Install
 
-Manually: copy the tree in, rename the two templated files, append the gitignore fragment.
-Better: `tools/atlas_init.py --slug <slug> --vault-remote <url>` (not yet written — see the
-gap list) should do exactly this, so onboarding is one command rather than nine steps.
+One command, from the target code-repo root:
+
+```sh
+git clone --depth 1 https://github.com/OneMoreRabbit/Atlas.git .atlas-method   # bootstrap only
+python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>
+```
+
+It copies the tree in, fills `.atlas.conf` and `AGENTS.md`, appends the gitignore
+fragment, and **merges** the hooks into any existing `.claude/settings.json` rather than
+overwriting it. Re-running is a no-op on existing files; `--force` re-copies (the fix
+when `atlas-sync.sh` reports script self-drift). Manual install remains: copy the tree,
+rename the two templated files, append the fragment.

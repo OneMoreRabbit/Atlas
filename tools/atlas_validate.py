@@ -244,8 +244,9 @@ def proposal_in_flight(fm: dict, slug: str) -> bool:
 def emit_context(slug: str, out: str | None) -> int:
     manifest_path = ROOT / "registry" / ".compiled" / slug / "io-manifest.yml"
     if not manifest_path.exists():
-        print(f"No {manifest_path.relative_to(ROOT)} — run the validator (no flags) first.",
-              file=sys.stderr)
+        print(f"No {manifest_path.relative_to(ROOT).as_posix()} in the vault — the compiled "
+              "manifests must be committed (AAC-method §5); regenerate with the validator "
+              "(no flags) on the vault's default branch.", file=sys.stderr)
         return 2
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     reading = manifest.get("read_before_working", {})
