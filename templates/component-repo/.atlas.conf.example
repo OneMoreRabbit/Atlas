@@ -1,0 +1,14 @@
+# .atlas.conf — the only per-repo Atlas configuration.
+# Sourced by scripts/atlas-*.sh, which are otherwise byte-identical in every
+# component repo so they can be checksum-verified against the method templates.
+SLUG="<slug>"
+ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"
+
+# Optional overrides — defaults shown.
+# ATLAS_VAULT=.atlas
+# ATLAS_METHOD=.atlas-method
+# ATLAS_METHOD_REMOTE=https://github.com/OneMoreRabbit/Atlas.git
+#
+# Desk layout: ATLAS_VAULT may point at an existing checkout instead of a clone.
+# On Windows, spell it the way your tools report paths (e.g. G:/Projects/Atlas-X,
+# forward slashes) so the write guard's path match agrees with hook payloads.

@@ -1,0 +1,4 @@
+# --- Atlas ---
+.atlas/
+.atlas-method/
+ATLAS-CONTEXT.md

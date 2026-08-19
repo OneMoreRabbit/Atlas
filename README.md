@@ -15,6 +15,7 @@ contract drift on each project's dashboard.
 - [`component-init.md`](component-init.md) — onboarding brief for a new component in any project vault: registers it, and installs the code-repo hooks (`AGENTS.md`, `scripts/atlas-sync.sh`, `SessionStart` hook, `/atlas-publish`).
 - [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`. Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
 - [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
+- [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
 
 ## Starting a new project

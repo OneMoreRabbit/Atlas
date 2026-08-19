@@ -312,7 +312,10 @@ principle as the retrieval invariant in §6, applied to the write side:
   stops being real-time.
 
 Template workflows for the guard and the regeneration job ship in this repo under
-`templates/vault-ci/` — copy them into the vault's `.github/workflows/`.
+`templates/vault-ci/` — copy them into the vault's `.github/workflows/`. The code-repo
+half (sync + context scripts, local hook guards, `AGENTS.md`, `/atlas-publish`) ships as
+`templates/component-repo/` — installed per [[component-init]], byte-identical in every
+repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 
 ---
 
