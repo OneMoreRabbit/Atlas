@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.2
+version: 2.3
 status: active
 maturity: 1.0
-updated: 2026-08-19
-supersedes: 2.1
+updated: 2026-08-21
+supersedes: 2.2
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -19,6 +19,8 @@ supersedes: 2.1
 #   .atlas.conf (SLUG + vault remote) so the scripts are byte-identical everywhere and
 #   checksum-verifiable against the pinned method. Local hook guards added: PreToolUse
 #   write guard (golden rule 2 at the tool boundary) and Stop publish guard.
+# 2.3 (2026-08-21): method 1.3 — docs/manual/ operation plane in the decision checklist;
+#   filenames follow the naming canon (AAC-method §4).
 ---
 
 # Component Init Brief
@@ -146,11 +148,17 @@ ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 ## Decision checklist: where does this document go?
 
-- The architecture doc / user manual / development plan *about me* → `docs/` root (NOTHING else lives in the root)
+- The architecture doc / development plan / status *about me* (design plane) → `docs/` root (NOTHING else lives in the root)
+- A user manual, operator manual, runbook, playbook, or setup guide (operation plane) → `docs/manual/`
 - A contract/interface *I provide* to others → `docs/provides/`
 - A request/need/feedback *I have* of an upstream → `docs/needs/`
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)
 - A design *spanning 2+ components* → `architecture/` (reference it from your contract; never keep a copy)
 - A retired MAJOR/MINOR version of any of the above → its `archive/` sibling
+- Inherited material you haven't sorted yet → `docs/_triage/` (outside the protocol; empty it, don't reference it)
 
 **Never** put another component's document in your folders. Reference it where it lives.
+**Name every file per the canon** (AAC-method §4): lowercase kebab-case, version suffix
+`-vX_Y`, the type word (`brief`, `response`, `handover`, `manual`, …) last before the
+version; living docs (plan, status, TODO) carry no version suffix. The validator warns on
+names outside the canon.

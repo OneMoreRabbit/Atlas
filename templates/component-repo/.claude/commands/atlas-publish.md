@@ -2,7 +2,9 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
 ./.atlas); never edit generated blocks by hand.
 
 1. Contracts changed? Write them to components/<slug>/docs/provides/, versioned per
-   AAC-method §4 (PATCH = same file; MINOR/MAJOR = new `…vX.Y.md`, prior file to archive/).
+   AAC-method §4 (PATCH = same file; MINOR/MAJOR = new `…-vX_Y.md`, prior file to
+   archive/). Filenames follow the naming canon (§4): lowercase kebab-case, type word
+   before the version.
 2. New asks/feedback for upstreams? Write to components/<slug>/docs/needs/ with `to:`
    frontmatter naming the provider.
 3. Changed shared architecture? Do NOT edit the constitution — raise an ADR in

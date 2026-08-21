@@ -11,7 +11,7 @@ sitting next to the project's code repos. Each project vault **pins** a version 
 contract drift on each project's dashboard.
 
 ## Contents
-- [`AAC-method.md`](AAC-method.md) — the specification (two planes, outbox folders, versioning, I/O graph, session protocol, ADR flow, git transport).
+- [`AAC-method.md`](AAC-method.md) — the specification (two planes, outbox folders, versioning + naming canon, I/O graph, session protocol, ADR flow, git transport, write model).
 - [`component-init.md`](component-init.md) — onboarding brief for a new component in any project vault: registers it, and installs the code-repo hooks (`AGENTS.md`, `scripts/atlas-sync.sh`, `SessionStart` hook, `/atlas-publish`).
 - [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`. Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
 - [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/`: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`.
@@ -60,6 +60,12 @@ so declare it only once the vault actually conforms:
    manual equivalent: [`component-init.md`](component-init.md) §4.
 5. **History is grandfathered.** Commits that predate the write model stay as they are;
    the branch/guard discipline applies from the re-pin forward. There is nothing to rewrite.
-6. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
+6. **Sort the doc planes and names** (1.3+). In each component, move user/operator
+   manuals, runbooks, playbooks and setup guides from the `docs/` root into
+   `docs/manual/`; rename live-folder files to the naming canon (AAC-method §4 —
+   lowercase kebab-case, `-vX_Y` version suffix; archives keep their historical names);
+   file or delete everything in `_triage/` until it is empty. The validator lists the
+   names outside the canon (warn-only), so run it for the worklist.
+7. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
    run the validator there once and commit the derived views) so the compiled manifests
    reflect the upgraded state.
