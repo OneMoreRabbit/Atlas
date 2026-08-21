@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.2
+version: 1.3
 status: active
 maturity: 1.0
-updated: 2026-08-19
+updated: 2026-08-21
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -18,6 +18,12 @@ updated: 2026-08-19
 #   - components author, main generates: derived views are committed only by CI after merge
 #   - ceremony follows path: outbox-only PRs auto-merge; proposals/io-graph edits get review
 #   - method pin honoured: atlas-sync checks out the method repo at the vault's pinned tag
+# 1.3 (2026-08-21): doc planes + the naming canon.
+#   - docs/manual/ separates the operation plane (user/operator manuals, runbooks,
+#     playbooks, setup guides) from the design plane in the docs/ root
+#   - filename canon (§4): lowercase kebab-case, -vMAJOR_MINOR suffix, type vocabulary;
+#     the validator warns on live-folder drift (warn-only, never blocks a publish)
+#   - _triage/ (quarantine, target-empty) and meta/ (vault admin) given official semantics
 ---
 
 # Architecture-Above-Code (AAC)
@@ -78,21 +84,35 @@ Each component lives at `components/<slug>/`:
 ```
 components/<slug>/
   component.md            # identity + frontmatter the dashboard reads (REQUIRED)
-  docs/                   # reference: design briefs + user manuals (this component's own)
-    archive/              # retired briefs/manuals (MAJOR/MINOR milestones)
+  docs/                   # DESIGN plane: the architecture doc + development plan/status
+    archive/              # retired design milestones (MAJOR/MINOR)
+    manual/               # OPERATION plane: user & operator manuals, runbooks, playbooks
+      archive/            # retired manual milestones
   docs/provides/          # OUTBOX: "what I provide" — contracts my consumers build against
     archive/              # retired versions of my provided contracts
   docs/needs/             # OUTBOX: "what I need" — requests/feedback aimed at my providers
     archive/              # retired versions of my asks
 ```
 
-> **Root rule:** `docs/` root holds ONLY component-level reference documents — the
-> architecture doc, the user manual, and a development plan/status. **Every document
-> addressed to or negotiated with another component** (proposal, reply, response, finding,
-> question, handoff, review, schema) **lives in `provides/` or `needs/` — never in the
-> root.** Rule of thumb: *asking side* (proposal, request, finding, question, reply-in-your-
-> own-thread) → `needs/`; *answering/committing side* (response, handover, agreement,
-> published schema) → `provides/`.
+> **Root rule — two planes, two homes.** `docs/` root holds ONLY the component's
+> *design-plane* reference documents: the architecture doc and a development plan/status.
+> Documents that tell someone how to **use or operate** the component — user manuals,
+> operator manuals, runbooks, playbooks, setup guides, catalogues — live in
+> **`docs/manual/`**. The split is by audience and churn: the design plane answers *why it
+> is built this way* and moves with the architecture; the operation plane answers *how to
+> run it* and moves with releases. **Every document addressed to or negotiated with
+> another component** (proposal, reply, response, finding, question, handover, review,
+> schema) **lives in `provides/` or `needs/` — never in the root or `manual/`.** Rule of
+> thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
+> `needs/`; *answering/committing side* (response, handover, agreement, published schema)
+> → `provides/`.
+
+> **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
+> `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the
+> protocol**: the validator and the context emitter ignore it, nothing in-protocol may
+> reference into it, and its target state is **empty** — every triage doc either finds its
+> one home or is deleted. The vault root may also carry `meta/` for vault-administration
+> records (migration logs, curation notes); likewise outside the protocol.
 
 > Naming note: the folders are named by **content** (`provides`/`needs`), not by direction
 > (`downstream`/`upstream`), because direction-names invite the inbox misreading —
@@ -113,20 +133,46 @@ For an edge where **A feeds B** (A is upstream/provider, B is downstream/consume
 
 Git is the substrate (full history, diffs, blame). On top of git, one semantic layer:
 
-**Filenames carry `MAJOR.MINOR`** — `dprox-endpoints.v0.2.md`. Frontmatter may carry the
-full `MAJOR.MINOR.PATCH`.
+**Filenames carry `MAJOR.MINOR`** as a `-vMAJOR_MINOR` suffix — `dprox-endpoints-v0_2.md`.
+Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 
 | Level | When | Action | Folder impact |
 |---|---|---|---|
 | **PATCH** | typo, clarification | commit to same file | none |
-| **MINOR** | additive, backward-compatible | new `…v1.4.md`, move prior to `archive/` | +1 in archive |
-| **MAJOR** | breaking change | new `…v2.0.md`, deprecate `1.x`, move to `archive/` | +1 in archive |
+| **MINOR** | additive, backward-compatible | new `…-v1_4.md`, move prior to `archive/` | +1 in archive |
+| **MAJOR** | breaking change | new `…-v2_0.md`, deprecate `1.x`, move to `archive/` | +1 in archive |
 
 - **`0.x`** = unstable / in development. Breaking changes allowed freely between minors.
 - **`1.0`+** = stable contract. MAJOR-is-breaking discipline applies. Crossing to `1.0` is
   the deliberate signal "this interface is now ratified."
 - The **live folder holds only current versions** (one file per interface). Retired
   MAJOR/MINOR milestones live in `archive/`, viewable in-vault. Git holds everything else.
+
+### The naming canon
+
+One name shape, everywhere a document is live. (Archives are exempt: archived files keep
+their historical names — renaming history breaks every wikilink that points into it.)
+
+- **Lowercase kebab-case**: `a-z`, `0-9`, `-` only. No spaces, no parentheses, no
+  capitals, no underscores outside the version suffix. `OPERATOR_MANUAL.md` and
+  `Sync Compiler Architecture 0.4.1.md` are both drift.
+- **One version spelling**: the suffix `-vMAJOR_MINOR` (`agent-shares-schema-v0_2.md`) —
+  never `v0.2`, `V02`, or a bare `0.2` in the name.
+- **Name for the global namespace.** Wikilinks resolve by basename across the whole
+  vault, so a basename must be unique vault-wide: prefix with your slug or the interface
+  id — `<slug-or-interface>-<topic>-<type>-vX_Y.md`.
+- **The type is the last word before the version**, drawn from a small vocabulary:
+  `architecture`, `plan`, `status`, `manual`, `runbook`, `playbook`, `contract`,
+  `schema`, `brief`, `proposal`, `response`, `reply`, `finding`, `question`, `review`,
+  `decision`, `handover` (one spelling — never "handoff").
+- **Living documents carry no version suffix.** A status, development plan, TODO list, or
+  catalogue evolves in place — git is its history; the §4 version machinery is for
+  contracts and milestone documents, where consumers pin.
+- **Exempt by convention:** `README.md`, `component.md`, `AGENTS.md`, `dashboard.md`, and
+  the `NNNN-` numeric prefix on ADR files.
+
+The validator (§8) warns on live-folder names outside the canon — warn-only; a name never
+blocks a publish.
 
 Required frontmatter on every contract document:
 
@@ -238,7 +284,8 @@ contract frontmatter and regenerates:
 
 and prints a **drift report** (every edge where `pinned ≠ latest`; exit non-zero on breaking
 drift — run it as a CI gate on the vault repo, on push and nightly, so drift surfaces with
-no local machine switched on).
+no local machine switched on). It also lists live-folder documents whose names fall outside
+the **naming canon** (§4) — warn-only; `archive/` and `_triage/` are never checked.
 
 A second mode serves the session protocol (§6): **`--emit-context <slug>`** reads the
 component's committed `io-manifest.yml` and concatenates the five protocol reads into one

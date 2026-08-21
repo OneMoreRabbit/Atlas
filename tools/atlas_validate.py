@@ -11,7 +11,9 @@ Emits   registry/graph.md                (Mermaid diagram + edge table)
         registry/.compiled/<slug>/io-manifest.yml
         dashboard.md                     (drift panel, between atlas:drift markers)
         components/<slug>/component.md   (edge block, between atlas:edges markers)
-Prints  a drift report. Exit 1 on breaking (major) drift, else 0.
+Prints  a drift report, plus warn-only naming-canon notes for live-folder documents
+        (AAC-method §4; archive/ and _triage/ are skipped). Exit 1 on breaking
+        (major) drift, else 0 — naming never affects the exit code.
 
 Context mode (--emit-context <slug>)
 Reads   registry/.compiled/<slug>/io-manifest.yml   (run validate mode first)
@@ -95,6 +97,25 @@ def replace_block(path: Path, marker: str, body: str) -> bool:
         return False
     path.write_text(pattern.sub(rf"\1\n{body}\n\2", text), encoding="utf-8")
     return True
+
+
+NAME_EXEMPT = {"README.md", "component.md", "AGENTS.md", "dashboard.md"}
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*(-v\d+_\d+)?\.md$")
+NAME_SKIP_DIRS = {"archive", "_triage"}  # archives keep historical names; triage is quarantine
+
+
+def naming_warnings() -> list[str]:
+    """Live-folder documents outside the naming canon (AAC-method §4). Warn-only."""
+    warns = []
+    for pattern in ("components/*/docs/**/*.md", "architecture/**/*.md"):
+        for p in sorted(ROOT.glob(pattern)):
+            rel = p.relative_to(ROOT)
+            if NAME_SKIP_DIRS & set(rel.parts[:-1]):
+                continue
+            if p.name in NAME_EXEMPT or NAME_RE.match(p.name):
+                continue
+            warns.append(rel.as_posix())
+    return warns
 
 
 def edge_rows(graph, latest):
@@ -400,6 +421,14 @@ def main() -> int:
           f"{sum(r['emoji'] == '🟠' for r in rows)} minor drift, "
           f"{sum(r['emoji'] == '🔴' for r in rows)} breaking, "
           f"{sum(r['emoji'] == '⚪' for r in rows)} unpublished")
+
+    # -- naming canon (AAC-method §4) — warn-only, never affects the exit code --
+    warns = naming_warnings()
+    if warns:
+        print(f"\nNAMING — {len(warns)} live-folder name(s) outside the canon "
+              "(lowercase-kebab, version -vX_Y; AAC-method §4; warn-only):")
+        for w in warns:
+            print(f"  ⚠ {w}")
     return worst
 
 
