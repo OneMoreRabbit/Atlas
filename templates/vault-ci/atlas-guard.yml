@@ -1,0 +1,76 @@
+# TEMPLATE — copy into the VAULT repo's .github/workflows/atlas-guard.yml
+# (it does nothing in the method repo; it guards a project vault's PRs).
+#
+# Enforces AAC-method §9's write model: a PR from branch atlas/<slug>/<topic> may touch
+# only that component's outbox paths, and any io-graph.yml edit must concern the slug's
+# own entries. Pair with atlas-regen.yml on the default branch.
+#
+# Merge policy (AAC-method §9, "ceremony follows path"): PRs touching only
+# components/<slug>/** should auto-merge once both jobs pass (e.g. enable repo
+# auto-merge and run `gh pr merge --auto`); PRs touching architecture/proposals/**
+# or registry/io-graph.yml wait for the architecture session's review.
+name: atlas-guard
+on: pull_request
+
+jobs:
+  paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Enforce outbox scope (golden rule 2)
+        run: |
+          BR="${{ github.head_ref }}"
+          case "$BR" in
+            atlas/*/*) SLUG=$(echo "$BR" | cut -d/ -f2) ;;
+            *) echo "::error::branch must be atlas/<slug>/<topic>"; exit 1 ;;
+          esac
+          echo "SLUG=$SLUG" >> "$GITHUB_ENV"
+          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
+          FAIL=0
+          while IFS= read -r f; do
+            case "$f" in
+              "components/$SLUG"/*) ;;                # own subtree — the outbox
+              architecture/proposals/*) ;;            # additive ADRs, status: proposed
+              registry/io-graph.yml) ;;               # ownership checked below
+              *) echo "::error file=$f::$SLUG may not write $f"; FAIL=1 ;;
+            esac
+          done < /tmp/changed.txt                     # redirect, not a pipe: FAIL survives
+          exit $FAIL
+
+      - name: Edge ownership — io-graph.yml edits must name the slug
+        run: |
+          git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- registry/io-graph.yml && exit 0
+          pip install -q PyYAML
+          git show "origin/${{ github.base_ref }}:registry/io-graph.yml" > /tmp/base.yml
+          python - "$SLUG" <<'PYEOF'
+          import sys, yaml
+          slug = sys.argv[1]
+
+          def entries(path, key):
+              g = yaml.safe_load(open(path)) or {}
+              return {frozenset((k, str(v)) for k, v in d.items()) for d in g.get(key, [])}
+
+          bad = []
+          for key, owns in (("edges", lambda d: slug in (d.get("from"), d.get("to"))),
+                            ("components", lambda d: d.get("slug") == slug)):
+              for e in entries("registry/io-graph.yml", key) ^ entries("/tmp/base.yml", key):
+                  d = dict(e)
+                  if not owns(d):
+                      bad.append((key, d))
+          for key, d in bad:
+              print(f"::error file=registry/io-graph.yml::{slug} changed a {key} entry it does not own: {d}")
+          sys.exit(1 if bad else 0)
+          PYEOF
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { repository: OneMoreRabbit/Atlas, path: .atlas-method }
+        # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
+        # If the method repo is private, this checkout also needs a `token:` with access.
+      - run: pip install -r .atlas-method/tools/requirements.txt
+      - run: python .atlas-method/tools/atlas_validate.py .   # check only; exit 1 blocks merge

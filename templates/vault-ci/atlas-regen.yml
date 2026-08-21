@@ -1,0 +1,31 @@
+# TEMPLATE — copy into the VAULT repo's .github/workflows/atlas-regen.yml
+# (it does nothing in the method repo; it maintains a project vault's default branch).
+#
+# "Components author, main generates" (AAC-method §9): derived views are committed only
+# here, from merged truth — never by component PRs. Also runs nightly, so drift
+# detection needs no local machine switched on.
+name: atlas-regen
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+  schedule: [{ cron: "17 3 * * *" }]
+permissions: { contents: write }
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { repository: OneMoreRabbit/Atlas, path: .atlas-method }
+        # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
+        # If the method repo is private, this checkout also needs a `token:` with access.
+      - run: pip install -r .atlas-method/tools/requirements.txt
+      - run: python .atlas-method/tools/atlas_validate.py .
+      - name: Commit derived views
+        run: |
+          git config user.name  "atlas-bot"
+          git config user.email "atlas-bot@users.noreply.github.com"
+          git add registry/graph.md dashboard.md 'components/*/component.md' registry/.compiled
+          git diff --cached --quiet || git commit -m "atlas: regenerate derived views [skip ci]"
+          git push

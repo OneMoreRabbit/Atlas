@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-context.sh\"" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-write.sh\"" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-publish.sh\"" } ] }
+    ]
+  }
+}
