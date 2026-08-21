@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.3
+version: 1.4
 status: active
 maturity: 1.0
 updated: 2026-08-21
@@ -24,6 +24,12 @@ updated: 2026-08-21
 #   - filename canon (§4): lowercase kebab-case, -vMAJOR_MINOR suffix, type vocabulary;
 #     the validator warns on live-folder drift (warn-only, never blocks a publish)
 #   - _triage/ (quarantine, target-empty) and meta/ (vault admin) given official semantics
+# 1.4 (2026-08-22): method drift made mechanical (a fresh vault was seeded pinned to a
+#   stale runbook literal; the method pin was the one edge with no drift detection).
+#   - validator: method-pin drift row in the drift report + dashboard panel (major = red,
+#     blocks like any breaking edge); atlas-sync warns when a newer release than the pin
+#     exists on the method remote
+#   - policy: a NEW project pins the latest tagged release, resolved not copied
 ---
 
 # Architecture-Above-Code (AAC)
@@ -330,6 +336,12 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
   `method:` pin from `registry/io-graph.yml` and checks out `$ATLAS_METHOD` at the
   matching tag (`v<pinned>`); method releases are tagged. A session never silently gets
   whatever the method repo's default branch happens to hold.
+- **The method pin is an edge, and it drifts like one** (golden rule 3 applies to the
+  method itself). `atlas-sync.sh` warns when the method remote has a newer release than
+  the pin, and the validator reports method-pin drift in the drift report and dashboard
+  panel — minor is informational, major is breaking. A **new** project pins the **latest
+  tagged release**, resolved from the remote at seed time — never a literal copied from a
+  runbook, an example, or another vault, which is stale the day after it is written.
 
 ### The write model — golden rule 2, mechanical
 

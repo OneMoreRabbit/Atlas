@@ -123,7 +123,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
    | Piece | Role |
    |---|---|
-   | `scripts/atlas-sync.sh` | clone/ff the vault; check out the method repo at the vault's `method:` pin (tag `v<pinned>`); self-drift check on these scripts |
+   | `scripts/atlas-sync.sh` | clone/ff the vault; check out the method repo at the vault's `method:` pin (tag `v<pinned>`); warn when the remote has a newer release than the pin; self-drift check on these scripts |
    | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |

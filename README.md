@@ -26,6 +26,12 @@ contract drift on each project's dashboard.
    `dashboard.md`, a `.gitattributes` containing `* text=auto eol=lf`, and a `.gitignore`
    for editor cruft only (never `registry/.compiled/` — the compiled manifests are
    committed, published contracts).
+   **A new project always pins the latest tagged release** — resolve it, never copy it:
+   `git ls-remote --tags <method-remote>` and take the highest `vMAJOR.MINOR`. The pin
+   exists to keep building stable *after* you start; it is never a reason to start on an
+   old method. A pin copied as a literal from a runbook, an example, or another vault is
+   stale the day after it is written — `atlas-sync` and the validator both surface method
+   drift, but seeding correctly costs one command.
 2. Write its `constitution.md`; register components per [`component-init.md`](component-init.md),
    which also wires each code repo to resolve the vault via `$ATLAS_VAULT` (a per-session
    clone) and to inject `ATLAS-CONTEXT.md` at session start.
