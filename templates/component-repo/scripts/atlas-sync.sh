@@ -36,6 +36,17 @@ else
   git -C "$ATLAS_METHOD" pull --ff-only
 fi
 
+# Method drift: pinned for building, latest for awareness (golden rule 3 applies to
+# the method itself). A stale pin must never be silent — a hardcoded pin copied from
+# a runbook or another vault is stale the day after it is written.
+LATEST=$(git ls-remote --tags "$ATLAS_METHOD_REMOTE" 'v*' 2>/dev/null |
+  sed 's|.*refs/tags/||; s|\^{}$||' | grep -E '^v[0-9]+\.[0-9]+$' | sort -V | tail -1)
+if [ -n "$LATEST" ] && [ -n "$REF" ] && [ "$LATEST" != "$REF" ]; then
+  if [ "$(printf '%s\n%s\n' "$REF" "$LATEST" | sort -V | tail -1)" = "$LATEST" ]; then
+    echo "atlas-sync: METHOD DRIFT — vault pins ${REF#v}, latest release is ${LATEST#v}. Re-pin deliberately (see the AAC-method changelog), never silently." >&2
+  fi
+fi
+
 # Self-drift. These scripts are copies of the method's templates; hand-maintained
 # copies drift (AAC-method §8), so detect it rather than trusting it.
 TPL="$ATLAS_METHOD/templates/component-repo/scripts"
