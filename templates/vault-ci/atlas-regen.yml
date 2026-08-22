@@ -6,7 +6,10 @@
 # detection needs no local machine switched on.
 name: atlas-regen
 on:
-  push: { branches: [main] }
+  # run on the vault's WORK branch (the `branching:` policy in io-graph.yml) — derived
+  # views reflect the merged truth of the working line; both listed so the template
+  # works under the default policy (work: dev) and for trunk-only vaults (work: main).
+  push: { branches: [main, dev] }
   workflow_dispatch:
   schedule: [{ cron: "17 3 * * *" }]
 permissions: { contents: write }

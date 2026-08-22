@@ -22,7 +22,8 @@ contract drift on each project's dashboard.
 ## Starting a new project
 1. Create an `Atlas-<Project>` vault as a **private git repo with a remote** — this is the
    transport; there are no shares, mirrors, or machine paths (AAC-method §9). Seed it with
-   `architecture/`, `registry/io-graph.yml` (with a `method:` pin), `components/`,
+   `architecture/`, `registry/io-graph.yml` (with a `method:` pin and a `branching:`
+   policy — default `work: dev`, `release: main`; AAC-method §9), `components/`,
    `dashboard.md`, a `.gitattributes` containing `* text=auto eol=lf`, and a `.gitignore`
    for editor cruft only (never `registry/.compiled/` — the compiled manifests are
    committed, published contracts).
@@ -32,6 +33,11 @@ contract drift on each project's dashboard.
    old method. A pin copied as a literal from a runbook, an example, or another vault is
    stale the day after it is written — `atlas-sync` and the validator both surface method
    drift, but seeding correctly costs one command.
+   **Set every repo's default branch — the vault's and each code repo's — to the policy
+   `work` branch** (`gh api repos/<org>/<repo> --method PATCH -f default_branch=dev`),
+   and protect the `release` branch. Fresh clones then land on the right branch by
+   default; `atlas-sync` re-applies the policy each session; the dashboard reports
+   per-repo branch status.
 2. Write its `constitution.md`; register components per [`component-init.md`](component-init.md),
    which also wires each code repo to resolve the vault via `$ATLAS_VAULT` (a per-session
    clone) and to inject `ATLAS-CONTEXT.md` at session start.
@@ -72,6 +78,10 @@ so declare it only once the vault actually conforms:
    lowercase kebab-case, `-vX_Y` version suffix; archives keep their historical names);
    file or delete everything in `_triage/` until it is empty. The validator lists the
    names outside the canon (warn-only), so run it for the worklist.
-7. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
+7. **Declare the branch policy** (1.5+). Add the `branching:` block to
+   `registry/io-graph.yml` (default `work: dev`, `release: main`); set every repo's
+   default branch to `work` and protect `release` (PRs only). From then on `atlas-sync`
+   puts every session on the right branch and the dashboard shows per-repo branch status.
+8. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
    run the validator there once and commit the derived views) so the compiled manifests
    reflect the upgraded state.

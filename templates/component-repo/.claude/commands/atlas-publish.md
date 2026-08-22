@@ -20,5 +20,6 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
        ':(exclude)components/<slug>/component.md'
 6. Commit ONLY your authored files (components/<slug>/**, any ADR, any io-graph edge
    naming you) on branch atlas/<slug>/<topic>, push, and open a PR against the vault's
-   default branch. The CI path guard enforces this scope; a write outside it is refused
+   work branch (the `branching:` policy in io-graph.yml; the default branch if no policy
+   is declared). The CI path guard enforces this scope; a write outside it is refused
    locally by the PreToolUse guard before it ever reaches a commit.

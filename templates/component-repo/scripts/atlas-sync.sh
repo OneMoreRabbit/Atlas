@@ -36,6 +36,37 @@ else
   git -C "$ATLAS_METHOD" pull --ff-only
 fi
 
+# Branch policy (AAC-method §9): the vault declares the project's branching model in
+# io-graph.yml (branching: work/release). The current branch is invisible ambient state
+# and a fresh clone lands on the default branch — so the policy is applied here, at
+# session start, not trusted to be remembered.
+BWORK=$(awk '/^branching:/{b=1;next} b&&/^[^ ]/{b=0} b&&/work:/{gsub(/[^A-Za-z0-9._\/-]/,"",$2); print $2; exit}' \
+        "$ATLAS_VAULT/registry/io-graph.yml" 2>/dev/null || true)
+if [ -n "$BWORK" ]; then
+  # the vault clone follows the policy branch too
+  VCUR=$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+  if [ "$VCUR" != "$BWORK" ] && [ "$VCUR" != "HEAD" ]; then
+    git -C "$ATLAS_VAULT" fetch --depth 1 origin "$BWORK:refs/remotes/origin/$BWORK" 2>/dev/null || true
+    if git -C "$ATLAS_VAULT" checkout -q "$BWORK" 2>/dev/null ||
+       git -C "$ATLAS_VAULT" checkout -q -b "$BWORK" "origin/$BWORK" 2>/dev/null; then
+      echo "atlas-sync: vault clone switched $VCUR -> $BWORK (branching policy)" >&2
+    else
+      echo "atlas-sync: WARN vault clone is on '$VCUR' but the policy work branch is '$BWORK'" >&2
+    fi
+  fi
+  # this code repo works on the policy branch. Detached HEAD (CI checkouts) is exempt;
+  # a missing branch is never invented — that is a seat-setup problem, reported loudly.
+  CUR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+  if [ "$CUR" != "$BWORK" ] && [ "$CUR" != "HEAD" ]; then
+    if git checkout -q "$BWORK" 2>/dev/null ||
+       git checkout -q -b "$BWORK" --track "origin/$BWORK" 2>/dev/null; then
+      echo "atlas-sync: switched $CUR -> $BWORK (branching policy in the vault's io-graph.yml)" >&2
+    else
+      echo "atlas-sync: BRANCH POLICY — this repo is on '$CUR' but the project works on '$BWORK', and '$BWORK' does not exist here. Do NOT work on '$CUR': create '$BWORK' (or fix the seat) first." >&2
+    fi
+  fi
+fi
+
 # Method drift: pinned for building, latest for awareness (golden rule 3 applies to
 # the method itself). A stale pin must never be silent — a hardcoded pin copied from
 # a runbook or another vault is stale the day after it is written.
