@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.3
+version: 2.4
 status: active
 maturity: 1.0
-updated: 2026-08-21
-supersedes: 2.2
+updated: 2026-08-22
+supersedes: 2.3
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -21,6 +21,8 @@ supersedes: 2.2
 #   write guard (golden rule 2 at the tool boundary) and Stop publish guard.
 # 2.3 (2026-08-21): method 1.3 — docs/manual/ operation plane in the decision checklist;
 #   filenames follow the naming canon (AAC-method §4).
+# 2.4 (2026-08-22): method 1.5 — branch policy: seat setup sets the repo default branch
+#   to the vault's declared work branch; atlas-sync applies the policy every session.
 ---
 
 # Component Init Brief
@@ -79,7 +81,8 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    git -C "$ATLAS_VAULT" add components/<slug> registry/io-graph.yml
    git -C "$ATLAS_VAULT" commit -m "register <slug>" && git -C "$ATLAS_VAULT" push -u origin HEAD
    ```
-   Open a PR against the vault's default branch. (The `checkout --` only restores
+   Open a PR against the vault's **`work` branch** (the `branching:` policy in
+   `io-graph.yml`; the default branch if no policy is declared). (The `checkout --` only restores
    *tracked* files — it discards the validator's edge-block rewrites in existing
    components while leaving your brand-new, untracked `component.md` untouched.)
 
@@ -113,6 +116,16 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
      attributes stop the mangling at the source);
    - copy `.claude/` — vendor-specific shims with no logic of their own.
 
+5. **Set the repo's default branch to the project's `work` branch** (the `branching:`
+   policy in the vault's `io-graph.yml` — AAC-method §9). This is what makes every fresh
+   clone and seat land on the right branch by default; `atlas-sync` then re-applies the
+   policy each session as the backstop. Agent-runnable:
+   ```sh
+   gh api "repos/<org>/<repo>" --method PATCH -f default_branch=<work>
+   ```
+   Protect the `release` branch (PRs only) so wrong-branch work fails at push,
+   recoverably, instead of landing silently.
+
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
    your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
@@ -123,7 +136,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
    | Piece | Role |
    |---|---|
-   | `scripts/atlas-sync.sh` | clone/ff the vault; check out the method repo at the vault's `method:` pin (tag `v<pinned>`); warn when the remote has a newer release than the pin; self-drift check on these scripts |
+   | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); warn when the remote has a newer release than the pin; self-drift check on these scripts |
    | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |

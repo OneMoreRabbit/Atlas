@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.4
+version: 1.5
 status: active
 maturity: 1.0
 updated: 2026-08-21
@@ -30,6 +30,13 @@ updated: 2026-08-21
 #     blocks like any breaking edge); atlas-sync warns when a newer release than the pin
 #     exists on the method remote
 #   - policy: a NEW project pins the latest tagged release, resolved not copied
+# 1.5 (2026-08-22): branch policy — declared once, enforced mechanically (sessions kept
+#   discovering they were on the wrong branch; the branch is invisible ambient state).
+#   - branching: block in io-graph.yml (per-project; default work dev / release main,
+#     release merged by the architecture session at periodic review)
+#   - enforcement: repo default branches set to work at seat creation; atlas-sync
+#     switches session + vault clone to work at start; release branch protected
+#   - dashboard: per-repo branch status (default vs policy, unreleased work, latest tag)
 ---
 
 # Architecture-Above-Code (AAC)
@@ -200,6 +207,15 @@ supersedes: 0.1                # optional
 edge list of a directed graph. Each edge pins the version the consumer builds against:
 
 ```yaml
+method:
+  repo: https://github.com/OneMoreRabbit/Atlas.git
+  pinned: <latest vMAJOR.MINOR at seed time — resolve from the tags, never copy a literal (§9)>
+branching:                     # this project's branch policy (§9) — declared at initiation
+  work: dev                    # every session, every repo, works here
+  release: main                # merged by the architecture session at periodic review
+components:
+  - {slug: agent-image, name: Agent Image, maturity: 0.2}
+  # ...
 edges:
   - from: agent-image          # provider (upstream)
     to: agent-compile          # consumer (downstream)
@@ -342,6 +358,35 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
   panel — minor is informational, major is breaking. A **new** project pins the **latest
   tagged release**, resolved from the remote at seed time — never a literal copied from a
   runbook, an example, or another vault, which is stale the day after it is written.
+
+### Branch policy — declared once, enforced mechanically
+
+The branching model is a **per-project decision** (it follows the project's deploy and
+test realities), but it is **declared, never assumed**: a `branching:` block in
+`registry/io-graph.yml`, set when the project is initiated (§5). The default template is
+`work: dev`, `release: main` — all development in every repo happens on `work`; the
+`release` branch is merged **only by the architecture session, at periodic review**. A
+trunk-only project declares `work: main` and omits `release`.
+
+Why this must be mechanical: the current branch is *invisible ambient state* — the
+working tree looks identical on every branch, nothing in a session's loop surfaces it,
+and a fresh clone lands on the default branch, so "correct" would otherwise require an
+active step that stateless sessions cannot remember. The policy is therefore applied at
+every point where a session meets a repo:
+
+- **The default branch of every repo — code repos and the vault — is set to the `work`
+  branch** at seat creation, so every fresh clone lands correctly by default (one API
+  call, e.g. `gh api repos/<org>/<repo> --method PATCH -f default_branch=dev`).
+- **`atlas-sync.sh` applies the policy at session start**: it reads the block from the
+  synced vault, switches the code repo and the vault clone to `work` if they are
+  elsewhere, and warns loudly when it cannot (a missing `work` branch is a seat-setup
+  defect, never silently invented; detached-HEAD checkouts, i.e. CI, are exempt).
+- **The `release` branch is protected** (PRs only) so wrong-branch work fails at push —
+  recoverably — instead of landing silently.
+- **The dashboard reports per-repo branch status** (validator, §8): each repo's default
+  branch against policy, work-vs-release divergence (unreleased changes awaiting the
+  periodic review), and the latest release tag. Misalignment is visible red, but
+  branch status never fails the run — it is seat configuration, not contract truth.
 
 ### The write model — golden rule 2, mechanical
 

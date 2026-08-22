@@ -29,7 +29,9 @@ Edge facts are edited ONLY in io-graph.yml. See AAC-method.md §8.
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -150,6 +152,82 @@ def method_drift(graph) -> tuple[str, str]:
     if m[0] > p[0]:
         return "🔴", f"BREAKING — pinned {pin}, running method {mine}; review required"
     return "🟠", f"pinned {pin}, running method {mine} — re-pin deliberately"
+
+
+def run_git(args: list, timeout: int = 10) -> str | None:
+    try:
+        r = subprocess.run(["git", *args], capture_output=True, text=True, timeout=timeout,
+                           env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+        return r.stdout if r.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def remote_repo_info(url: str, *branches: str) -> dict | None:
+    """Default branch, branch heads, and latest v-tag of a remote — via one ls-remote."""
+    pats = ["HEAD"] + [f"refs/heads/{b}" for b in branches if b] + ["refs/tags/*"]
+    out = run_git(["ls-remote", "--symref", url, *pats])
+    if out is None:
+        return None
+    info = {"default": None, "heads": {}, "tag": None}
+    tags = []
+    for line in out.splitlines():
+        if line.startswith("ref:"):  # "ref: refs/heads/dev\tHEAD"
+            info["default"] = line.split()[1].rsplit("/", 1)[-1]
+            continue
+        sha, _, ref = line.partition("\t")
+        ref = ref.strip()
+        if ref.startswith("refs/heads/"):
+            info["heads"][ref[len("refs/heads/"):]] = sha
+        elif ref.startswith("refs/tags/"):
+            tags.append(ref[len("refs/tags/"):].removesuffix("^{}"))
+    vt = [t for t in tags if re.fullmatch(r"v\d+(\.\d+)*", t)]
+    if vt:
+        info["tag"] = max(vt, key=lambda t: version_tuple(t[1:]))
+    return info
+
+
+def gen_branch_section(graph) -> tuple[str, list[str]]:
+    """-> (dashboard markdown, console lines) for the per-repo branch status
+    (AAC-method §9, branch policy). Network state at regen time; unreachable
+    repos degrade to a note, never an error."""
+    pol = graph.get("branching") or {}
+    work, release = pol.get("work"), pol.get("release")
+    if not work:
+        line = ("no `branching:` policy in io-graph.yml — declare `work:`/`release:` "
+                "(AAC-method §9; default template: work `dev`, release `main`)")
+        return f"**Branch policy:** ⚪ {line}", [f"  ⚪ branching  {line}"]
+    head = (f"**Branch policy:** work `{work}`"
+            + (f" → release `{release}` (merged by the architecture session at periodic review)"
+               if release else ""))
+    md = [head, "", "| Repo | Default branch | Work vs release | Latest tag |", "|---|---|---|---|"]
+    console = [f"  🧭 branching  work {work}" + (f" -> release {release}" if release else "")]
+    repos = [("vault", (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip())]
+    for c in graph["components"]:
+        fm = parse_frontmatter(ROOT / "components" / c["slug"] / "component.md")
+        repos.append((c["slug"], str(fm.get("source") or c.get("source") or "")))
+    for name, url in repos:
+        if not ("://" in url or url.startswith("git@")):
+            md.append(f"| {name} | — | _no source URL_ | — |")
+            continue
+        info = remote_repo_info(url, work, release)
+        if info is None:
+            md.append(f"| {name} | — | _unreachable at regen_ | — |")
+            continue
+        d = info["default"] or "?"
+        d_cell = f"`{d}` 🟢" if d == work else f"`{d}` 🔴 policy: `{work}`"
+        w, r = info["heads"].get(work), info["heads"].get(release) if release else None
+        if w is None:
+            wr = f"🔴 no `{work}` branch"
+        elif release is None or r is None:
+            wr = "—" if release is None else f"no `{release}` branch"
+        else:
+            wr = "in sync" if w == r else "unreleased changes on work"
+        md.append(f"| {name} | {d_cell} | {wr} | {info['tag'] or '—'} |")
+        if d != work or w is None:
+            console.append(f"  🔴 branch  {name}: default '{d}', policy '{work}'"
+                           + ("" if w else f" (no {work} branch)"))
+    return "\n".join(md), console
 
 
 def gen_graph_md(graph, rows) -> str:
@@ -413,8 +491,9 @@ def main() -> int:
     print("regenerated registry/graph.md")
 
     m_emoji, m_label = method_drift(graph)
+    branch_md, branch_console = gen_branch_section(graph)
     drift_table = "\n".join(
-        [f"**Method:** {m_emoji} {m_label}", "",
+        [f"**Method:** {m_emoji} {m_label}", "", branch_md, "",
          "| Edge (provider → consumer) | Interface | Pinned | Latest | State |", "|---|---|---|---|---|"]
         + [
             f"| {r['from']} → {r['to']} | {r['interface']} | {r['pinned']} | {r['latest']} | {r['emoji']} {r['label']} |"
@@ -443,6 +522,8 @@ def main() -> int:
     print(f"  {m_emoji} method  {m_label}")
     if m_emoji == "🔴":
         worst = 1
+    for line in branch_console:
+        print(line)
     for r in rows:
         print(f"  {r['emoji']} {r['from']} → {r['to']}  {r['interface']}  pinned {r['pinned']}  ({r['label']})")
         if r["emoji"] == "🔴":
