@@ -13,7 +13,7 @@ contract drift on each project's dashboard.
 ## Contents
 - [`AAC-method.md`](AAC-method.md) — the specification (two planes, outbox folders, versioning + naming canon, I/O graph, session protocol, ADR flow, git transport, write model).
 - [`component-init.md`](component-init.md) — onboarding brief for a new component in any project vault: registers it, and installs the code-repo hooks (`AGENTS.md`, `scripts/atlas-sync.sh`, `SessionStart` hook, `/atlas-publish`).
-- [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`. Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
+- [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`; `--check-wiring` verifies each component repo actually carries the committed Atlas half (warn-only, for CI). Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
 - [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/`: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`.
 - [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
 - [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
@@ -79,10 +79,15 @@ so declare it only once the vault actually conforms:
    lowercase kebab-case, `-vX_Y` version suffix; archives keep their historical names);
    file or delete everything in `_triage/` until it is empty. The validator lists the
    names outside the canon (warn-only), so run it for the worklist.
-7. **Declare the branch policy** (1.5+). Add the `branching:` block to
+7. **Make the estate addressable and wiring visible** (1.6+). Every io-graph component
+   entry carries `source: <clone URL>` (machine paths are drift — each component fixes
+   its own entry at its next publish); the regen workflow runs the validator with
+   `--check-wiring`, so the dashboard's estate table shows wired / unwired /
+   unaddressable per repo (warn-only; decisions/0001).
+8. **Declare the branch policy** (1.5+). Add the `branching:` block to
    `registry/io-graph.yml` (default `work: dev`, `release: main`); set every repo's
    default branch to `work` and protect `release` (PRs only). From then on `atlas-sync`
    puts every session on the right branch and the dashboard shows per-repo branch status.
-8. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
+9. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
    run the validator there once and commit the derived views) so the compiled manifests
    reflect the upgraded state.

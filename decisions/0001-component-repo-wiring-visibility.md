@@ -8,7 +8,7 @@ origin: Atlas-AgentEco architecture/proposals/0005 (raised 2026-08-21 by the
   agent-skeleton component session; classified ATLAS-METHOD by AgentEco arch
   review 2026-08-23 and extracted here — one home per document)
 affects: [aac-method, atlas_validate, component-init, templates/component-repo]
-implement-in: "1.6"
+implemented: method 1.6 (2026-08-23)
 ---
 
 # ADR-0001 — Component repo wiring is a declared, checkable fact

@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.5
+version: 1.6
 status: active
 maturity: 1.0
-updated: 2026-08-21
+updated: 2026-08-23
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -37,6 +37,13 @@ updated: 2026-08-21
 #   - enforcement: repo default branches set to work at seat creation; atlas-sync
 #     switches session + vault clone to work at start; release branch protected
 #   - dashboard: per-repo branch status (default vs policy, unreleased work, latest tag)
+# 1.6 (2026-08-23): wiring visibility (decisions/0001, extracted from an AgentEco
+#   component proposal — an unwired component must not be invisible from above).
+#   - source: in each io-graph component entry is the canonical clone URL of its code
+#     repo (never a machine path); machine paths are reportable drift
+#   - validator --check-wiring (opt-in, CI): a repo is WIRED iff its default branch has
+#     .atlas.conf with the matching SLUG and a committed AGENTS.md; warn-only
+#   - Wired column joins the dashboard estate table (branch status, tag, wiring)
 ---
 
 # Architecture-Above-Code (AAC)
@@ -214,7 +221,12 @@ branching:                     # this project's branch policy (§9) — declared
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
 components:
-  - {slug: agent-image, name: Agent Image, maturity: 0.2}
+  - slug: agent-image
+    name: Agent Image
+    maturity: 0.2
+    source: https://github.com/<org>/agent-image.git   # canonical clone URL of the code
+                          # repo — never a machine path (1.6+, decisions/0001); this is
+                          # what the estate table and --check-wiring resolve
   # ...
 edges:
   - from: agent-image          # provider (upstream)
@@ -227,6 +239,9 @@ edges:
 Component entries may carry an optional `sink: true` flag (terminal downstream sink —
 rendered distinctly in the graph). Note `role:` on a component entry is free prose;
 rendering semantics live in explicit flags, never inferred from slugs or prose.
+**`source:` is typed:** the component's clone URL, resolvable from any machine. A machine
+path here is drift, reported like any other (a component you cannot address is a component
+you cannot check).
 
 From the graph, each component's reading list is fully determined:
 - **My inputs** = the `docs/provides/` of every component where `to == me`.
@@ -308,6 +323,17 @@ and prints a **drift report** (every edge where `pinned ≠ latest`; exit non-ze
 drift — run it as a CI gate on the vault repo, on push and nightly, so drift surfaces with
 no local machine switched on). It also lists live-folder documents whose names fall outside
 the **naming canon** (§4) — warn-only; `archive/` and `_triage/` are never checked.
+
+**`--check-wiring`** (opt-in; decisions/0001) extends the estate table with a **Wired**
+column: for each component it fetches `.atlas.conf` and `AGENTS.md` from the `source:`
+remote's default branch (blobless shallow clone — refs plus two blobs) and reports
+wired / unwired / unaddressable. A repo is **wired** iff `.atlas.conf` carries the
+matching `SLUG` and `AGENTS.md` is committed — what a fresh clone anywhere gets, not
+what a local checkout claims. **Warn-only, always**: a component may be unwired while
+being brought up; it may not be unwired *invisibly*. CI runs the flag (it has the
+network and the credentials); plain local runs stay offline apart from the cheap
+ref-level branch checks (§9). Wiring is the owning component's own act, in its own
+repo — never installed centrally on its behalf (golden rule 2 is about ownership).
 
 A second mode serves the session protocol (§6): **`--emit-context <slug>`** reads the
 component's committed `io-manifest.yml` and concatenates the five protocol reads into one

@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.4
+version: 2.5
 status: active
 maturity: 1.0
-updated: 2026-08-22
-supersedes: 2.3
+updated: 2026-08-23
+supersedes: 2.4
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -23,6 +23,8 @@ supersedes: 2.3
 #   filenames follow the naming canon (AAC-method §4).
 # 2.4 (2026-08-22): method 1.5 — branch policy: seat setup sets the repo default branch
 #   to the vault's declared work branch; atlas-sync applies the policy every session.
+# 2.5 (2026-08-23): method 1.6 — source: (clone URL) required on the io-graph component
+#   entry at registration; wiring is checked from above (--check-wiring, decisions/0001).
 ---
 
 # Component Init Brief
@@ -55,8 +57,11 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
 ### In the vault (via a clone of the vault repo)
 
-1. **Register.** Add an edge-free entry to `registry/io-graph.yml` under `components:` and
-   create `components/<slug>/component.md` with this frontmatter:
+1. **Register.** Add an edge-free entry to `registry/io-graph.yml` under `components:` —
+   `{slug: <slug>, name: <Display Name>, maturity: 0.1, source: <clone URL of the code
+   repo>}`. `source:` is the canonical, resolvable address of your code (never a machine
+   path — it is what the estate table and the wiring check resolve; AAC-method §5).
+   Then create `components/<slug>/component.md` with this frontmatter:
    ```yaml
    ---
    name: <Display Name>
