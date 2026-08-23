@@ -24,7 +24,11 @@ jobs:
         # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
         # If the method repo is private, this checkout also needs a `token:` with access.
       - run: pip install -r .atlas-method/tools/requirements.txt
-      - run: python .atlas-method/tools/atlas_validate.py .
+        # --check-wiring fetches .atlas.conf/AGENTS.md from each component's source:
+        # remote (decisions/0001; warn-only). Public repos work with no setup; if any
+        # component repo is PRIVATE, give git a token first, e.g.:
+        #   git config --global url."https://x-access-token:${{ secrets.ATLAS_ESTATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: python .atlas-method/tools/atlas_validate.py . --check-wiring
       - name: Commit derived views
         run: |
           git config user.name  "atlas-bot"

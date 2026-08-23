@@ -14,6 +14,11 @@ Emits   registry/graph.md                (Mermaid diagram + edge table)
 Prints  a drift report, plus warn-only naming-canon notes for live-folder documents
         (AAC-method §4; archive/ and _triage/ are skipped). Exit 1 on breaking
         (major) drift, else 0 — naming never affects the exit code.
+With    --check-wiring (opt-in; decisions/0001): also verifies each component repo is
+        wired — default branch has .atlas.conf with the matching SLUG and a committed
+        AGENTS.md, fetched from its source: URL. Warn-only; adds the Wired column to
+        the dashboard estate table. CI runs this; plain local runs stay offline apart
+        from the cheap ref-level branch checks.
 
 Context mode (--emit-context <slug>)
 Reads   registry/.compiled/<slug>/io-manifest.yml   (run validate mode first)
@@ -33,6 +38,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -187,32 +193,94 @@ def remote_repo_info(url: str, *branches: str) -> dict | None:
     return info
 
 
-def gen_branch_section(graph) -> tuple[str, list[str]]:
-    """-> (dashboard markdown, console lines) for the per-repo branch status
-    (AAC-method §9, branch policy). Network state at regen time; unreachable
-    repos degrade to a note, never an error."""
+def component_source(graph, c) -> str:
+    """The component's clone URL. Canonical home: its io-graph entry (§5, 1.6+);
+    component.md frontmatter is the fallback for pre-1.6 vaults."""
+    fm = parse_frontmatter(ROOT / "components" / c["slug"] / "component.md")
+    return str(c.get("source") or fm.get("source") or "")
+
+
+def check_wiring(graph) -> dict:
+    """slug -> (emoji, label): is the component's code repo actually wired into the
+    protocol? (decisions/0001; opt-in via --check-wiring.) A repo is WIRED iff its
+    default branch root has .atlas.conf with SLUG == the component's slug, and a
+    committed AGENTS.md — what a fresh clone anywhere gets, not what a local
+    checkout claims. Content fetch is a blobless shallow clone + two blob reads.
+    Warn-only, always: a component may be unwired while being brought up; it may
+    not be unwired invisibly."""
+    results = {}
+    for c in graph["components"]:
+        slug = c["slug"]
+        url = component_source(graph, c)
+        if not ("://" in url or url.startswith("git@")):
+            results[slug] = ("⚪", "unaddressable — `source:` is not a clone URL")
+            continue
+        with tempfile.TemporaryDirectory() as td:
+            if run_git(["clone", "--depth", "1", "--filter=blob:none", "--no-checkout",
+                        "--quiet", url, td], timeout=30) is None:
+                results[slug] = ("⚪", "unreachable at check time")
+                continue
+            conf = run_git(["-C", td, "show", "HEAD:.atlas.conf"])
+            agents = run_git(["-C", td, "show", "HEAD:AGENTS.md"])
+        if conf is None and agents is None:
+            results[slug] = ("🔴", "unwired — no `.atlas.conf`/`AGENTS.md` on the default branch")
+            continue
+        m = re.search(r'^SLUG="?([^"\r\n]*)"?', conf or "", re.MULTILINE)
+        repo_slug = m.group(1) if m else None
+        if conf is None:
+            results[slug] = ("🔴", "unwired — `AGENTS.md` present but no `.atlas.conf`")
+        elif repo_slug != slug:
+            results[slug] = ("🔴", f"unwired — `.atlas.conf` SLUG `{repo_slug or '?'}` ≠ `{slug}`")
+        elif agents is None:
+            results[slug] = ("🔴", "unwired — `.atlas.conf` present but no committed `AGENTS.md`")
+        else:
+            results[slug] = ("🟢", "wired")
+    return results
+
+
+def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str]]:
+    """-> (dashboard markdown, console lines): the per-repo estate table — branch
+    status (AAC-method §9) plus, when --check-wiring ran, the Wired column
+    (decisions/0001). Network state at regen time; unreachable repos degrade to a
+    note, never an error."""
     pol = graph.get("branching") or {}
     work, release = pol.get("work"), pol.get("release")
+    console = []
+
+    def wired_cell(name):
+        if wiring is None:
+            return "–"
+        if name not in wiring:
+            return "—"
+        emoji, label = wiring[name]
+        if emoji != "🟢":
+            console.append(f"  {emoji} wiring  {name}: {label}")
+        return f"{emoji} {label}"
+
     if not work:
         line = ("no `branching:` policy in io-graph.yml — declare `work:`/`release:` "
                 "(AAC-method §9; default template: work `dev`, release `main`)")
-        return f"**Branch policy:** ⚪ {line}", [f"  ⚪ branching  {line}"]
+        md = [f"**Branch policy:** ⚪ {line}"]
+        console.append(f"  ⚪ branching  {line}")
+        if wiring is not None:
+            md += ["", "| Repo | Wired |", "|---|---|"]
+            md += [f"| {s} | {wired_cell(s)} |" for s in wiring]
+        return "\n".join(md), console
     head = (f"**Branch policy:** work `{work}`"
             + (f" → release `{release}` (merged by the architecture session at periodic review)"
                if release else ""))
-    md = [head, "", "| Repo | Default branch | Work vs release | Latest tag |", "|---|---|---|---|"]
-    console = [f"  🧭 branching  work {work}" + (f" -> release {release}" if release else "")]
+    md = [head, "", "| Repo | Default branch | Work vs release | Latest tag | Wired |",
+          "|---|---|---|---|---|"]
+    console.append(f"  🧭 branching  work {work}" + (f" -> release {release}" if release else ""))
     repos = [("vault", (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip())]
-    for c in graph["components"]:
-        fm = parse_frontmatter(ROOT / "components" / c["slug"] / "component.md")
-        repos.append((c["slug"], str(fm.get("source") or c.get("source") or "")))
+    repos += [(c["slug"], component_source(graph, c)) for c in graph["components"]]
     for name, url in repos:
         if not ("://" in url or url.startswith("git@")):
-            md.append(f"| {name} | — | _no source URL_ | — |")
+            md.append(f"| {name} | — | _no source URL_ | — | {wired_cell(name)} |")
             continue
         info = remote_repo_info(url, work, release)
         if info is None:
-            md.append(f"| {name} | — | _unreachable at regen_ | — |")
+            md.append(f"| {name} | — | _unreachable at regen_ | — | {wired_cell(name)} |")
             continue
         d = info["default"] or "?"
         d_cell = f"`{d}` 🟢" if d == work else f"`{d}` 🔴 policy: `{work}`"
@@ -223,7 +291,7 @@ def gen_branch_section(graph) -> tuple[str, list[str]]:
             wr = "—" if release is None else f"no `{release}` branch"
         else:
             wr = "in sync" if w == r else "unreleased changes on work"
-        md.append(f"| {name} | {d_cell} | {wr} | {info['tag'] or '—'} |")
+        md.append(f"| {name} | {d_cell} | {wr} | {info['tag'] or '—'} | {wired_cell(name)} |")
         if d != work or w is None:
             console.append(f"  🔴 branch  {name}: default '{d}', policy '{work}'"
                            + ("" if w else f" (no {work} branch)"))
@@ -458,7 +526,7 @@ def emit_context(slug: str, out: str | None) -> int:
     return 0
 
 
-def main() -> int:
+def main(wiring_flag: bool = False) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if not (ROOT / "registry" / "io-graph.yml").exists():
@@ -491,7 +559,8 @@ def main() -> int:
     print("regenerated registry/graph.md")
 
     m_emoji, m_label = method_drift(graph)
-    branch_md, branch_console = gen_branch_section(graph)
+    wiring = check_wiring(graph) if wiring_flag else None
+    branch_md, branch_console = gen_branch_section(graph, wiring)
     drift_table = "\n".join(
         [f"**Method:** {m_emoji} {m_label}", "", branch_md, "",
          "| Edge (provider → consumer) | Interface | Pinned | Latest | State |", "|---|---|---|---|---|"]
@@ -550,6 +619,9 @@ if __name__ == "__main__":
                     help="project-vault root (default: cwd)")
     ap.add_argument("--emit-context", metavar="SLUG",
                     help="emit the component's ATLAS-CONTEXT.md instead of validating")
+    ap.add_argument("--check-wiring", action="store_true",
+                    help="also check each component repo is wired (fetches .atlas.conf "
+                         "and AGENTS.md from its source: remote; warn-only; decisions/0001)")
     ap.add_argument("--out", metavar="PATH",
                     help="with --emit-context: write to PATH instead of stdout")
     args = ap.parse_args()
@@ -560,4 +632,4 @@ if __name__ == "__main__":
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.exit(emit_context(args.emit_context, args.out))
-    sys.exit(main())
+    sys.exit(main(args.check_wiring))
