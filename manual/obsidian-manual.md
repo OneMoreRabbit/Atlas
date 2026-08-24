@@ -30,13 +30,13 @@ One Obsidian vault per repo. The Git plugin is configured per vault.
 
 ## 3. Windows — per project
 
+All repos live flat in `B:\_obsidian\`.
+
 1. Open cmd:
    ```cmd
-   cd /d D:\
-   mkdir Obsidian\<Project>
-   cd /d D:\Obsidian\<Project>
-   git clone https://github.com/<org>/Nav-<Project>.git
-   git clone --branch dev https://github.com/<org>/Atlas-<Project>.git
+   cd /d B:\_obsidian
+   git clone https://github.com/OneMoreRabbit/Nav-<Project>.git
+   git clone --branch dev https://github.com/OneMoreRabbit/Atlas-<Project>.git
    ```
    (First private-repo clone opens a browser to authenticate; cached after.)
 2. Verify branches:
@@ -62,7 +62,7 @@ One Obsidian vault per repo. The Git plugin is configured per vault.
 
 1. Install **GitSync** by ViscousPotential ([Play Store](https://play.google.com/store/apps/details?id=com.viscouspot.gitsync) / [F-Droid](https://f-droid.org/en/packages/com.viscouspot.gitsync/)).
 2. Add the repo (GitHub OAuth on first use).
-3. Clone folder: `Internal storage/Obsidian/<Project>/<Repo>`.
+3. Clone folder: `Internal storage/_obsidian/<Repo>` (mirror the Windows layout).
 4. Set the branch per §1.
 5. Enable background sync (schedule / on-app-close / widget).
 6. In Obsidian: open the repo folder as a vault.
@@ -80,7 +80,7 @@ One Obsidian vault per repo. The Git plugin is configured per vault.
 
 ## 6. Troubleshooting
 
-- **`cd` does nothing (cmd):** use `cd /d "D:\..."`.
+- **`cd` does nothing (cmd):** use `cd /d B:\_obsidian` — plain `cd` doesn't change drive.
 - **Wrong branch cloned:** `git -C <Repo> switch dev`, then fix the branch in the plugin/GitSync.
 - **`gh` prompt errors in Git Bash:** run `gh auth login` in cmd/PowerShell once, or prefix `winpty`.
 - **File over 100 MB rejected:** gitignore the attachments folder; sync it out of band (no LFS on mobile).
@@ -116,6 +116,6 @@ project". These steps are for a plain vault.)
    ```
    (Atlas vaults: never ignore `registry/.compiled/`.)
 3. `git add -A` → check the staged count is sane (`git status --short | wc -l`) → `git commit -m "initial vault"`.
-4. Push: `gh repo create <org>/<Repo> --private --source=. --remote=origin --push`
+4. Push: `gh repo create OneMoreRabbit/<Repo> --private --source=. --remote=origin --push`
    — or create the repo on github.com **empty** (no README/licence), then
    `git remote add origin <url>` and `git push -u origin main`.
