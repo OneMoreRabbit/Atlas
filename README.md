@@ -17,6 +17,7 @@ contract drift on each project's dashboard.
 - [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/`: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`.
 - [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
 - [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
+- [`bridge-init.md`](bridge-init.md) — the human/AI interface: `_bridge/` in each project's `Nav-<Project>` vault (owner-tagged tasks + threads), the one place AI writes in the human's idea space. Deliberately simple; iterated from practice.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
 
@@ -88,6 +89,10 @@ so declare it only once the vault actually conforms:
    `registry/io-graph.yml` (default `work: dev`, `release: main`); set every repo's
    default branch to `work` and protect `release` (PRs only). From then on `atlas-sync`
    puts every session on the right branch and the dashboard shows per-repo branch status.
-9. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
+9. **Open the bridge** (1.7+). Owner renames `Dev-<Project>` → `Nav-<Project>`; the
+   arch seat creates `_bridge/` (tasks + threads) per [`bridge-init.md`](bridge-init.md)
+   and adds the Nav vault to its reading list (write `_bridge/` only, read what tasks
+   point at).
+10. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
    run the validator there once and commit the derived views) so the compiled manifests
    reflect the upgraded state.

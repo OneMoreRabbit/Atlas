@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.6
+version: 1.7
 status: active
 maturity: 1.0
-updated: 2026-08-23
+updated: 2026-08-24
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -44,6 +44,13 @@ updated: 2026-08-23
 #   - validator --check-wiring (opt-in, CI): a repo is WIRED iff its default branch has
 #     .atlas.conf with the matching SLUG and a committed AGENTS.md; warn-only
 #   - Wired column joins the dashboard estate table (branch status, tag, wiring)
+# 1.7 (2026-08-24): the bridge — the human/AI interface, kept deliberately simple.
+#   - Nav-<Project> (formerly Dev-<Project>): the human's idea vault. Poles: Nav =
+#     direction (ideas, decisions, judgment), Atlas = implementation; ideation/design
+#     is mutual discussion — it happens on the bridge.
+#   - _bridge/ in the Nav vault (tasks.md with per-item owners, threads/, archive/) is
+#     the ONE place AI writes in Nav; see bridge-init.md. Guards/dashboard counts
+#     deliberately deferred until practice settles.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -414,6 +421,19 @@ every point where a session meets a repo:
   periodic review), and the latest release tag. Misalignment is visible red, but
   branch status never fails the run — it is seat configuration, not contract truth.
 
+### The bridge — where direction meets implementation
+
+Beside every project's Atlas vault sits a **Nav vault** (`Nav-<Project>`) — the human's
+idea space: sketches, half-ideas, canvases, messy by right and edited by the human
+alone. The poles are **Nav = direction** (ideas, priorities, decisions, judgment) and
+**Atlas = implementation** (analysis, structure, execution); ideation and design are
+mutual, and the mutual part happens on the **bridge**: `_bridge/` at the Nav vault
+root — an owner-tagged task list plus append-only conversation threads, the one
+declared place the AI writes in a Nav vault, read by the arch seat every session.
+Direction agreed on the bridge is carried into the Atlas vault by the arch seat as
+proposals, contracts, and ADRs — the bridge is where architecture is *agreed*, never
+where it is *recorded*. Structure, rules, and setup: [[bridge-init]].
+
 ### The write model — golden rule 2, mechanical
 
 One vault, many writers, safe because writes are to **disjoint paths**. The same
@@ -469,3 +489,7 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 - **Drift** — `pinned < latest`. Patch/minor = informational; major = review required.
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.
+- **Nav vault** — `Nav-<Project>`: the human's idea space beside the Atlas vault.
+  Human-edited only, trunk-only, exempt from canon and ceremony.
+- **Bridge** — `_bridge/` in the Nav vault: the human/AI interface (owner-tagged
+  tasks + threads); the one place the AI writes in a Nav vault. See [[bridge-init]].
