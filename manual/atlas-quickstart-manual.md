@@ -1,49 +1,43 @@
 ---
-title: Atlas Quickstart — the operator's view
+title: Atlas Quickstart — the operator's reference
 interface: atlas-quickstart-manual
-version: 1.0
+version: 1.1
 status: active
 updated: 2026-08-24
+supersedes: 1.0
+# 1.1: cut narrative; lookup tables + step pointers only.
 ---
 
 # Atlas Quickstart
 
-The human operator's view of an Atlas-run project: what the repos are, where you act,
-and where everything else happens without you. Setup detail lives in the referenced
-docs — this page points, it doesn't duplicate.
+## The repos
 
-## The fleet — four repo classes per project
-
-| Repo | What it is | Who edits | Branch you're on |
+| Repo | Contents | Who edits | Your branch |
 |---|---|---|---|
-| `Atlas` (this repo) | the method: spec, tools, templates, manuals | the method seat | n/a — vaults pin a release tag |
-| `Atlas-<Project>` | the project vault: constitution, ADRs, io-graph, contracts, dashboard | AI seats (write model); **you review, never edit** | `dev` (work) |
-| `Nav-<Project>` | your idea space: sketches, canvases, half-ideas — messy by right | **you; AI writes only `_bridge/`** | `main` (trunk-only) |
-| one code repo per component | the code + its committed Atlas half | its component seat | `dev` (work) |
+| `Atlas` | the method: spec, tools, templates, manuals | method seat | n/a (vaults pin a tag) |
+| `Atlas-<Project>` | vault: constitution, ADRs, io-graph, contracts, dashboard | AI seats — you review PRs, never edit | `dev` |
+| `Nav-<Project>` | your ideas; AI writes `_bridge/` only | you | `main` |
+| code repos (per component) | code + committed Atlas half | component seats | `dev` |
 
-## Your day
+## Daily
 
-- **The bridge** — `Nav-<Project>/_bridge/` (sorts first in Obsidian). `tasks.md`: tick
-  and add `@nav` items, drop `@atlas` asks. `threads/`: durable conversations — ideas,
-  decisions, disagreements go here, not into chat history. Rules: [[bridge-init]].
-- **The dashboard** — `Atlas-<Project>/dashboard.md`: method pin, per-repo estate
-  (branch policy, unreleased work, wiring), contract drift. Red means "look", not
-  necessarily "act".
-- **Vault PRs** — outbox-only PRs auto-merge; PRs touching `architecture/proposals/`
-  or `registry/io-graph.yml` wait for **you** (or your arch seat) — that's proposing,
-  the one ceremony the method keeps.
-- **Periodic review** — one sitting: walk the bridge threads, accept/reject ADRs,
-  merge `dev → main` across the project repos (the release/deploy signal).
+1. `Nav-<Project>/_bridge/tasks.md` — tick/add `@nav` items; add `@atlas` asks.
+2. `_bridge/threads/` — durable conversations; decisions go here, not chat.
+3. `Atlas-<Project>/dashboard.md` — method pin, estate (branches, wiring), drift.
+4. Vault PRs: outbox-only auto-merge; review only `architecture/proposals/**` and `registry/io-graph.yml` PRs.
 
-## Where things go
+## Periodic review (one sitting)
 
-Idea → Nav vault, anywhere. Direction, decision, or ask → `_bridge/`. Architecture →
-never written by you: it arrives in the Atlas vault via the seats, traceable to what
-was agreed on the bridge.
+1. Walk open `_bridge/threads/`; resolve or reply.
+2. Accept/reject ADR proposals.
+3. Merge `dev → main` across project repos (the release/deploy signal).
 
-## Setup pointers
+## Task → doc
 
-- New project: `README.md` → "Starting a new project" (vault seed, CI, branches, pin).
-- New component: [[component-init]] (registration + the code-repo half).
-- Upgrading a vault to a new method release: `README.md` → "Upgrading an existing vault".
-- Obsidian on desktop and phone: [[obsidian-manual]].
+| Task | Doc |
+|---|---|
+| New project | `README.md` → "Starting a new project" |
+| New component | [[component-init]] |
+| Upgrade a vault to a new method release | `README.md` → "Upgrading an existing vault" |
+| Bridge setup / rules | [[bridge-init]] |
+| Obsidian on desktop/Android | [[obsidian-manual]] |
