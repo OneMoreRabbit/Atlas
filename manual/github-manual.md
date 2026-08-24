@@ -1,9 +1,11 @@
 ---
 title: GitHub — repo-scoped tokens for device sync and vault CI
 interface: github-manual
-version: 1.0
+version: 1.1
 status: active
 updated: 2026-08-24
+# 1.1: single PAT-creation procedure with a per-token values table (the two tokens
+#   were easy to cross-configure); §4 references it.
 ---
 
 # GitHub — tokens and access
@@ -12,16 +14,25 @@ Two jobs: (1) restrict Obsidian Git / GitSync to just the fleet repos instead of
 account-wide OAuth; (2) set `ATLAS_ESTATE_TOKEN` so vault CI's wiring check can
 reach private component repos.
 
-## 1. Create the device-sync token (fine-grained PAT)
+## 1. Create a fine-grained PAT (same procedure for both tokens)
 
-1. github.com → Settings → **Developer settings** → **Personal access tokens** →
-   **Fine-grained tokens** → *Generate new token*.
-2. Name: `obsidian-sync`. Resource owner: **OneMoreRabbit**.
-3. Expiration: 90 days — calendar the renewal.
-4. Repository access: **Only select repositories** → every `Nav-*` and `Atlas-*` vault.
-5. Permissions → Repository permissions → **Contents: Read and write**
-   (Metadata: Read-only is added automatically).
-6. Generate; copy the token now — it is shown once.
+1. Go to **github.com/settings/personal-access-tokens/new**
+   (= avatar → Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → *Generate new token*).
+2. Fill in the values **for the token you are creating**:
+
+   | Setting | `obsidian-sync` (device sync, §2–3) | `ATLAS_ESTATE_TOKEN` (vault CI, §4) |
+   |---|---|---|
+   | Token name | `obsidian-sync` | `atlas-estate` |
+   | Resource owner | **OneMoreRabbit** | **OneMoreRabbit** |
+   | Expiration | 90 days — calendar the renewal | 90 days — calendar the renewal |
+   | Repository access | *Only select repositories* → every `Nav-*` and `Atlas-*` vault | *Only select repositories* → every component **code** repo (the `source:` URLs in the vaults' io-graphs) |
+   | Permissions → Repository → Contents | **Read and write** | **Read-only** |
+
+   (Metadata: Read-only is added automatically in both cases.)
+3. **Generate token**; copy it now — it is shown once. Lost = regenerate, no harm.
+4. If **OneMoreRabbit** is missing from the Resource owner dropdown: org Settings →
+   Third-party Access → Personal access tokens → allow, then retry.
 
 ## 2. Windows — make git use the token
 
@@ -51,9 +62,8 @@ component's `source:` repo. The workflow's built-in token can only see the vault
 itself, so private component repos report "unreachable" until this is set. All
 component repos public → skip this section.)
 
-1. Create a second fine-grained PAT: name `atlas-estate`, resource owner
-   **OneMoreRabbit**, repository access: the component **code** repos,
-   permissions → **Contents: Read-only**. Copy it.
+1. Create the `atlas-estate` token per §1 (right-hand column: component code repos,
+   Contents **Read-only**). Copy it.
 2. In **each** `Atlas-<Project>` vault repo: Settings → **Secrets and variables** →
    **Actions** → *New repository secret* → Name: `ATLAS_ESTATE_TOKEN` (exact) →
    paste → Add secret.
@@ -77,8 +87,6 @@ component repos public → skip this section.)
   remove `git:https://github.com` in Credential Manager and pull again.
 - **403 on a specific repo:** the repo isn't in the token's repository list — edit
   the token's Repository access.
-- **"Fine-grained tokens not available" for OneMoreRabbit:** org Settings →
-  Third-party Access → Personal access tokens → allow fine-grained PATs.
 - **Wiring still "unreachable" after §4:** secret name must be exactly
   `ATLAS_ESTATE_TOKEN`; the workflow step must run before the validator; re-run the
   workflow after any edit.
