@@ -27,6 +27,20 @@ case "$OUT" in
     exit 2 ;;
 esac
 
+# The briefing must come from the WORK branch. 1.11 rightly leaves an in-progress
+# atlas/<slug>/<topic> publish branch alone at sync — but a briefing compiled from it
+# is silently historical (stale pins, an accepted ADR still shown as proposed).
+# Warn loudly, in the briefing itself, so the session cannot miss it.
+BWORK=$(awk '/^branching:/{b=1;next} b&&/^[^ ]/{b=0} b&&/work:/{gsub(/[^A-Za-z0-9._\/-]/,"",$2); print $2; exit}' \
+        "$ATLAS_VAULT/registry/io-graph.yml" 2>/dev/null || true)
+VBR=$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+if [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ] && [ "$VBR" != "HEAD" ]; then
+  echo "atlas-context: WARNING — briefing compiled from vault branch '$VBR', not work branch '$BWORK' (may be historical)" >&2
+  OUT=$(printf '%s\n\n%s' \
+    "> ⚠⚠ **STALE SOURCE** — this briefing was compiled from vault branch \`$VBR\`, not the work branch \`$BWORK\`. Pins, ADRs and contracts may be historical. Finish or park the publish, switch the vault clone to \`$BWORK\`, and re-run \`sh scripts/atlas-context.sh\` before relying on this." \
+    "$OUT")
+fi
+
 # Report the size of what we inject. Growth here is a defect in the io-graph,
 # not a fact of life — the retrieval invariant is only worth anything if measured.
 printf '%s' "$OUT" | wc -c |

@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.11"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.12"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -82,6 +82,14 @@ updated: 2026-08-24
 #     repos read "unreachable at regen" while being perfectly reachable
 #   - atlas-regen serialises (concurrency group) and rebases before pushing derived
 #     views, with fetch-depth 0 — fixes the push race against merging component PRs
+# 1.12 (2026-08-25): four defects from AgentEco run-2 seat orientations.
+#   - atlas_init --verify no longer requires --vault-remote (the documented command
+#     exited 2), and no longer false-greens: --launch-dir is persisted to .atlas.conf
+#     ($HOME-relative) and read back; a defaulted launch dir WARNs that it proves nothing
+#   - a briefing compiled from a non-work vault branch (a parked publish) carries a loud
+#     STALE SOURCE header instead of being silently historical
+#   - multi-repo components: install is idempotent per repo (replace, never append) and
+#     the SessionStart briefing is deduplicated by slug; guards stay per-repo
 ---
 
 # Architecture-Above-Code (AAC)
