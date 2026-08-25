@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.6
+version: 2.7
 status: active
 maturity: 1.0
 updated: 2026-08-25
-supersedes: 2.5
+supersedes: 2.6
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -27,6 +27,9 @@ supersedes: 2.5
 #   entry at registration; wiring is checked from above (--check-wiring, decisions/0001).
 # 2.6 (2026-08-25): method 1.9 — --launch-dir for seats that start outside the repo, and
 #   --verify to prove the hooks actually fire (decisions/0002).
+# 2.7 (2026-08-25): method 1.12 — --launch-dir persisted to .atlas.conf ($HOME-relative)
+#   and read back by --verify; --verify needs no --vault-remote; multi-repo components
+#   dedupe the briefing by slug; a briefing from a non-work vault branch self-labels STALE.
 ---
 
 # Component Init Brief
@@ -106,12 +109,18 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    seat starting in the clone parent, for example — add `--launch-dir "$HOME/work"`.
    Otherwise the repo's `.claude/settings.json` is never loaded and every hook is
    silently inert: no context injection, and **no local write guard** (decisions/0002).
-   Then prove it, on the seat, before trusting the guard:
+   `--launch-dir` is persisted into `.atlas.conf` ($HOME-relative — the file is
+   committed), so later verifies check the real launch dir automatically. Then prove
+   it, on the seat, before trusting the guard:
    ```sh
-   python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url> --verify
+   python .atlas-method/tools/atlas_init.py --slug <slug> --verify
    ```
-   Non-zero means the hook layer is not live. "Wired" on the dashboard means *installed*
-   (decisions/0001); only `--verify` means *firing*.
+   Non-zero means the hook layer is not live; a WARN about a defaulted launch dir means
+   the verify proved nothing — re-install with `--launch-dir`. "Wired" on the dashboard
+   means *installed* (decisions/0001); only `--verify` means *firing*.
+   **A component spanning several code repos** (one slug, N repos): run the installer in
+   each repo. Guards and publish nags are per-repo; the SessionStart briefing is
+   per-slug — the installer skips a duplicate briefing automatically.
    `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
    gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
    re-running skips existing files (`--force` re-copies drifted scripts). Installing by

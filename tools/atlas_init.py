@@ -72,7 +72,80 @@ def hook_settings(repo: Path, absolute: bool) -> dict:
     return tpl
 
 
-def merge_settings(target: Path, tpl: dict, force: bool, written: list) -> None:
+def portable_launch_dir(launch_dir: Path) -> str:
+    """$HOME-relative when possible: .atlas.conf is COMMITTED, and the seat
+    convention (clone parent under $HOME) is shared across machines while the
+    absolute path is not (AAC-method §9)."""
+    try:
+        return "$HOME/" + launch_dir.relative_to(Path.home()).as_posix()
+    except ValueError:
+        print(f"  WARN   launch dir {launch_dir} is outside $HOME — stored as a "
+              "machine path in the committed .atlas.conf")
+        return launch_dir.as_posix()
+
+
+def persist_launch_dir(repo: Path, launch_dir: Path, written: list) -> None:
+    """Record where the agent launches, so --verify checks the real launch dir
+    instead of self-validating the default (the run-2 false-green)."""
+    conf = repo / ".atlas.conf"
+    if not conf.exists():
+        return
+    value = portable_launch_dir(launch_dir)
+    text = read(conf)
+    line = f'ATLAS_LAUNCH_DIR="{value}"'
+    if re.search(r"^ATLAS_LAUNCH_DIR=", text, re.MULTILINE):
+        text = re.sub(r"^ATLAS_LAUNCH_DIR=.*$", line, text, count=1, flags=re.MULTILINE)
+    else:
+        text = (text.rstrip("\n")
+                + "\n\n# Where the agent actually starts (persisted by atlas_init"
+                + " --launch-dir;\n# read by --verify). $HOME-relative on purpose —"
+                + " this file is committed.\n" + line + "\n")
+    with conf.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    written.append(conf)
+    print(f"  conf   ATLAS_LAUNCH_DIR={value}")
+
+
+def conf_launch_dir(repo: Path) -> Path | None:
+    conf = repo / ".atlas.conf"
+    if not conf.exists():
+        return None
+    m = re.search(r'^ATLAS_LAUNCH_DIR="?([^"\r\n]+)"?', read(conf), re.MULTILINE)
+    if not m:
+        return None
+    raw = m.group(1).replace("$HOME", str(Path.home()))
+    return Path(raw).expanduser().resolve()
+
+
+def context_hook_for_slug(launch_dir: Path, slug: str, exclude_root: Path):
+    """A SessionStart atlas-context hook for the same slug, installed from a DIFFERENT
+    repo at this launch dir (a multi-repo component). Its briefing is identical, so a
+    second one would inject the same context twice."""
+    dst = launch_dir / ".claude" / "settings.json"
+    if not dst.exists():
+        return None
+    try:
+        entries = json.loads(read(dst)).get("hooks", {}).get("SessionStart", [])
+    except json.JSONDecodeError:
+        return None
+    for entry in entries:
+        for hook in entry.get("hooks", []):
+            m = re.search(r'"([^"]+)/scripts/atlas-context\.sh"', hook.get("command", ""))
+            if not m:
+                continue
+            root = Path(m.group(1))
+            if root == exclude_root:
+                continue
+            sm = re.search(r'^SLUG="?([^"\r\n]*)"?',
+                           (root / ".atlas.conf").read_text(encoding="utf-8"),
+                           re.MULTILINE) if (root / ".atlas.conf").exists() else None
+            if sm and sm.group(1) == slug:
+                return root
+    return None
+
+
+def merge_settings(target: Path, tpl: dict, force: bool, written: list,
+                   repo_root: Path | None = None) -> None:
     """Merge the hooks into an existing settings.json; never clobber."""
     dst = target / ".claude" / "settings.json"
     if not dst.exists():
@@ -80,23 +153,37 @@ def merge_settings(target: Path, tpl: dict, force: bool, written: list) -> None:
         return
     current = json.loads(read(dst))
     hooks = current.setdefault("hooks", {})
-    added = 0
+    added = removed = 0
+
+    def is_this_repos(entry) -> bool:
+        # an atlas hook already pointing into THIS repo (absolute or project-dir form)
+        cmds = " ".join(h.get("command", "") for h in entry.get("hooks", []))
+        if "atlas-" not in cmds:
+            return False
+        return (repo_root is not None and f"{repo_root.as_posix()}/scripts/" in cmds) \
+            or "${CLAUDE_PROJECT_DIR}/scripts/" in cmds
+
     for event, entries in tpl["hooks"].items():
         bucket = hooks.setdefault(event, [])
+        # idempotency per repo: replace, never append, this repo's own entries
+        stale = [e for e in bucket if is_this_repos(e) and e not in entries]
+        for e in stale:
+            bucket.remove(e)
+            removed += 1
         for entry in entries:
             if entry not in bucket:
                 bucket.append(entry)
                 added += 1
-    if added:
+    if added or removed:
         with dst.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(json.dumps(current, indent=2) + "\n")
         written.append(dst)
-        print(f"  merge  {dst} (+{added} hook entr{'y' if added == 1 else 'ies'})")
+        print(f"  merge  {dst} (+{added}/-{removed} hook entries)")
     else:
         print(f"  ok     {dst} (hooks already wired)")
 
 
-def verify(repo: Path, slug: str, launch_dir: Path) -> int:
+def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     """End-to-end check that the hook layer will actually fire (decisions/0002).
 
     On disk != in force: a repo can carry .atlas.conf and AGENTS.md, report itself
@@ -109,7 +196,22 @@ def verify(repo: Path, slug: str, launch_dir: Path) -> int:
         ok = ok and good
         print(f"  {'PASS' if good else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
 
-    print(f"atlas_init --verify: repo {repo}, launch dir {launch_dir}")
+    defaulted = False
+    if launch_dir is None:
+        launch_dir = conf_launch_dir(repo)
+        if launch_dir is not None:
+            src = "from .atlas.conf ATLAS_LAUNCH_DIR"
+        else:
+            launch_dir, defaulted = repo, True
+            src = "DEFAULTED to the repo"
+    else:
+        src = "from --launch-dir"
+    print(f"atlas_init --verify: repo {repo}, launch dir {launch_dir} ({src})")
+    if defaulted:
+        print("  WARN  no --launch-dir given and no ATLAS_LAUNCH_DIR in .atlas.conf — "
+              "verifying against the repo itself. If the agent actually launches "
+              "elsewhere (a seat in the clone parent), this proves NOTHING: "
+              "re-install with --launch-dir, which also persists it for future runs.")
     conf = repo / ".atlas.conf"
     check(conf.exists(), ".atlas.conf present", "" if conf.exists() else str(conf))
     if conf.exists():
@@ -153,8 +255,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--slug", required=True, help="this component's Atlas slug")
-    ap.add_argument("--vault-remote", required=True,
-                    help="git URL of the project's Atlas-<Project> vault repo")
+    ap.add_argument("--vault-remote",
+                    help="git URL of the project's Atlas-<Project> vault repo "
+                         "(required for install; unused by --verify)")
     ap.add_argument("--project", help="project display name for AGENTS.md "
                     "(default: derived from the vault remote name)")
     ap.add_argument("--repo", default=".", help="target code-repo root (default: cwd)")
@@ -180,9 +283,12 @@ def main() -> int:
     if not repo.is_dir():
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
-    launch_dir = Path(args.launch_dir).resolve() if args.launch_dir else repo
     if args.verify:
-        return verify(repo, args.slug, launch_dir)
+        return verify(repo, args.slug,
+                      Path(args.launch_dir).resolve() if args.launch_dir else None)
+    if not args.vault_remote:
+        ap.error("--vault-remote is required (except with --verify)")
+    launch_dir = Path(args.launch_dir).resolve() if args.launch_dir else repo
     project = args.project or derive_project(args.vault_remote)
     written: list = []
     print(f"atlas_init: installing '{args.slug}' (project {project}) into {repo}")
@@ -225,9 +331,18 @@ def main() -> int:
     install(repo / ".claude" / "commands" / "atlas-publish.md",
             read(TEMPLATES / ".claude" / "commands" / "atlas-publish.md"),
             args.force, written)
-    merge_settings(repo, hook_settings(repo, absolute=False), args.force, written)
+    merge_settings(repo, hook_settings(repo, absolute=False), args.force, written,
+                   repo_root=repo)
     if launch_dir and launch_dir != repo:
-        merge_settings(launch_dir, hook_settings(repo, absolute=True), args.force, written)
+        tpl = hook_settings(repo, absolute=True)
+        other = context_hook_for_slug(launch_dir, args.slug, exclude_root=repo)
+        if other:
+            tpl["hooks"].pop("SessionStart", None)
+            print(f"  skip   SessionStart at {launch_dir} — slug '{args.slug}' briefing "
+                  f"already injected from {other} (multi-repo component: guards are "
+                  "per-repo, the briefing is per-slug)")
+        merge_settings(launch_dir, tpl, args.force, written, repo_root=repo)
+        persist_launch_dir(repo, launch_dir, written)
         print(f"  hooks  also installed at {launch_dir}/.claude/settings.json "
               "(absolute paths — the agent launches there, not in the repo)")
 
@@ -235,8 +350,8 @@ def main() -> int:
     print("  1. git add + commit these (AGENTS.md and .atlas.conf must be committed)")
     print("  2. sh scripts/atlas-context.sh   # sync + first ATLAS-CONTEXT.md")
     print("  3. register the component in the vault (component-init.md §1–3)")
-    print(f"  4. python {Path(__file__).name} --slug {args.slug} --vault-remote <url> "
-          "--verify   # confirm the hooks actually fire")
+    print(f"  4. python {Path(__file__).name} --slug {args.slug} --verify"
+          "   # confirm the hooks actually fire")
     return 0
 
 
