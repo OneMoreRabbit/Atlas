@@ -12,8 +12,19 @@ if [ -z "${ATLAS_VAULT_REMOTE:-}" ]; then
   exit 2
 fi
 
+# A refresh must never abort the session. With `set -e`, `pull --ff-only` on a branch
+# with no upstream (a local atlas/<slug>/<topic> publish branch) or on a detached HEAD
+# exits non-zero and kills the hook before anything below runs — the read half dying
+# for a write-side reason. Fetch instead, and only ever warn.
 if [ -d "$ATLAS_VAULT/.git" ]; then
-  git -C "$ATLAS_VAULT" pull --ff-only
+  if git -C "$ATLAS_VAULT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+    git -C "$ATLAS_VAULT" pull --ff-only ||
+      echo "atlas-sync: WARN vault pull failed — continuing on the current checkout" >&2
+  else
+    git -C "$ATLAS_VAULT" fetch --prune origin >/dev/null 2>&1 ||
+      echo "atlas-sync: WARN vault fetch failed — continuing offline" >&2
+    echo "atlas-sync: vault clone on '$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD)' has no upstream — fetched, not pulled" >&2
+  fi
 else
   git clone --depth 1 "$ATLAS_VAULT_REMOTE" "$ATLAS_VAULT"
 fi
@@ -33,7 +44,8 @@ elif [ -n "$REF" ]; then
   git -C "$ATLAS_METHOD" checkout -q "$REF" 2>/dev/null ||
     echo "atlas-sync: WARN method tag $REF unavailable — using current checkout" >&2
 else
-  git -C "$ATLAS_METHOD" pull --ff-only
+  git -C "$ATLAS_METHOD" pull --ff-only ||
+    echo "atlas-sync: WARN method pull failed — continuing on the current checkout" >&2
 fi
 
 # Branch policy (AAC-method §9): the vault declares the project's branching model in
@@ -45,15 +57,19 @@ BWORK=$(awk '/^branching:/{b=1;next} b&&/^[^ ]/{b=0} b&&/work:/{gsub(/[^A-Za-z0-
 if [ -n "$BWORK" ]; then
   # the vault clone follows the policy branch too
   VCUR=$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
-  if [ "$VCUR" != "$BWORK" ] && [ "$VCUR" != "HEAD" ]; then
-    git -C "$ATLAS_VAULT" fetch --depth 1 origin "$BWORK:refs/remotes/origin/$BWORK" 2>/dev/null || true
-    if git -C "$ATLAS_VAULT" checkout -q "$BWORK" 2>/dev/null ||
-       git -C "$ATLAS_VAULT" checkout -q -b "$BWORK" "origin/$BWORK" 2>/dev/null; then
-      echo "atlas-sync: vault clone switched $VCUR -> $BWORK (branching policy)" >&2
-    else
-      echo "atlas-sync: WARN vault clone is on '$VCUR' but the policy work branch is '$BWORK'" >&2
-    fi
-  fi
+  case "$VCUR" in
+    "$BWORK"|HEAD) ;;                 # on policy, or detached (CI) — leave alone
+    atlas/*)                          # an in-progress publish branch is not policy drift
+      echo "atlas-sync: vault clone is on publish branch '$VCUR' — left as is" >&2 ;;
+    *)
+      git -C "$ATLAS_VAULT" fetch --depth 1 origin "$BWORK:refs/remotes/origin/$BWORK" 2>/dev/null || true
+      if git -C "$ATLAS_VAULT" checkout -q "$BWORK" 2>/dev/null ||
+         git -C "$ATLAS_VAULT" checkout -q -b "$BWORK" "origin/$BWORK" 2>/dev/null; then
+        echo "atlas-sync: vault clone switched $VCUR -> $BWORK (branching policy)" >&2
+      else
+        echo "atlas-sync: WARN vault clone is on '$VCUR' but the policy work branch is '$BWORK'" >&2
+      fi ;;
+  esac
   # this code repo works on the policy branch. Detached HEAD (CI checkouts) is exempt;
   # a missing branch is never invented — that is a seat-setup problem, reported loudly.
   CUR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)

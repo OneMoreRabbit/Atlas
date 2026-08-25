@@ -167,19 +167,33 @@ def method_drift(graph) -> tuple[str, str]:
     return "🟠", f"pinned {pin}, running method {mine} — re-pin deliberately"
 
 
-def run_git(args: list, timeout: int = 10) -> str | None:
+def run_git(args: list, timeout: int = 10, cwd: str | None = None) -> str | None:
     try:
         r = subprocess.run(["git", *args], capture_output=True, text=True, timeout=timeout,
-                           env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+                           cwd=cwd, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
         return r.stdout if r.returncode == 0 else None
     except (OSError, subprocess.TimeoutExpired):
         return None
 
 
+def run_git_remote(args: list, timeout: int = 30) -> str | None:
+    """Git against a REMOTE, run from outside any repository.
+
+    Never inherit the surrounding checkout's config. actions/checkout writes a
+    repo-local http.extraheader carrying the workflow's vault-scoped GITHUB_TOKEN;
+    inside that checkout it overrides the global insteadOf credential (the
+    ATLAS_ESTATE_TOKEN), so every probe of another private repo 403s and reports
+    "unreachable" while the repo is perfectly reachable. Diagnosed and reproduced by
+    the agent-skeleton seat, 2026-08-24.
+    """
+    with tempfile.TemporaryDirectory() as neutral:
+        return run_git(args, timeout=timeout, cwd=neutral)
+
+
 def remote_repo_info(url: str, *branches: str) -> dict | None:
     """Default branch, branch heads, and latest v-tag of a remote — via one ls-remote."""
     pats = ["HEAD"] + [f"refs/heads/{b}" for b in branches if b] + ["refs/tags/*"]
-    out = run_git(["ls-remote", "--symref", url, *pats])
+    out = run_git_remote(["ls-remote", "--symref", url, *pats])
     if out is None:
         return None
     info = {"default": None, "heads": {}, "tag": None}
@@ -223,8 +237,8 @@ def check_wiring(graph) -> dict:
             results[slug] = ("⚪", "unaddressable — `source:` is not a clone URL")
             continue
         with tempfile.TemporaryDirectory() as td:
-            if run_git(["clone", "--depth", "1", "--filter=blob:none", "--no-checkout",
-                        "--quiet", url, td], timeout=30) is None:
+            if run_git_remote(["clone", "--depth", "1", "--filter=blob:none",
+                               "--no-checkout", "--quiet", url, td]) is None:
                 results[slug] = ("⚪", "unreachable at check time")
                 continue
             conf = run_git(["-C", td, "show", "HEAD:.atlas.conf"])

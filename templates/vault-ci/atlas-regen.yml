@@ -14,6 +14,13 @@ on:
   schedule: [{ cron: "17 3 * * *" }]
 permissions: { contents: write }
 
+# Serialise runs: two regens racing (a merge landing while the nightly runs) both push
+# derived views to the same branch and one loses. Queue instead of cancelling — the
+# later run must still produce artefacts.
+concurrency:
+  group: atlas-regen-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   regen:
     runs-on: ubuntu-latest
@@ -35,4 +42,11 @@ jobs:
           git config user.email "atlas-bot@users.noreply.github.com"
           git add registry/graph.md dashboard.md 'components/*/component.md' registry/.compiled
           git diff --cached --quiet || git commit -m "atlas: regenerate derived views [skip ci]"
-          git push
+          # Rebase before pushing: a component PR can merge between checkout and push,
+          # and derived views are regenerated from merged truth, not owned by this run.
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || exit 1
+            git push && exit 0
+            echo "push rejected (attempt $attempt) — refetching"
+          done
+          echo "::error::atlas-regen could not push after 3 attempts"; exit 1
