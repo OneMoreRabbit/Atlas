@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.10"       # quoted: unquoted 1.10 is the YAML float 1.1
+version: "1.11"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -71,6 +71,17 @@ updated: 2026-08-24
 #     periodic routine, what to discuss with the arch seat, what a PR actually is
 #   - the escalation rule (§7, arch-seat 1.1): the arch seat decides structural and
 #     mechanical proposals; direction, cost or scope goes to the bridge
+# 1.11 (2026-08-25): three field defects from the AgentEco estate.
+#   - atlas-sync never aborts on a refresh: an unguarded `pull --ff-only` under `set -e`
+#     killed the whole SessionStart hook whenever the vault clone had incoming commits
+#     and local edits (the mid-publish state) — reproduced against v1.9
+#   - the vault clone is left alone on an atlas/<slug>/<topic> publish branch: the
+#     branch policy no longer yanks an in-progress publish onto the work branch
+#   - remote probes run from outside the checkout: actions/checkout's repo-local
+#     http.extraheader overrode the global ATLAS_ESTATE_TOKEN credential, so private
+#     repos read "unreachable at regen" while being perfectly reachable
+#   - atlas-regen serialises (concurrency group) and rebases before pushing derived
+#     views, with fetch-depth 0 — fixes the push race against merging component PRs
 ---
 
 # Architecture-Above-Code (AAC)
