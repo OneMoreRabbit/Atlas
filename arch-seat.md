@@ -1,10 +1,12 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.0
+version: 1.1
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
-updated: 2026-08-24
+updated: 2026-08-25
+supersedes: 1.0
+# 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
 ---
 
 # Arch Seat Protocol
@@ -48,6 +50,10 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    `_bridge/archive/`.
 2. Accept or reject `architecture/proposals/**`. Accepted → `architecture/decisions/`,
    update constitution / system-context / io-graph. Rejected → keep, `status: rejected`.
+   **Escalation rule:** decide purely structural or mechanical proposals yourself.
+   Anything that changes **direction, cost, or scope** goes to the bridge for `@nav` —
+   stated in plain words, not as a diff — and waits. Escalating a naming or
+   folder-placement question is a defect; so is deciding a scope question alone.
 3. Re-pin deliberately: method version, contract versions flagged as drift.
 4. Archive: answered proposals to `architecture/archive/proposals/` with a
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
