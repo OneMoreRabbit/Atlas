@@ -19,6 +19,7 @@ contract drift on each project's dashboard.
 - [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
 - [`bridge-init.md`](bridge-init.md) — the human/AI interface: `_bridge/` in each project's `Nav-<Project>` vault (owner-tagged tasks + threads), the one place AI writes in the human's idea space. Deliberately simple; iterated from practice.
 - [`manual/`](manual/) — the method's own operation plane (§3 applied to itself): [`atlas-quickstart-manual.md`](manual/atlas-quickstart-manual.md) — the human operator's view of the fleet; [`obsidian-manual.md`](manual/obsidian-manual.md) — vault ↔ GitHub sync on desktop (Git plugin) and Android (GitSync); [`github-manual.md`](manual/github-manual.md) — repo-scoped tokens for device sync + `ATLAS_ESTATE_TOKEN` for vault CI.
+- [`arch-seat.md`](arch-seat.md) — the architecture session's own protocol: what it owns, its every-session checklist (sweep component asks, answer the bridge, dashboard reds, review queue) and its periodic review.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
 

@@ -1,10 +1,13 @@
 ---
 title: Bridge Init — the human/AI interface of a project
 interface: bridge-init
-version: 1.0
+version: 1.1
 status: active
 maturity: 0.1        # deliberately simple; iterate from practice, not design
 updated: 2026-08-24
+supersedes: 1.0
+# 1.1: component asks route via their own needs/ outbox (nav- prefix), mirrored to the
+#   bridge by the arch seat — no component seat needs Nav-vault credentials.
 ---
 
 # Bridge Init
@@ -48,6 +51,28 @@ Nav-<Project>/_bridge/
 3. **The arch seat reads `_bridge/` every session and answers before it ends** —
    anything addressed `@atlas` gets a turn or a tick. It reads the wider Nav vault only
    where a task or thread points it (the human's idea space stays private by default).
+
+## Component asks — routed, not direct
+
+Component seats never write to a Nav vault. A component asking the human files it in
+**its own outbox**, where the CI guard already permits it and the PR auto-merges:
+
+```
+components/<slug>/docs/needs/nav-<slug>-<topic>-vX_Y.md
+```
+```yaml
+---
+to: nav          # required and explicit — a needs doc with no `to:` goes to everyone
+version: 0.1
+status: open
+---
+```
+
+The `nav-` prefix makes the arch seat's sweep one glob and clusters the asks in a
+folder listing. The arch seat mirrors each new one onto `tasks.md` as an `@nav` line
+linking the source file ([[arch-seat]] §Every session); you tick it on the bridge,
+which you own. Answers come back through the vault (ADR, contract, constitution) —
+never by editing the asking component's outbox.
 
 ## Setup (arch seat, one time — as part of the 1.7 upgrade)
 
