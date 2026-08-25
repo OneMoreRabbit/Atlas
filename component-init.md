@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.5
+version: 2.6
 status: active
 maturity: 1.0
-updated: 2026-08-23
-supersedes: 2.4
+updated: 2026-08-25
+supersedes: 2.5
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -25,6 +25,8 @@ supersedes: 2.4
 #   to the vault's declared work branch; atlas-sync applies the policy every session.
 # 2.5 (2026-08-23): method 1.6 — source: (clone URL) required on the io-graph component
 #   entry at registration; wiring is checked from above (--check-wiring, decisions/0001).
+# 2.6 (2026-08-25): method 1.9 — --launch-dir for seats that start outside the repo, and
+#   --verify to prove the hooks actually fire (decisions/0002).
 ---
 
 # Component Init Brief
@@ -100,6 +102,16 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    git clone --depth 1 <method-remote> .atlas-method    # bootstrap only; atlas-sync manages it after
    python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url>
    ```
+   **If the agent does not launch with this repo as its project directory** — a devagent
+   seat starting in the clone parent, for example — add `--launch-dir "$HOME/work"`.
+   Otherwise the repo's `.claude/settings.json` is never loaded and every hook is
+   silently inert: no context injection, and **no local write guard** (decisions/0002).
+   Then prove it, on the seat, before trusting the guard:
+   ```sh
+   python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url> --verify
+   ```
+   Non-zero means the hook layer is not live. "Wired" on the dashboard means *installed*
+   (decisions/0001); only `--verify` means *firing*.
    `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
    gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
    re-running skips existing files (`--force` re-copies drifted scripts). Installing by

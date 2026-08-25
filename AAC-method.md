@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.8
+version: 1.9
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -58,6 +58,14 @@ updated: 2026-08-24
 #     (docs/needs/nav-<slug>-<topic>-vX_Y.md, to: nav), mirrored to the bridge by the
 #     arch seat; no component seat holds Nav-vault credentials
 #   - archive convention: answered proposals carry a resolution: pointer
+# 1.9 (2026-08-25): the hook layer must not depend on the launch directory
+#   (decisions/0002 — a whole estate's guards were silently inert).
+#   - atlas_init --launch-dir <path>: hooks also installed where the agent actually
+#     starts, with absolute paths (that file is outside any repo, so nothing machine-
+#     specific is ever committed); the repo's own settings keep ${CLAUDE_PROJECT_DIR}
+#   - atlas_init --verify: end-to-end self-test — installed (decisions/0001) is not the
+#     same fact as firing, and only the seat can assert the second
+#   - write guard ignores absolute paths outside its own repo (multi-repo seats)
 ---
 
 # Architecture-Above-Code (AAC)
@@ -463,6 +471,12 @@ principle as the retrieval invariant in §6, applied to the write side:
   commits them after each merge (and nightly), so the compiled manifests reflect merged
   truth rather than the last publisher's local run. In a component session the validator
   runs as a **check only** (a red exit blocks publishing); its local output is discarded.
+- **A guard that cannot run is a guard that must be detected.** Installing the hook
+  layer is not the same fact as the hook layer firing: hooks load from the directory the
+  agent *launches* in, which on a seat is not always the repo. Install them where the
+  session actually starts (`atlas_init --launch-dir`) and prove it with
+  `atlas_init --verify` — an inert guard reads as protection and is worse than an absent
+  one (decisions/0002).
 - **Guards fail closed.** A guard that cannot parse its inputs — a path, a config value,
   a hook payload — must **deny, never allow**. Every fail-open found in this subsystem
   (stdin consumed by a heredoc, an un-normalised Windows path, a CRLF-mangled config)

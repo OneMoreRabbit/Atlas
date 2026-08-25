@@ -41,6 +41,15 @@ fi
 # unnormalised path would silently match nothing — allowing every vault write.
 P=$(printf '%s' "$P" | tr '\\' '/')
 V=$(printf '%s' "$ATLAS_VAULT" | tr '\\' '/')
+R=$(printf '%s' "$ATLAS_REPO_ROOT" | tr '\\' '/')
+
+# Only police writes belonging to THIS repo. A seat that launches in the clone
+# parent registers one guard per repo it holds (decisions/0002); without this,
+# sibling repo A's guard would deny a legitimate write in sibling repo B.
+case "$P" in
+  "$R"/*) ;;
+  /*) exit 0 ;;                                   # absolute, outside this repo
+esac
 
 case "$P" in
   *"/$V/"*) REL=${P#*"/$V/"} ;;

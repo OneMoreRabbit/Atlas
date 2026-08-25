@@ -7,7 +7,9 @@ pinned in the vault's `registry/io-graph.yml`. Never reference the vault by a ma
 
 **Before working:** read `ATLAS-CONTEXT.md` — injected by the SessionStart hook on every
 session start (including resume, `/clear`, compaction and fork). Regenerate any time with
-`sh scripts/atlas-context.sh`. It is your complete reading list: constitution, pinned
+`sh scripts/atlas-context.sh`. **If it is absent, your hooks are not live** — the write
+guard is not running either. Fix the install (`atlas_init --launch-dir`, then `--verify`);
+until then honour the write scope by hand. It is your complete reading list: constitution, pinned
 upstream contracts, consumers' needs, in-flight proposals, drift. Consult the wider vault
 only if the context is insufficient — and treat that as a defect in the vault's
 `registry/io-graph.yml`: fix the graph, don't browse.
