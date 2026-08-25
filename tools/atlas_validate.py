@@ -142,13 +142,20 @@ def method_drift(graph) -> tuple[str, str]:
     treatment (minor = informational, major = breaking). Run from a method checkout at
     the pinned tag, the two match and the row reads aligned; run from a newer checkout
     (CI checks out the method default branch = latest release), drift surfaces here."""
-    mine = parse_frontmatter(METHOD_ROOT / "AAC-method.md").get("version")
+    # Read as raw text, never through YAML: an unquoted 1.10 parses as the float 1.1
+    # and silently collides with release 1.1 (found on the 1.10 release itself).
+    vm = re.search(r'^version:\s*"?([0-9][0-9.]*)"?',
+                   (METHOD_ROOT / "AAC-method.md").read_text(encoding="utf-8"), re.MULTILINE)
+    mine = vm.group(1) if vm else None
     pin = (graph.get("method") or {}).get("pinned")
     if mine is None:
         return "⚪", "cannot read the method version beside this validator — skipped"
     if pin is None:
         return "🔴", (f"no method: pin in io-graph.yml — pin the latest release "
                       f"(this validator is method {mine})")
+    if isinstance(pin, float):
+        return "🔴", (f"method pin {pin} is an unquoted YAML number — ambiguous "
+                      f"(1.10 reads as 1.1). Quote it: pinned: '{mine}'")
     p, m = version_tuple(pin)[:2], version_tuple(str(mine))[:2]
     if p == m:
         return "🟢", f"pinned {pin} — aligned with the running method"

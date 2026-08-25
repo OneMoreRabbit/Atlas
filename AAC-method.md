@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.10
+version: "1.10"       # quoted: unquoted 1.10 is the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -243,7 +243,8 @@ edge list of a directed graph. Each edge pins the version the consumer builds ag
 ```yaml
 method:
   repo: https://github.com/OneMoreRabbit/Atlas.git
-  pinned: <latest vMAJOR.MINOR at seed time — resolve from the tags, never copy a literal (§9)>
+  pinned: '<latest MAJOR.MINOR at seed time — resolve from the tags, never copy a literal (§9)>'
+                             # ALWAYS quoted: unquoted 1.10 is the YAML float 1.1
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
@@ -266,6 +267,9 @@ edges:
 Component entries may carry an optional `sink: true` flag (terminal downstream sink —
 rendered distinctly in the graph). Note `role:` on a component entry is free prose;
 rendering semantics live in explicit flags, never inferred from slugs or prose.
+**Version values are quoted strings**, in this file and in every document's
+frontmatter: unquoted `1.10` is the YAML float `1.1` and silently collides with release
+1.1. The validator refuses to guess and reports an unquoted pin as red.
 **`source:` is typed:** the component's clone URL, resolvable from any machine. A machine
 path here is drift, reported like any other (a component you cannot address is a component
 you cannot check).
