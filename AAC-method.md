@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.7
+version: 1.8
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -51,6 +51,13 @@ updated: 2026-08-24
 #   - _bridge/ in the Nav vault (tasks.md with per-item owners, threads/, archive/) is
 #     the ONE place AI writes in Nav; see bridge-init.md. Guards/dashboard counts
 #     deliberately deferred until practice settles.
+# 1.8 (2026-08-24): the arch seat's own protocol — the last trust-based role written down.
+#   - arch-seat.md: scope table, every-session checklist (sweep asks, answer the bridge,
+#     dashboard reds, review queue) and a pull-driven periodic-review checklist
+#   - component -> human asks route through the component's OWN outbox
+#     (docs/needs/nav-<slug>-<topic>-vX_Y.md, to: nav), mirrored to the bridge by the
+#     arch seat; no component seat holds Nav-vault credentials
+#   - archive convention: answered proposals carry a resolution: pointer
 ---
 
 # Architecture-Above-Code (AAC)
@@ -303,7 +310,7 @@ When work in a component implies a change to **shared** architecture:
 
 1. The component drops an ADR in `architecture/proposals/NNNN-title.md`, `status: proposed`,
    listing `affects: [components]`.
-2. It is reviewed at the architecture level (you, or a designated reviewer).
+2. It is reviewed at the architecture level (the arch seat — [[arch-seat]]).
 3. If accepted: `status: accepted`, moved to `architecture/decisions/`, and the constitution
    / system-context / io-graph are updated. If rejected: `status: rejected`, kept for record.
 4. Because every component reads the same constitution, the decision propagates without
@@ -432,7 +439,9 @@ root — an owner-tagged task list plus append-only conversation threads, the on
 declared place the AI writes in a Nav vault, read by the arch seat every session.
 Direction agreed on the bridge is carried into the Atlas vault by the arch seat as
 proposals, contracts, and ADRs — the bridge is where architecture is *agreed*, never
-where it is *recorded*. Structure, rules, and setup: [[bridge-init]].
+where it is *recorded*. Structure, rules, and setup: [[bridge-init]] — including how component seats ask
+the human without ever holding Nav credentials. The arch seat's own duties, every
+session and at review, are [[arch-seat]].
 
 ### The write model — golden rule 2, mechanical
 
