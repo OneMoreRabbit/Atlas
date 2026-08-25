@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: 1.9
+version: 1.10
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -66,6 +66,11 @@ updated: 2026-08-24
 #   - atlas_init --verify: end-to-end self-test — installed (decisions/0001) is not the
 #     same fact as firing, and only the seat can assert the second
 #   - write guard ignores absolute paths outside its own repo (multi-repo seats)
+# 1.10 (2026-08-25): who operates this, and who decides.
+#   - manual/atlas-operating-manual.md replaces the quickstart: the human's daily and
+#     periodic routine, what to discuss with the arch seat, what a PR actually is
+#   - the escalation rule (§7, arch-seat 1.1): the arch seat decides structural and
+#     mechanical proposals; direction, cost or scope goes to the bridge
 ---
 
 # Architecture-Above-Code (AAC)
@@ -318,7 +323,9 @@ When work in a component implies a change to **shared** architecture:
 
 1. The component drops an ADR in `architecture/proposals/NNNN-title.md`, `status: proposed`,
    listing `affects: [components]`.
-2. It is reviewed at the architecture level (the arch seat — [[arch-seat]]).
+2. It is reviewed at the architecture level (the arch seat — [[arch-seat]]), which
+   decides structural and mechanical proposals itself and escalates anything changing
+   **direction, cost or scope** to the human on the bridge.
 3. If accepted: `status: accepted`, moved to `architecture/decisions/`, and the constitution
    / system-context / io-graph are updated. If rejected: `status: rejected`, kept for record.
 4. Because every component reads the same constitution, the decision propagates without
