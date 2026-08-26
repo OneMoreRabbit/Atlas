@@ -190,7 +190,7 @@ ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 - The architecture doc / development plan / status *about me* (design plane) → `docs/` root (NOTHING else lives in the root)
 - A user manual, operator manual, runbook, playbook, or setup guide (operation plane) → `docs/manual/`
 - A contract/interface *I provide* to others → `docs/provides/`
-- A request/need/feedback *I have* of an upstream → `docs/needs/`
+- A request/need/feedback *I have* of an upstream → `docs/needs/`, with `to:` naming the addressee's slug (delivery follows the addressee, not the edge)
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)
 - A design *spanning 2+ components* → `architecture/` (reference it from your contract; never keep a copy)
 - A retired MAJOR/MINOR version of any of the above → its `archive/` sibling

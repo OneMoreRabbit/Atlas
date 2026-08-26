@@ -127,6 +127,24 @@ def naming_warnings() -> list[str]:
     return warns
 
 
+def addressee_warnings(graph) -> list[str]:
+    """needs/ documents whose addressee matches no component (decisions/0003 §4).
+
+    Routing by addressee turns a typo into silent non-delivery, so an unroutable
+    addressee must be visible. Warn-only, like naming."""
+    slugs = [c["slug"] for c in graph.get("components", [])] + [BRIDGE_ADDRESSEE]
+    warns = []
+    for p in sorted(ROOT.glob("components/*/docs/needs/*.md")):
+        fm = parse_frontmatter(p)
+        named = addressee(fm)
+        if named is None or str(fm.get("status", "")).lower().startswith("superseded"):
+            continue
+        if not any(names_slug(named, s) for s in slugs):
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
+                         f"'{named}' matches no component; it will reach nobody")
+    return warns
+
+
 def edge_rows(graph, latest):
     rows = []
     for e in graph.get("edges", []):
@@ -435,14 +453,36 @@ def contract_at_pin(provides_dir: Path, interface: str, pinned: str):
     return p, ver, f"pinned {pinned} not found — showing latest {ver}; re-pin deliberately"
 
 
+# `to:` is canonical (AAC-method §3); `addressed-to:` is accepted because a
+# substantial minority of documents in the field use it, and an unrecognised key
+# used to fall through to "addressed to everyone" — fail-open in the selector
+# (Atlas decisions/0003, from AgentEco ADR-0008).
+ADDRESSEE_KEYS = ("to", "addressed-to", "addressed_to")
+BRIDGE_ADDRESSEE = "nav"  # the human, via the Nav vault bridge (AAC-method §9)
+
+
+def addressee(fm: dict) -> str | None:
+    """The addressee field of a needs/ doc, whichever spelling it uses; None if absent."""
+    for key in ADDRESSEE_KEYS:
+        val = fm.get(key)
+        if val is None:
+            continue
+        if isinstance(val, list):
+            return "; ".join(str(v) for v in val)
+        return str(val)
+    return None
+
+
+def names_slug(value: str, slug: str) -> bool:
+    """Does an addressee field name this slug? Substring, because the field is often
+    prose ("RBAC-compile workstream; platform / Ansible workstream")."""
+    return slug.lower() in value.lower()
+
+
 def addressed_to(fm: dict, slug: str) -> bool:
-    """A needs/ doc is in scope if its `to:` names the slug, or has no `to:` at all."""
-    to = fm.get("to")
-    if to is None:
-        return True
-    if isinstance(to, list):
-        to = "; ".join(str(t) for t in to)
-    return slug.lower() in str(to).lower()
+    """A needs/ doc is in scope if it names the slug, or names nobody at all."""
+    value = addressee(fm)
+    return True if value is None else names_slug(value, slug)
 
 
 def proposal_in_flight(fm: dict, slug: str) -> bool:
@@ -495,23 +535,34 @@ def emit_context(slug: str, out: str | None) -> int:
             sections += [f"{head}\n\n**Source:** `{path.relative_to(ROOT).as_posix()}` "
                          f"(version {ver})\n", read_doc(path)]
 
-    # 3. consumers' needs addressed to me
+    # 3. needs addressed to me — by addressee first, by edge only as the fallback.
+    # A document that names an addressee is delivered to that slug wherever it lives:
+    # the edge list says who my consumers are, not who may write to me (decisions/0003).
     sections.append("\n---\n\n# Consumer feedback — needs addressed to me\n")
-    seen_dirs, any_needs = set(), False
-    for fb in reading.get("consumer_feedback", []):
-        needs_dir = ROOT / fb["path"]
-        if needs_dir in seen_dirs:
-            continue
-        seen_dirs.add(needs_dir)
+    edge_dirs = {(ROOT / fb["path"]).resolve()
+                 for fb in reading.get("consumer_feedback", [])}
+    any_needs = False
+    for needs_dir in sorted(ROOT.glob("components/*/docs/needs")):
+        owner = needs_dir.relative_to(ROOT).parts[1]
+        if owner == slug:
+            continue                                   # my own outbox, not feedback to me
         for p in sorted(needs_dir.glob("*.md")):
             fm = parse_frontmatter(p)
             if str(fm.get("status", "")).lower().startswith("superseded"):
                 continue
-            if not addressed_to(fm, slug):
-                continue
+            named = addressee(fm)
+            if named is None:
+                # no addressee: keep the historic edge-scoped, fail-open behaviour
+                if needs_dir.resolve() not in edge_dirs:
+                    continue
+                why = "no addressee — delivered because {} is my consumer".format(owner)
+            else:
+                if not names_slug(named, slug):
+                    continue
+                why = f"addressed to `{named}`"
             any_needs = True
-            sections += [f"## From {fb['consumer']} — `{p.relative_to(ROOT).as_posix()}` "
-                         f"(version {fm.get('version', '?')})\n", read_doc(p)]
+            sections += [f"## From {owner} — `{p.relative_to(ROOT).as_posix()}` "
+                         f"(version {fm.get('version', '?')}; {why})\n", read_doc(p)]
     if not any_needs:
         sections.append("_none pending._")
 
@@ -624,6 +675,13 @@ def main(wiring_flag: bool = False) -> int:
           f"{sum(r['emoji'] == '⚪' for r in rows)} unpublished")
 
     # -- naming canon (AAC-method §4) — warn-only, never affects the exit code --
+    unroutable = addressee_warnings(graph)
+    if unroutable:
+        print(f"\nROUTING — {len(unroutable)} needs document(s) with an unroutable "
+              "addressee (AAC-method §3; warn-only):")
+        for w in unroutable:
+            print(f"  ⚠ {w}")
+
     warns = naming_warnings()
     if warns:
         print(f"\nNAMING — {len(warns)} live-folder name(s) outside the canon "
