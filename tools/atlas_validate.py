@@ -127,6 +127,62 @@ def naming_warnings() -> list[str]:
     return warns
 
 
+def ref_stem(ref) -> str:
+    """The document stem a `responds_to:` value points at.
+
+    Values are written in several shapes in the field — a vault-relative path, an
+    Obsidian [[wikilink]], or prose naming a file. Resolve all of them rather than
+    demanding a migration."""
+    s = str(ref).strip().strip("[]")
+    m = re.search(r"[\w./\\-]+\.md", s)
+    token = m.group(0) if m else (s.split()[-1] if s.split() else "")
+    return Path(token.replace("\\", "/")).stem
+
+
+def responds_to_index(slug: str) -> dict:
+    """need-document stem -> the provides/ document that answers it.
+
+    The provider already writes the link (`responds_to:`); this makes it load-bearing.
+    A component's obligations are then computed, not remembered — the same shape as
+    pinned-vs-latest drift (decisions/0004, from an agent-skeleton field finding).
+    Archived responses still count: an answer that was later superseded was still given.
+    """
+    index = {}
+    for p in sorted(ROOT.glob(f"components/{slug}/docs/provides/**/*.md")):
+        fm = parse_frontmatter(p)
+        val = fm.get("responds_to") or fm.get("responds-to")
+        if val is None:
+            continue
+        refs = val if isinstance(val, list) else [val]
+        for ref in refs:
+            # canonical form is a vault-relative path; free-text mentions still resolve,
+            # so existing documents keep working without a migration
+            stem = ref_stem(ref)
+            if stem:
+                index.setdefault(stem, p)
+    return index
+
+
+def responds_to_warnings(graph) -> list[str]:
+    """`responds_to:` pointing at a document that does not exist in the vault.
+
+    A response may legitimately answer a need, a proposal, or a living document, so the
+    check is existence — not category. Anything narrower cries wolf on correct links."""
+    stems = {p.stem for p in ROOT.rglob("*.md")}
+    warns = []
+    for p in sorted(ROOT.glob("components/*/docs/provides/**/*.md")):
+        fm = parse_frontmatter(p)
+        val = fm.get("responds_to") or fm.get("responds-to")
+        if val is None:
+            continue
+        for ref in (val if isinstance(val, list) else [val]):
+            stem = ref_stem(ref)
+            if stem and stem not in stems:
+                warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
+                             f"'{ref}' names no document in the vault")
+    return warns
+
+
 def addressee_warnings(graph) -> list[str]:
     """needs/ documents whose addressee matches no component (decisions/0003 §4).
 
@@ -539,9 +595,11 @@ def emit_context(slug: str, out: str | None) -> int:
     # A document that names an addressee is delivered to that slug wherever it lives:
     # the edge list says who my consumers are, not who may write to me (decisions/0003).
     sections.append("\n---\n\n# Consumer feedback — needs addressed to me\n")
+    needs_head = len(sections) - 1
     edge_dirs = {(ROOT / fb["path"]).resolve()
                  for fb in reading.get("consumer_feedback", [])}
-    any_needs = False
+    answers = responds_to_index(slug)
+    any_needs, outstanding = False, 0
     for needs_dir in sorted(ROOT.glob("components/*/docs/needs")):
         owner = needs_dir.relative_to(ROOT).parts[1]
         if owner == slug:
@@ -561,10 +619,25 @@ def emit_context(slug: str, out: str | None) -> int:
                     continue
                 why = f"addressed to `{named}`"
             any_needs = True
-            sections += [f"## From {owner} — `{p.relative_to(ROOT).as_posix()}` "
-                         f"(version {fm.get('version', '?')}; {why})\n", read_doc(p)]
+            answered = answers.get(p.stem)
+            if answered is None:
+                outstanding += 1
+                state = "**UNANSWERED**"
+            else:
+                state = f"answered by `{answered.relative_to(ROOT).as_posix()}`"
+            # render the fields a needs document actually carries (need:/status:),
+            # not a version: they never have
+            bits = [f"{k}: {fm[k]}" for k in ("need", "status", "version") if fm.get(k)]
+            meta = "; ".join(bits) or "no metadata"
+            sections += [f"## {state} — from {owner}: "
+                         f"`{p.relative_to(ROOT).as_posix()}`\n\n"
+                         f"_{meta}. Delivered because: {why}._\n", read_doc(p)]
     if not any_needs:
         sections.append("_none pending._")
+    else:
+        sections.insert(needs_head + 1,
+                        f"_{outstanding} unanswered._ An entry is answered when one of my "
+                        "`docs/provides/` documents carries `responds_to:` naming it.\n")
 
     # 4. in-flight proposals touching me
     proposals_dir = ROOT / reading.get("proposals", "architecture/proposals/")
@@ -680,6 +753,13 @@ def main(wiring_flag: bool = False) -> int:
         print(f"\nROUTING — {len(unroutable)} needs document(s) with an unroutable "
               "addressee (AAC-method §3; warn-only):")
         for w in unroutable:
+            print(f"  ⚠ {w}")
+
+    dangling = responds_to_warnings(graph)
+    if dangling:
+        print(f"\nRESPONSES — {len(dangling)} responds_to link(s) naming no document "
+              "in the vault (warn-only):")
+        for w in dangling:
             print(f"  ⚠ {w}")
 
     warns = naming_warnings()

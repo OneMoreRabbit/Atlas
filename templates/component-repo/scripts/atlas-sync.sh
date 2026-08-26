@@ -29,8 +29,14 @@ else
   git clone --depth 1 "$ATLAS_VAULT_REMOTE" "$ATLAS_VAULT"
 fi
 
-PIN=$(awk '/^method:/{m=1;next} m&&/^[^ ]/{m=0} m&&/pinned:/{gsub(/[^0-9.]/,"",$2); print $2; exit}' \
-      "$ATLAS_VAULT/registry/io-graph.yml" 2>/dev/null || true)
+# The io-graph must be read from the WORK branch, never from whatever the clone has
+# checked out. A publish branch's `method:` pin is by definition equal or stale, so
+# comparing against it can only manufacture false drift — and false drift invites a
+# wrong corrective action (agent-skeleton finding, 2026-08-26).
+BWORK=$(atlas_work_branch)
+GRAPH=$(atlas_graph_text "$BWORK")
+PIN=$(printf '%s\n' "$GRAPH" |
+      awk '/^method:/{m=1;next} m&&/^[^ ]/{m=0} m&&/pinned:/{gsub(/[^0-9.]/,"",$2); print $2; exit}')
 REF=${PIN:+v$PIN}
 
 if [ ! -d "$ATLAS_METHOD/.git" ]; then
@@ -52,8 +58,6 @@ fi
 # io-graph.yml (branching: work/release). The current branch is invisible ambient state
 # and a fresh clone lands on the default branch — so the policy is applied here, at
 # session start, not trusted to be remembered.
-BWORK=$(awk '/^branching:/{b=1;next} b&&/^[^ ]/{b=0} b&&/work:/{gsub(/[^A-Za-z0-9._\/-]/,"",$2); print $2; exit}' \
-        "$ATLAS_VAULT/registry/io-graph.yml" 2>/dev/null || true)
 if [ -n "$BWORK" ]; then
   # the vault clone follows the policy branch too
   VCUR=$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)

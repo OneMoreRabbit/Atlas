@@ -22,5 +22,30 @@ fi
 : "${ATLAS_VAULT:=.atlas}"
 : "${ATLAS_METHOD:=.atlas-method}"
 : "${ATLAS_METHOD_REMOTE:=https://github.com/OneMoreRabbit/Atlas.git}"
+# --- shared vault-graph resolution -------------------------------------------------
+# The io-graph must be read from the WORK branch, never from whatever the clone has
+# checked out: a publish branch's `method:` pin and policy are by definition equal or
+# stale (agent-skeleton finding, 2026-08-26). Defined here so atlas-sync and
+# atlas-context agree — a child process cannot export back to its parent.
+atlas_graph_text() {
+  if [ -n "${1:-}" ] &&
+     git -C "$ATLAS_VAULT" cat-file -e "origin/$1:registry/io-graph.yml" 2>/dev/null; then
+    git -C "$ATLAS_VAULT" show "origin/$1:registry/io-graph.yml"
+  else
+    cat "$ATLAS_VAULT/registry/io-graph.yml" 2>/dev/null || true
+  fi
+}
+
+atlas_branching_work() {
+  printf '%s\n' "$1" |
+    awk '/^branching:/{b=1;next} b&&/^[^ ]/{b=0} b&&/work:/{gsub(/[^A-Za-z0-9._\/-]/,"",$2); print $2; exit}'
+}
+
+# -> the policy work branch, resolved from the work branch itself where possible
+atlas_work_branch() {
+  _bw=$(atlas_branching_work "$(atlas_graph_text)")
+  atlas_branching_work "$(atlas_graph_text "$_bw")"
+}
+
 ATLAS_SENTINEL="${TMPDIR:-/tmp}/atlas-nag.$(printf '%s' "$ATLAS_REPO_ROOT" | cksum | cut -d' ' -f1)"
 export ATLAS_REPO_ROOT ATLAS_VAULT ATLAS_METHOD ATLAS_METHOD_REMOTE ATLAS_SENTINEL SLUG
