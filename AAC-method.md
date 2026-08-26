@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.13"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.14"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -98,6 +98,13 @@ updated: 2026-08-24
 #   - a needs doc naming an addressee reaches that slug wherever it lives; docs naming
 #     nobody keep the edge-scoped fallback
 #   - validator warns on an addressee matching no component (`nav` is valid — the human)
+# 1.14 (2026-08-26): the briefing must be trustworthy about time and about obligations
+#   (decisions/0004 and 0005, both from agent-skeleton field findings).
+#   - the briefing and the io-graph facts (pin, policy) are read from the WORK branch,
+#     not from whatever the vault clone has checked out; every briefing states the
+#     branch and commit it was compiled from
+#   - needs render as `answered by <doc>` or UNANSWERED, computed from the provider's
+#     own `responds_to:`; the section leads with an unanswered count
 ---
 
 # Architecture-Above-Code (AAC)
@@ -180,6 +187,14 @@ components/<slug>/
 > thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
 > `needs/`; *answering/committing side* (response, handover, agreement, published schema)
 > → `provides/`.
+
+> **Answer them in the open.** A `provides/` document that answers a need carries
+> **`responds_to:`** naming that document (a vault-relative path; `[[wikilink]]` and
+> prose forms also resolve). The briefing computes each need's state from it —
+> `answered by …` or **UNANSWERED** — so what a component owes is on the page rather
+> than in its memory, and neither side has to poll the other. A response published
+> without `responds_to:` reads as unanswered, which is the correct default: silence
+> about an obligation should look like an obligation.
 
 > **Address your asks.** Every `needs/` document carries **`to:`** naming the addressee's
 > **slug** (a list for several; `nav` for the human, via the bridge). Delivery follows the
