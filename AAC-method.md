@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.12"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.13"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-24
@@ -90,6 +90,14 @@ updated: 2026-08-24
 #     STALE SOURCE header instead of being silently historical
 #   - multi-repo components: install is idempotent per repo (replace, never append) and
 #     the SessionStart briefing is deduplicated by slug; guards stay per-repo
+# 1.13 (2026-08-26): needs route by addressee, not by graph edge (decisions/0003, from
+#   an AgentEco component seat: routing was fail-open where it should be precise and
+#   fail-closed where it should be permissive).
+#   - `to:` is canonical; `addressed-to:` accepted as an alias (an unread key used to
+#     mean "broadcast to everyone whose edge scans this folder")
+#   - a needs doc naming an addressee reaches that slug wherever it lives; docs naming
+#     nobody keep the edge-scoped fallback
+#   - validator warns on an addressee matching no component (`nav` is valid — the human)
 ---
 
 # Architecture-Above-Code (AAC)
@@ -172,6 +180,15 @@ components/<slug>/
 > thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
 > `needs/`; *answering/committing side* (response, handover, agreement, published schema)
 > → `provides/`.
+
+> **Address your asks.** Every `needs/` document carries **`to:`** naming the addressee's
+> **slug** (a list for several; `nav` for the human, via the bridge). Delivery follows the
+> addressee, not the graph: a document naming a slug reaches it wherever it sits, even
+> with no edge between you — which is exactly when a component most needs to hear from a
+> stranger. `addressed-to:` is accepted as an alias. A document naming nobody is
+> delivered to the components whose edges scan your folder, so name your addressee unless
+> you mean "all my providers". An addressee matching no component reaches nobody and the
+> validator says so (§8).
 
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the

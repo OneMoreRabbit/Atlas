@@ -6,7 +6,9 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
    archive/). Filenames follow the naming canon (§4): lowercase kebab-case, type word
    before the version.
 2. New asks/feedback for upstreams? Write to components/<slug>/docs/needs/ with `to:`
-   frontmatter naming the provider.
+   frontmatter naming the addressee's SLUG (a list for several; `nav` for the human).
+   Delivery follows the addressee, not the io-graph edge — an addressee that is not a
+   component slug reaches nobody, and the validator warns.
 3. Changed shared architecture? Do NOT edit the constitution — raise an ADR in
    architecture/proposals/NNNN-title.md, `status: proposed`, `affects: […]`.
 4. Stamp `updated:` in components/<slug>/component.md.
