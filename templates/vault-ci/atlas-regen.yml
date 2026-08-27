@@ -31,16 +31,27 @@ jobs:
         # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
         # If the method repo is private, this checkout also needs a `token:` with access.
       - run: pip install -r .atlas-method/tools/requirements.txt
-        # --check-wiring fetches .atlas.conf/AGENTS.md from each component's source:
-        # remote (decisions/0001; warn-only). Public repos work with no setup; if any
-        # component repo is PRIVATE, give git a token first, e.g.:
-        #   git config --global url."https://x-access-token:${{ secrets.ATLAS_ESTATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Configure remote-probe credentials
+        env:
+          # GITHUB_TOKEN addresses this private vault. A configured estate token also
+          # lets --check-wiring inspect private component repos (decisions/0001).
+          ATLAS_PROBE_TOKEN: ${{ secrets.ATLAS_ESTATE_TOKEN || github.token }}
+        run: git config --global url."https://x-access-token:${ATLAS_PROBE_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: python .atlas-method/tools/atlas_validate.py . --check-wiring
       - name: Commit derived views
         run: |
           git config user.name  "atlas-bot"
           git config user.email "atlas-bot@users.noreply.github.com"
-          git add registry/graph.md dashboard.md 'components/*/component.md' registry/.compiled
+          git add registry/graph.md dashboard.md
+          component_views=(components/*/component.md)
+          if [[ -e "${component_views[0]}" ]]; then
+            git add "${component_views[@]}"
+          fi
+          # A newly seeded vault has no compiled manifests until its first component.
+          # Stage the directory only when it exists or contains tracked deletions.
+          if [[ -d registry/.compiled ]] || [[ -n "$(git ls-files -- registry/.compiled)" ]]; then
+            git add -A -- registry/.compiled
+          fi
           git diff --cached --quiet || git commit -m "atlas: regenerate derived views [skip ci]"
           # Rebase before pushing: a component PR can merge between checkout and push,
           # and derived views are regenerated from merged truth, not owned by this run.
