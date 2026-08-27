@@ -1,11 +1,12 @@
 ---
 title: Obsidian ↔ GitHub — sync setup, Windows and Android
 interface: obsidian-manual
-version: 1.2
+version: 1.3
 status: active
 updated: 2026-08-24
 supersedes: 1.1
 # 1.2: steps only. One Obsidian vault per repo; Git plugin configured per vault.
+# 1.3: resolving a blocked push (unmerged paths) added to troubleshooting.
 ---
 
 # Obsidian ↔ GitHub
@@ -80,6 +81,15 @@ All repos live flat in `B:\_obsidian\`.
 
 ## 6. Troubleshooting
 
+- **Push refused, "unmerged files" / "you have unmerged paths":** a merge stopped on a
+  conflict and is half-done. In that repo folder:
+  1. `git status` — read the **Unmerged paths** list (`git diff --diff-filter=U` shows the
+     conflicting text).
+  2. Per file, either `git checkout --theirs "<file>"` (keep the other device's version)
+     or `git checkout --ours "<file>"` (keep this machine's), or edit the note and delete
+     the `<<<<<<<` / `=======` / `>>>>>>>` markers and the text you don't want.
+  3. `git add "<file>"` for each, then `git commit --no-edit` and `git push`.
+  To back out instead and decide later: `git merge --abort` (nothing is lost).
 - **`cd` does nothing (cmd):** use `cd /d B:\_obsidian` — plain `cd` doesn't change drive.
 - **Wrong branch cloned:** `git -C <Repo> switch dev`, then fix the branch in the plugin/GitSync.
 - **`gh` prompt errors in Git Bash:** run `gh auth login` in cmd/PowerShell once, or prefix `winpty`.
