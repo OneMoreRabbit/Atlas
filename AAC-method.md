@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.14"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.16"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-08-24
+updated: 2026-08-28
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -105,6 +105,21 @@ updated: 2026-08-24
 #     branch and commit it was compiled from
 #   - needs render as `answered by <doc>` or UNANSWERED, computed from the provider's
 #     own `responds_to:`; the section leads with an unanswered count
+# 1.15 (2026-08-28): manual vs runbook — the operation plane split by reader (from the
+#   AgentEco estate; operator definitions, arch-reviewed).
+#   - `manual` = human, out of practice; `runbook` = agent, no prior context. Both stay
+#     in docs/manual/; the type word in the filename says which
+#   - `playbook` removed from the §4 type vocabulary and reserved for Ansible playbooks
+#   - existing docs split as next revised, not in a sweep
+# 1.16 (2026-08-28): depending across vaults (decisions/0006; from the AgentEco estate,
+#   its ADR-0008 — shared infrastructure serving five projects sat inside one of them).
+#   - `external:` in io-graph — a pinned dependency on a contract homed in another
+#     vault, the same shape as the existing `method:` pin; provider keeps one home,
+#     consumer pins and sees drift (dashboard row, checked in CI)
+#   - vault-level `needs/` — project-level asks that belong to no component; a vault
+#     with zero components could previously express no dependency at all; delivered,
+#     routed and lint-checked like any component outbox
+#   - guidance: depend on a capability, not an implementation
 ---
 
 # Architecture-Above-Code (AAC)
@@ -177,11 +192,29 @@ components/<slug>/
 
 > **Root rule — two planes, two homes.** `docs/` root holds ONLY the component's
 > *design-plane* reference documents: the architecture doc and a development plan/status.
-> Documents that tell someone how to **use or operate** the component — user manuals,
-> operator manuals, runbooks, playbooks, setup guides, catalogues — live in
-> **`docs/manual/`**. The split is by audience and churn: the design plane answers *why it
-> is built this way* and moves with the architecture; the operation plane answers *how to
-> run it* and moves with releases. **Every document addressed to or negotiated with
+> Documents that tell someone how to **use or operate** the component — manuals,
+> runbooks, setup guides, catalogues — live in **`docs/manual/`**. The split is by
+> audience and churn: the design plane answers *why it is built this way* and moves with
+> the architecture; the operation plane answers *how to run it* and moves with releases.
+>
+> **Two document types share the operation plane, split by reader.** Both live in
+> `docs/manual/`; the type word in the filename says which:
+>
+> | | **manual** | **runbook** |
+> |---|---|---|
+> | Reader | a human, out of practice | an agent, with no prior context |
+> | Optimise for | finding the right command fast | acting correctly without asking |
+> | Include | locations, commands, options, a troubleshooting table | preconditions, exact steps, verification, failure handling |
+> | Exclude | rationale, history, justification | nothing needed to act; assume no session memory |
+> | Length | as short as the task allows | as long as correctness requires |
+>
+> Rationale still belongs in the vault — in ADRs, briefs and contracts, where a reader
+> goes deliberately. It should not be interleaved with instructions. Split existing
+> operation-plane documents **as they are next revised**, not in a sweep.
+>
+> **`playbook` is not a vault document type.** The word is reserved for Ansible
+> playbooks (executable code), which infrastructure components discuss constantly;
+> using it for documentation too made three overlapping type words where two suffice. **Every document addressed to or negotiated with
 > another component** (proposal, reply, response, finding, question, handover, review,
 > schema) **lives in `provides/` or `needs/` — never in the root or `manual/`.** Rule of
 > thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
@@ -204,6 +237,15 @@ components/<slug>/
 > delivered to the components whose edges scan your folder, so name your addressee unless
 > you mean "all my providers". An addressee matching no component reaches nobody and the
 > validator says so (§8).
+
+> **Vault-level `needs/`.** A project may need something that belongs to **no single
+> component of it** — most commonly a dependency on another vault ("this project needs a
+> seat"). A vault with no components yet cannot express such a thing at all, because every
+> `needs/` hangs off a component. So the vault root may carry a `needs/` folder, governed
+> by exactly the rules of a component's: one topic per document, `to:` naming the
+> addressee, answered by the provider publishing in its own `provides/`. Use it only for
+> asks that are genuinely the project's rather than a component's; a component-owned ask
+> belongs in that component's outbox, where its consumers look.
 
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the
@@ -260,7 +302,7 @@ their historical names — renaming history breaks every wikilink that points in
   vault, so a basename must be unique vault-wide: prefix with your slug or the interface
   id — `<slug-or-interface>-<topic>-<type>-vX_Y.md`.
 - **The type is the last word before the version**, drawn from a small vocabulary:
-  `architecture`, `plan`, `status`, `manual`, `runbook`, `playbook`, `contract`,
+  `architecture`, `plan`, `status`, `manual`, `runbook`, `contract`,
   `schema`, `brief`, `proposal`, `response`, `reply`, `finding`, `question`, `review`,
   `decision`, `handover` (one spelling — never "handoff").
 - **Living documents carry no version suffix.** A status, development plan, TODO list, or
@@ -314,6 +356,33 @@ edges:
     mode: collaboration        # team-topologies mode: x-as-a-service | collaboration | facilitation
     pinned: 0.2                 # version agent-compile currently builds against
 ```
+
+### Depending on something in another vault
+
+A vault may depend on a component that lives in a **different** project vault —
+shared infrastructure serving several projects, or one project consuming a capability
+another produces. The `method:` block above is already this shape: a pinned dependency on
+a contract whose home is elsewhere. Generalise it rather than inventing a second concept:
+
+```yaml
+external:                      # dependencies whose provider is homed in another vault
+  - interface: devagent-seat-contract
+    provider: agent-skeleton   # the slug in its own vault, not this one
+    vault: https://github.com/<org>/Atlas-AgentEco.git
+    pinned: '0.3'              # quoted, like every version
+```
+
+The rules are the ordinary ones. The **provider** keeps one home: the contract is authored
+and versioned in its own vault's `provides/`, never copied here. The **consumer** pins a
+version deliberately and sees drift when the provider publishes a newer one. Asks travel
+the normal outbox route — a `needs/` document in the consumer's vault addressed `to:` the
+provider's slug, which the provider's arch seat picks up when reading the consuming vault.
+
+Prefer **depending on a capability, not an implementation**. If a project needs a thing
+deployed, it should say so and let the provider choose what serves it; pinning the
+provider's own upstreams couples you to a supply chain that is not yours, and prevents the
+provider swapping it. An `external:` entry per project, pointing at one deliberately
+published contract, is the shape that survives.
 
 Component entries may carry an optional `sink: true` flag (terminal downstream sink —
 rendered distinctly in the graph). Note `role:` on a component entry is free prose;
