@@ -96,4 +96,4 @@ bridge.
 | How the bridge works | [[bridge-init]] |
 | What the arch seat is supposed to do | [[arch-seat]] |
 | Obsidian on desktop and Android | `Atlas-Orchestrator` → `components/ansible-platform/docs/manual/new-seat-4-obsidian-sync.md` |
-| Tokens and repo access | [[github-manual]] |
+| Tokens and repo access | `Atlas-Orchestrator` → `components/ansible-platform/docs/manual/new-seat-3-github-tokens.md` |
