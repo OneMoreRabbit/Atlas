@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.14"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.16"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-08-24
+updated: 2026-08-28
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -98,12 +98,6 @@ updated: 2026-08-24
 #   - a needs doc naming an addressee reaches that slug wherever it lives; docs naming
 #     nobody keep the edge-scoped fallback
 #   - validator warns on an addressee matching no component (`nav` is valid — the human)
-# 1.15 (proposed): manual vs runbook — the operation plane split by reader (from the
-#   AgentEco estate; operator definitions, arch-reviewed).
-#   - `manual` = human, out of practice; `runbook` = agent, no prior context. Both stay
-#     in docs/manual/; the type word in the filename says which
-#   - `playbook` removed from the §4 type vocabulary and reserved for Ansible playbooks
-#   - existing docs split as next revised, not in a sweep
 # 1.14 (2026-08-26): the briefing must be trustworthy about time and about obligations
 #   (decisions/0004 and 0005, both from agent-skeleton field findings).
 #   - the briefing and the io-graph facts (pin, policy) are read from the WORK branch,
@@ -111,6 +105,21 @@ updated: 2026-08-24
 #     branch and commit it was compiled from
 #   - needs render as `answered by <doc>` or UNANSWERED, computed from the provider's
 #     own `responds_to:`; the section leads with an unanswered count
+# 1.15 (2026-08-28): manual vs runbook — the operation plane split by reader (from the
+#   AgentEco estate; operator definitions, arch-reviewed).
+#   - `manual` = human, out of practice; `runbook` = agent, no prior context. Both stay
+#     in docs/manual/; the type word in the filename says which
+#   - `playbook` removed from the §4 type vocabulary and reserved for Ansible playbooks
+#   - existing docs split as next revised, not in a sweep
+# 1.16 (2026-08-28): depending across vaults (decisions/0006; from the AgentEco estate,
+#   its ADR-0008 — shared infrastructure serving five projects sat inside one of them).
+#   - `external:` in io-graph — a pinned dependency on a contract homed in another
+#     vault, the same shape as the existing `method:` pin; provider keeps one home,
+#     consumer pins and sees drift (dashboard row, checked in CI)
+#   - vault-level `needs/` — project-level asks that belong to no component; a vault
+#     with zero components could previously express no dependency at all; delivered,
+#     routed and lint-checked like any component outbox
+#   - guidance: depend on a capability, not an implementation
 ---
 
 # Architecture-Above-Code (AAC)
@@ -229,6 +238,15 @@ components/<slug>/
 > you mean "all my providers". An addressee matching no component reaches nobody and the
 > validator says so (§8).
 
+> **Vault-level `needs/`.** A project may need something that belongs to **no single
+> component of it** — most commonly a dependency on another vault ("this project needs a
+> seat"). A vault with no components yet cannot express such a thing at all, because every
+> `needs/` hangs off a component. So the vault root may carry a `needs/` folder, governed
+> by exactly the rules of a component's: one topic per document, `to:` naming the
+> addressee, answered by the provider publishing in its own `provides/`. Use it only for
+> asks that are genuinely the project's rather than a component's; a component-owned ask
+> belongs in that component's outbox, where its consumers look.
+
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the
 > protocol**: the validator and the context emitter ignore it, nothing in-protocol may
@@ -338,6 +356,33 @@ edges:
     mode: collaboration        # team-topologies mode: x-as-a-service | collaboration | facilitation
     pinned: 0.2                 # version agent-compile currently builds against
 ```
+
+### Depending on something in another vault
+
+A vault may depend on a component that lives in a **different** project vault —
+shared infrastructure serving several projects, or one project consuming a capability
+another produces. The `method:` block above is already this shape: a pinned dependency on
+a contract whose home is elsewhere. Generalise it rather than inventing a second concept:
+
+```yaml
+external:                      # dependencies whose provider is homed in another vault
+  - interface: devagent-seat-contract
+    provider: agent-skeleton   # the slug in its own vault, not this one
+    vault: https://github.com/<org>/Atlas-AgentEco.git
+    pinned: '0.3'              # quoted, like every version
+```
+
+The rules are the ordinary ones. The **provider** keeps one home: the contract is authored
+and versioned in its own vault's `provides/`, never copied here. The **consumer** pins a
+version deliberately and sees drift when the provider publishes a newer one. Asks travel
+the normal outbox route — a `needs/` document in the consumer's vault addressed `to:` the
+provider's slug, which the provider's arch seat picks up when reading the consuming vault.
+
+Prefer **depending on a capability, not an implementation**. If a project needs a thing
+deployed, it should say so and let the provider choose what serves it; pinning the
+provider's own upstreams couples you to a supply chain that is not yours, and prevents the
+provider swapping it. An `external:` entry per project, pointing at one deliberately
+published contract, is the shape that survives.
 
 Component entries may carry an optional `sink: true` flag (terminal downstream sink —
 rendered distinctly in the graph). Note `role:` on a component entry is free prose;
