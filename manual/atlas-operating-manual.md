@@ -95,5 +95,5 @@ bridge.
 | Upgrade a vault to a new method release | `README.md` → "Upgrading an existing vault" |
 | How the bridge works | [[bridge-init]] |
 | What the arch seat is supposed to do | [[arch-seat]] |
-| Obsidian on desktop and Android | [[obsidian-manual]] |
+| Obsidian on desktop and Android | `Atlas-Orchestrator` → `components/ansible-platform/docs/manual/new-seat-4-obsidian-sync.md` |
 | Tokens and repo access | [[github-manual]] |

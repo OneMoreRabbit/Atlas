@@ -120,6 +120,8 @@ updated: 2026-08-28
 #     with zero components could previously express no dependency at all; delivered,
 #     routed and lint-checked like any component outbox
 #   - guidance: depend on a capability, not an implementation
+#   - manual/obsidian-manual.md retired: vault<->GitHub sync is estate operation
+#     (Scope 1B), rehomed in Atlas-Orchestrator; the method references, never copies
 ---
 
 # Architecture-Above-Code (AAC)
