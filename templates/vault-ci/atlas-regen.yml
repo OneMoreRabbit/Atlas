@@ -26,9 +26,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve the vault's method pin
+        id: pin
+        # The pin lives in ONE place (registry/io-graph.yml, AAC-method §5). Reading it
+        # here rather than hardcoding `ref: v<pinned>` keeps it that way — a second
+        # literal in a workflow is a second thing to re-pin, and it drifts silently.
+        run: |
+          # Read as raw text, never through a YAML loader: an unquoted 1.10 parses as
+          # the float 1.1 and would check out the wrong tag (method 1.10 changelog).
+          PIN=$(sed -n '/^method:/,/^[^ ]/p' registry/io-graph.yml |
+                sed -n "s/^[[:space:]]*pinned:[[:space:]]*[\"']\{0,1\}\([0-9][0-9.]*\)[\"']\{0,1\}[[:space:]]*$/\1/p" |
+                head -1)
+          case "$PIN" in
+            "") echo "::error::no method pin in registry/io-graph.yml"; exit 1 ;;
+          esac
+          echo "ref=v$PIN" >> "$GITHUB_OUTPUT"
+          echo "vault pins method $PIN — checking the method out at v$PIN"
       - uses: actions/checkout@v4
-        with: { repository: OneMoreRabbit/Atlas, path: .atlas-method }
-        # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
+        with:
+          repository: OneMoreRabbit/Atlas
+          path: .atlas-method
+          ref: ${{ steps.pin.outputs.ref }}   # the vault's pin, honoured (AAC-method §9)
         # If the method repo is private, this checkout also needs a `token:` with access.
       - run: pip install -r .atlas-method/tools/requirements.txt
       - name: Configure remote-probe credentials
@@ -42,22 +60,42 @@ jobs:
         run: |
           git config user.name  "atlas-bot"
           git config user.email "atlas-bot@users.noreply.github.com"
-          git add registry/graph.md dashboard.md
-          component_views=(components/*/component.md)
-          if [[ -e "${component_views[0]}" ]]; then
-            git add "${component_views[@]}"
-          fi
-          # A newly seeded vault has no compiled manifests until its first component.
-          # Stage the directory only when it exists or contains tracked deletions.
-          if [[ -d registry/.compiled ]] || [[ -n "$(git ls-files -- registry/.compiled)" ]]; then
-            git add -A -- registry/.compiled
-          fi
-          git diff --cached --quiet || git commit -m "atlas: regenerate derived views [skip ci]"
-          # Rebase before pushing: a component PR can merge between checkout and push,
-          # and derived views are regenerated from merged truth, not owned by this run.
+
+          stage() {
+            git add registry/graph.md dashboard.md
+            local component_views=(components/*/component.md)
+            if [[ -e "${component_views[0]}" ]]; then
+              git add "${component_views[@]}"
+            fi
+            # A newly seeded vault has no compiled manifests until its first component.
+            # Stage the directory only when it exists or contains tracked deletions.
+            if [[ -d registry/.compiled ]] || [[ -n "$(git ls-files -- registry/.compiled)" ]]; then
+              git add -A -- registry/.compiled
+            fi
+          }
+
           for attempt in 1 2 3; do
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || exit 1
+            stage
+            if git diff --cached --quiet; then
+              echo "derived views already current — nothing to commit"; exit 0
+            fi
+            git commit -q -m "atlas: regenerate derived views [skip ci]"
             git push && exit 0
-            echo "push rejected (attempt $attempt) — refetching"
+
+            # Push rejected: a commit landed on the branch while this run was working.
+            # Derived views are NEVER rebased. Rebasing a generated file conflicts with
+            # itself and wedges the job mid-rebase (field defect, 2026-08-28: two pushes
+            # three seconds apart left dashboard.md disagreeing with io-graph.yml until
+            # the nightly). A *successful* rebase would be no better — it would splice
+            # two generations of a derived view together. The views are regenerated from
+            # merged truth and owned by nobody, so: drop this run's commit, take whatever
+            # won, and regenerate on top of it.
+            echo "push rejected (attempt $attempt) — regenerating on top of the new head"
+            git reset -q --hard HEAD~1
+            git fetch -q origin "${GITHUB_REF_NAME}"
+            git reset -q --hard "origin/${GITHUB_REF_NAME}"
+            # Breaking drift was already gated by the validate step above; this re-run
+            # exists only to produce files, so a red exit must not abort the retry.
+            python .atlas-method/tools/atlas_validate.py . --check-wiring || true
           done
           echo "::error::atlas-regen could not push after 3 attempts"; exit 1

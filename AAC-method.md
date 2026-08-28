@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.16"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.17"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-08-28
@@ -124,6 +124,14 @@ updated: 2026-08-28
 #     and token issue/install/rotate are estate operation (Scope 1B), rehomed in
 #     Atlas-Orchestrator; the method references, never copies. What stays here is why
 #     vault CI needs a credential (§8), not how to mint one
+# 1.17 (2026-08-28): from the ARCPlatform seat's deployment field report.
+#   - vault CI templates: both workflows resolve the vault's method pin from
+#     io-graph.yml and check the method out at that tag (the pin lives in one place);
+#     atlas-regen never rebases a derived view — on a rejected push it drops its own
+#     commit, takes whatever won and regenerates on top (a rebase wedged the job and
+#     left the dashboard disagreeing with io-graph.yml until the nightly)
+#   - `external:` entries may omit `pinned:` — declaring an addressable provider is not
+#     the same act as pinning a contract, and a project usually cannot see the version
 ---
 
 # Architecture-Above-Code (AAC)
@@ -375,6 +383,14 @@ external:                      # dependencies whose provider is homed in another
     vault: https://github.com/<org>/Atlas-AgentEco.git
     pinned: '0.3'              # quoted, like every version
 ```
+
+**`pinned:` is optional.** An entry without it *declares a provider you may address*
+without claiming to build against any version of its work — which is what asking for a
+capability is. A project that needs a seat says so before it consumes a seat contract,
+and often cannot see the provider's vault to read a version at all; requiring a pin
+there would force a guessed literal, the exact failure §9 warns about. The dashboard
+shows such an entry as a declared provider with nothing pinned; add the `interface:` and
+`pinned:` when you actually build against something.
 
 The rules are the ordinary ones. The **provider** keeps one home: the contract is authored
 and versioned in its own vault's `provides/`, never copied here. The **consumer** pins a

@@ -389,8 +389,17 @@ def gen_external_section(graph, check: bool) -> tuple[str, list[str], int]:
     console, worst = [], 0
     for e in ext:
         iface, prov = e.get("interface", "?"), e.get("provider", "?")
-        vault, pin = str(e.get("vault", "")), str(e.get("pinned", "?"))
+        vault = str(e.get("vault", ""))
         vshort = vault.rstrip("/").split("/")[-1].removesuffix(".git") or "?"
+        if e.get("pinned") is None:
+            # A provider you can address but do not yet build against. Asking for a
+            # capability must not require pinning a contract version you cannot see —
+            # that is how a guessed literal gets into a vault (§9, and the ARCPlatform
+            # seat's field report, 2026-08-28).
+            md.append(f"| {'`'+iface+'`' if iface != '?' else '—'} | {prov} | {vshort} "
+                      f"| — | — | 🔵 declared provider, nothing pinned |")
+            continue
+        pin = str(e.get("pinned"))
         if not check:
             md.append(f"| `{iface}` | {prov} | {vshort} | {pin} | – | unchecked (CI checks) |")
             continue

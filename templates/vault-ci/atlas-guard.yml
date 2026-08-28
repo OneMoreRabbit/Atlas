@@ -68,9 +68,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve the vault's method pin
+        id: pin
+        # The pin lives in ONE place (registry/io-graph.yml, AAC-method §5). Reading it
+        # here rather than hardcoding `ref: v<pinned>` keeps it that way — a second
+        # literal in a workflow is a second thing to re-pin, and it drifts silently.
+        run: |
+          # Read as raw text, never through a YAML loader: an unquoted 1.10 parses as
+          # the float 1.1 and would check out the wrong tag (method 1.10 changelog).
+          PIN=$(sed -n '/^method:/,/^[^ ]/p' registry/io-graph.yml |
+                sed -n "s/^[[:space:]]*pinned:[[:space:]]*[\"']\{0,1\}\([0-9][0-9.]*\)[\"']\{0,1\}[[:space:]]*$/\1/p" |
+                head -1)
+          case "$PIN" in
+            "") echo "::error::no method pin in registry/io-graph.yml"; exit 1 ;;
+          esac
+          echo "ref=v$PIN" >> "$GITHUB_OUTPUT"
+          echo "vault pins method $PIN — checking the method out at v$PIN"
       - uses: actions/checkout@v4
-        with: { repository: OneMoreRabbit/Atlas, path: .atlas-method }
-        # To honour the vault's method pin exactly, add `ref: v<pinned>` here.
+        with:
+          repository: OneMoreRabbit/Atlas
+          path: .atlas-method
+          ref: ${{ steps.pin.outputs.ref }}   # the vault's pin, honoured (AAC-method §9)
         # If the method repo is private, this checkout also needs a `token:` with access.
       - run: pip install -r .atlas-method/tools/requirements.txt
       - run: python .atlas-method/tools/atlas_validate.py .   # check only; exit 1 blocks merge
