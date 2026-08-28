@@ -58,7 +58,16 @@ contract drift on each project's dashboard.
 
 A vault adopts a method release by re-pinning and then installing what the release ships —
 the pin is honoured mechanically (`atlas-sync.sh` checks out the method at tag `v<pinned>`),
-so declare it only once the vault actually conforms:
+so declare it only once the vault actually conforms.
+
+> **Not everything needs a re-pin.** Two classes of artefact ship differently:
+> **pinned** — `AAC-method.md` and `tools/` are resolved at the vault's `method:` tag, so
+> changes there reach a vault only when it re-pins. **Copied** — `templates/vault-ci/` and
+> `templates/component-repo/` are files a vault or code repo owns a copy of; re-copy them
+> to pick up a fix **at any pin**, and CI keeps running the method version you pin. So a
+> release that only fixes templates needs no re-pin at all: re-copy and carry on. Check a
+> release's changelog for which class it touched.
+
 
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release
    (`MAJOR.MINOR`). From here the vault is governed by that version of
