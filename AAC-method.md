@@ -98,6 +98,12 @@ updated: 2026-08-24
 #   - a needs doc naming an addressee reaches that slug wherever it lives; docs naming
 #     nobody keep the edge-scoped fallback
 #   - validator warns on an addressee matching no component (`nav` is valid — the human)
+# 1.15 (proposed): manual vs runbook — the operation plane split by reader (from the
+#   AgentEco estate; operator definitions, arch-reviewed).
+#   - `manual` = human, out of practice; `runbook` = agent, no prior context. Both stay
+#     in docs/manual/; the type word in the filename says which
+#   - `playbook` removed from the §4 type vocabulary and reserved for Ansible playbooks
+#   - existing docs split as next revised, not in a sweep
 # 1.14 (2026-08-26): the briefing must be trustworthy about time and about obligations
 #   (decisions/0004 and 0005, both from agent-skeleton field findings).
 #   - the briefing and the io-graph facts (pin, policy) are read from the WORK branch,
@@ -177,11 +183,29 @@ components/<slug>/
 
 > **Root rule — two planes, two homes.** `docs/` root holds ONLY the component's
 > *design-plane* reference documents: the architecture doc and a development plan/status.
-> Documents that tell someone how to **use or operate** the component — user manuals,
-> operator manuals, runbooks, playbooks, setup guides, catalogues — live in
-> **`docs/manual/`**. The split is by audience and churn: the design plane answers *why it
-> is built this way* and moves with the architecture; the operation plane answers *how to
-> run it* and moves with releases. **Every document addressed to or negotiated with
+> Documents that tell someone how to **use or operate** the component — manuals,
+> runbooks, setup guides, catalogues — live in **`docs/manual/`**. The split is by
+> audience and churn: the design plane answers *why it is built this way* and moves with
+> the architecture; the operation plane answers *how to run it* and moves with releases.
+>
+> **Two document types share the operation plane, split by reader.** Both live in
+> `docs/manual/`; the type word in the filename says which:
+>
+> | | **manual** | **runbook** |
+> |---|---|---|
+> | Reader | a human, out of practice | an agent, with no prior context |
+> | Optimise for | finding the right command fast | acting correctly without asking |
+> | Include | locations, commands, options, a troubleshooting table | preconditions, exact steps, verification, failure handling |
+> | Exclude | rationale, history, justification | nothing needed to act; assume no session memory |
+> | Length | as short as the task allows | as long as correctness requires |
+>
+> Rationale still belongs in the vault — in ADRs, briefs and contracts, where a reader
+> goes deliberately. It should not be interleaved with instructions. Split existing
+> operation-plane documents **as they are next revised**, not in a sweep.
+>
+> **`playbook` is not a vault document type.** The word is reserved for Ansible
+> playbooks (executable code), which infrastructure components discuss constantly;
+> using it for documentation too made three overlapping type words where two suffice. **Every document addressed to or negotiated with
 > another component** (proposal, reply, response, finding, question, handover, review,
 > schema) **lives in `provides/` or `needs/` — never in the root or `manual/`.** Rule of
 > thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
@@ -260,7 +284,7 @@ their historical names — renaming history breaks every wikilink that points in
   vault, so a basename must be unique vault-wide: prefix with your slug or the interface
   id — `<slug-or-interface>-<topic>-<type>-vX_Y.md`.
 - **The type is the last word before the version**, drawn from a small vocabulary:
-  `architecture`, `plan`, `status`, `manual`, `runbook`, `playbook`, `contract`,
+  `architecture`, `plan`, `status`, `manual`, `runbook`, `contract`,
   `schema`, `brief`, `proposal`, `response`, `reply`, `finding`, `question`, `review`,
   `decision`, `handover` (one spelling — never "handoff").
 - **Living documents carry no version suffix.** A status, development plan, TODO list, or
