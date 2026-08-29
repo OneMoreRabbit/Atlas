@@ -1,12 +1,13 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.1
+version: 1.2
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
 supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
+# 1.2: platform asks route to the orchestrator; seats run AI, not products.
 ---
 
 # Arch Seat Protocol
@@ -59,6 +60,18 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. Clear the validator's naming and doc-plane warnings.
 6. Merge `dev → main` across the project's repos — the release/deploy signal.
+
+## Platform asks are not yours to answer
+
+A component asking for a database, broker or product runtime is asking for a **platform
+container**, which is estate work: it runs beside the seat on the project network, and
+the orchestrator declares, provisions and owns its lifecycle. Route the ask there —
+do not answer it in-vault, and never by suggesting the seat install the thing. A seat
+runs AI and the component's own build and test runs; nothing else (Orchestrator
+`decisions/0004-seats-and-platforms`).
+
+The same test settles the borderline cases: **anything needing superuser or a different
+image is an ask**; using a platform that already exists is not.
 
 ## Answering a component's ask
 

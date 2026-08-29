@@ -132,6 +132,10 @@ updated: 2026-08-28
 #     left the dashboard disagreeing with io-graph.yml until the nightly)
 #   - `external:` entries may omit `pinned:` — declaring an addressable provider is not
 #     the same act as pinning a contract, and a project usually cannot see the version
+# 1.18 (unreleased): the seat/platform boundary — a seat runs AI, not products; a
+#   component that needs a platform asks the orchestrator for a container beside it
+#   (component-init 2.8, arch-seat 1.2, §10; owning decision is the Orchestrator's
+#   decisions/0004, referenced not copied). Requested by the orchestrator seat.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -661,6 +665,12 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 - **Contract** — a versioned document describing an interface between two components.
 - **Pin** — the contract version a consumer currently builds against.
 - **Drift** — `pinned < latest`. Patch/minor = informational; major = review required.
+- **Seat** — an isolated AI platform: agent CLIs, a persistent home, repo clones, and
+  the component's own build and test runs. Nothing else is installed into it.
+- **Platform container** — a database, broker or product runtime a component needs,
+  running *beside* its seat on the project network and owned by the orchestrator. A
+  component asks for one; it never installs it into its seat. (Scope 1B decides these —
+  the owning decision is the Orchestrator's `decisions/0004-seats-and-platforms`.)
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.
 - **Nav vault** — `Nav-<Project>`: the human's idea space beside the Atlas vault.

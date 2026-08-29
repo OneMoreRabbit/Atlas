@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.7
+version: 2.8
 status: active
 maturity: 1.0
-updated: 2026-08-25
-supersedes: 2.6
+updated: 2026-08-29
+supersedes: 2.7
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -30,6 +30,9 @@ supersedes: 2.6
 # 2.7 (2026-08-25): method 1.12 — --launch-dir persisted to .atlas.conf ($HOME-relative)
 #   and read back by --verify; --verify needs no --vault-remote; multi-repo components
 #   dedupe the briefing by slug; a briefing from a non-work vault branch self-labels STALE.
+# 2.8 (2026-08-29): the seat/platform boundary — a seat runs AI, not products; a
+#   component needing a platform asks the orchestrator for a container beside it
+#   (Orchestrator decisions/0004, requested for the method by its seat).
 ---
 
 # Component Init Brief
@@ -170,6 +173,28 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    | `.claude/commands/atlas-publish.md` | `/atlas-publish` — the outbox half of the protocol |
 
 ---
+
+## Your seat is not your runtime
+
+A **seat** is an isolated AI platform: agent CLIs, a persistent home, your repo
+clones. Your component's own build and test runs happen there; **nothing else does.**
+Databases, brokers, queues and the product runtime itself are never installed into a
+seat — they run as their own **platform containers** beside it, on the project network,
+reachable by service name.
+
+So when your component needs one, the ask is *"the project stack provides Postgres
+beside my seat"*, never *"my seat should be able to run Postgres"*. Raise it as a need
+addressed to the orchestrator; it declares and provisions the container, and its
+lifecycle (version, extensions, recreate — anything needing superuser or a different
+image) stays orchestrator-owned. Creating and dropping databases inside a running
+platform is your own test-time business and needs no ask.
+
+Two reasons this matters to you rather than being someone else's housekeeping: a seat
+that never grows services keeps a narrow trust boundary, and your product state
+survives an image bump because it was never inside the seat.
+
+> The owning decision is the Orchestrator's `decisions/0004-seats-and-platforms`; this
+> brief states only what it means for a component session. Reference it, don't copy it.
 
 ## Every session — before you touch code
 
