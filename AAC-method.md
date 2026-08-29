@@ -136,6 +136,14 @@ updated: 2026-08-28
 #   component that needs a platform asks the orchestrator for a container beside it
 #   (component-init 2.8, arch-seat 1.2, §10; owning decision is the Orchestrator's
 #   decisions/0004, referenced not copied). Requested by the orchestrator seat.
+#   - cross-vault delivery: providers sweep consuming vaults and DELIVER answers into
+#     components/<provider>/docs/provides/ there (already fenced by the CI guard);
+#     delivered contracts are compiled into every briefing in that vault, so a seat with
+#     no cross-vault credential still reads them. Pins stay optional bookkeeping.
+#   - addressee matching ignores parentheticals (an aside naming another slug was
+#     silently delivering to it) and warns when a match comes only from prose; `atlas`
+#     joins `nav` as a well-known addressee, so a vault can ask the method owner
+#   - frontmatter parsing tolerates a leading delivered-copy banner
 ---
 
 # Architecture-Above-Code (AAC)
@@ -387,6 +395,18 @@ external:                      # dependencies whose provider is homed in another
     vault: https://github.com/<org>/Atlas-AgentEco.git
     pinned: '0.3'              # quoted, like every version
 ```
+
+**Delivery, not fetching.** A consumer's seats hold no credential for the provider's
+vault, so the *provider* carries the content across: it answers in its own `provides/`
+and delivers a banner-marked copy to `components/<provider-slug>/docs/provides/` in the
+consumer's vault, on branch `atlas/<provider-slug>/<topic>` — which the CI guard already
+fences to exactly that folder, making this the one sanctioned write into another
+project's vault. The provider then appears in the consumer's vault as a component would,
+its contracts land in the plane every seat already reads, and the briefing carries them.
+The copy is read-only where it lands; one home stays true because it is authored and
+versioned only at the source. The provider **sweeps** consuming vaults for `needs/`
+addressed to its slug — the consumer's only obligation is to write the ask in its own
+outbox.
 
 **`pinned:` is optional.** An entry without it *declares a provider you may address*
 without claiming to build against any version of its work — which is what asking for a

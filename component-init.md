@@ -32,7 +32,8 @@ supersedes: 2.7
 #   dedupe the briefing by slug; a briefing from a non-work vault branch self-labels STALE.
 # 2.8 (2026-08-29): the seat/platform boundary — a seat runs AI, not products; a
 #   component needing a platform asks the orchestrator for a container beside it
-#   (Orchestrator decisions/0004, requested for the method by its seat).
+#   (Orchestrator decisions/0004, requested for the method by its seat). Cross-vault
+#   asks documented: ask in your own outbox, the provider sweeps and delivers.
 ---
 
 # Component Init Brief
@@ -173,6 +174,30 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    | `.claude/commands/atlas-publish.md` | `/atlas-publish` — the outbox half of the protocol |
 
 ---
+
+## Asking a provider in another vault
+
+Some providers are homed in a different vault — shared infrastructure, or another
+project's capability. You need **no access to their vault, ever**:
+
+1. **Ask** in your own outbox: a `docs/needs/` document addressed `to: <provider-slug>`.
+   That is the whole of your side.
+2. The provider **sweeps** the vaults that consume it, finds open needs addressed to it,
+   and answers in its own `provides/` — the authored home.
+3. It then **delivers** a marked copy into your vault at
+   `components/<provider-slug>/docs/provides/`. The provider appears in your vault as a
+   component would, so its contracts arrive in the plane you already read, and your
+   briefing carries them (`Inputs — contracts delivered from other vaults`).
+4. `external:` pins are **optional bookkeeping** — they add a drift row comparing pinned
+   to latest. Delivery is what makes content readable; a pin is what makes a version
+   deliberate.
+
+A delivered copy is **read-only in your vault**: its banner names the authored home, and
+newer versions arrive the same way. Never edit one, and never copy its content anywhere —
+if it looks wrong, raise a need addressed to the provider.
+
+> Address the slug, not prose. `to: agent-skeleton` routes; `to: the seat image people`
+> does not. Anything in parentheses is treated as commentary, not address.
 
 ## Your seat is not your runtime
 

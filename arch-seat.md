@@ -7,7 +7,8 @@ maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
 supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
-# 1.2: platform asks route to the orchestrator; seats run AI, not products.
+# 1.2: platform asks route to the orchestrator; seats run AI, not products. Cross-vault
+#   providers sweep consuming vaults and deliver answers into them.
 ---
 
 # Arch Seat Protocol
@@ -60,6 +61,24 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. Clear the validator's naming and doc-plane warnings.
 6. Merge `dev → main` across the project's repos — the release/deploy signal.
+
+## Cross-vault providers — sweep and deliver
+
+If this vault's component provides to consumers in **other** vaults, two duties are
+yours, because only you have the estate access:
+
+- **Sweep.** Each session, read the consuming vaults for open `needs/` addressed to your
+  slug. They cannot reach you any other way, and they have no access to this vault.
+- **Deliver.** Answer in your own `provides/` (the authored home), then push a
+  banner-marked copy to `components/<your-slug>/docs/provides/` in the consumer's vault,
+  on branch `atlas/<your-slug>/<topic>`. The CI guard already fences this to exactly
+  that folder — it is the one sanctioned write into another project's vault. Never write
+  anything else there, and never paste the content into a bridge: bridges carry
+  coordination, documents have homes.
+
+A consumer needs no `external:` pin to read what you delivered; the pin is optional
+bookkeeping that gives them a drift row. **Deliver on every version bump** — a stale
+delivered copy is silent, since an unpinned consumer has no drift signal.
 
 ## Platform asks are not yours to answer
 
