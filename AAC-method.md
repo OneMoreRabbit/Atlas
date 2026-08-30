@@ -144,6 +144,11 @@ updated: 2026-08-28
 #     silently delivering to it) and warns when a match comes only from prose; `atlas`
 #     joins `nav` as a well-known addressee, so a vault can ask the method owner
 #   - frontmatter parsing tolerates a leading delivered-copy banner
+#   - seat doctrine v0.2 (orchestrator field reports): no container runtime in a seat;
+#     images are authored by the component and BUILT BY THE ESTATE, which returns
+#     evidence; prototype-then-migrate is sanctioned; arch seats reshape tool-shaped
+#     asks into outcome-shaped ones; a component seat's token carries Checks/Actions
+#     read so the publish protocol's last step is verifiable
 ---
 
 # Architecture-Above-Code (AAC)
@@ -689,7 +694,9 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
   the component's own build and test runs. Nothing else is installed into it.
 - **Platform container** — a database, broker or product runtime a component needs,
   running *beside* its seat on the project network and owned by the orchestrator. A
-  component asks for one; it never installs it into its seat. (Scope 1B decides these —
+  component asks for one; it never installs it into its seat, and never a container
+  runtime with which to make its own. Images are authored by the component and built by
+  the estate, which returns the evidence. (Scope 1B decides these —
   the owning decision is the Orchestrator's `decisions/0004-seats-and-platforms`.)
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.

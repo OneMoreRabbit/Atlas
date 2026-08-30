@@ -8,7 +8,8 @@ updated: 2026-08-25
 supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
 # 1.2: platform asks route to the orchestrator; seats run AI, not products. Cross-vault
-#   providers sweep consuming vaults and deliver answers into them.
+#   providers sweep consuming vaults and deliver answers into them. Doctrine v0.2: no
+#   container runtime in a seat, estate-built images, reshape asks before forwarding.
 ---
 
 # Arch Seat Protocol
@@ -86,8 +87,16 @@ A component asking for a database, broker or product runtime is asking for a **p
 container**, which is estate work: it runs beside the seat on the project network, and
 the orchestrator declares, provisions and owns its lifecycle. Route the ask there —
 do not answer it in-vault, and never by suggesting the seat install the thing. A seat
-runs AI and the component's own build and test runs; nothing else (Orchestrator
-`decisions/0004-seats-and-platforms`).
+runs AI and the component's own build and test runs; nothing else, and never a container
+runtime (Orchestrator `decisions/0004-seats-and-platforms`).
+
+**Reshape the ask before you forward it.** Components ask for the tool they imagine
+using, not the outcome they need, and forwarding that verbatim spends an estate round
+trip on the wrong question. The pattern, from the field: *"give my seat a container
+runtime so I can build my image"* is really *"build this Dockerfile on an estate host
+and return the image id, run output and readiness result."* Rewrite it that way — the
+component authors the image, the estate builds it. Transient runs of a component's own
+code in its seat need no ask at all; anything that must stay up is a platform container.
 
 The same test settles the borderline cases: **anything needing superuser or a different
 image is an ask**; using a platform that already exists is not.

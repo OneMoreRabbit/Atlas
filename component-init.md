@@ -33,7 +33,9 @@ supersedes: 2.7
 # 2.8 (2026-08-29): the seat/platform boundary — a seat runs AI, not products; a
 #   component needing a platform asks the orchestrator for a container beside it
 #   (Orchestrator decisions/0004, requested for the method by its seat). Cross-vault
-#   asks documented: ask in your own outbox, the provider sweeps and delivers.
+#   asks documented: ask in your own outbox, the provider sweeps and delivers. Doctrine
+#   v0.2: no container runtime in a seat, prototype-then-migrate, estate-built images,
+#   and the CI-visibility token standard (Checks/Actions read).
 ---
 
 # Component Init Brief
@@ -156,6 +158,14 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    Protect the `release` branch (PRs only) so wrong-branch work fails at push,
    recoverably, instead of landing silently.
 
+   **Your seat's token must be able to see CI.** A component seat publishes through
+   guard CI, so its PAT carries **Checks: Read and Actions: Read** alongside its
+   Contents and Pull-request permissions. Without them `gh pr checks` returns 403 and
+   every publish ends "outcome unknown" — the protocol's last step becomes unverifiable,
+   which is the same class of defect as a guard that cannot run. Issuing and rotating
+   tokens is estate work (the Orchestrator's seat-token manual); this brief states only
+   what the protocol requires of one.
+
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
    your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
@@ -203,9 +213,19 @@ if it looks wrong, raise a need addressed to the provider.
 
 A **seat** is an isolated AI platform: agent CLIs, a persistent home, your repo
 clones. Your component's own build and test runs happen there; **nothing else does.**
-Databases, brokers, queues and the product runtime itself are never installed into a
-seat — they run as their own **platform containers** beside it, on the project network,
-reachable by service name.
+Databases, brokers, queues, the product runtime itself — and **any container runtime** —
+are never installed into a seat. They run as their own **platform containers** beside
+it, on the project network, reachable by service name.
+
+**Prototyping is fine; standing services are not.** Running your own code transiently in
+your seat to try something is exactly what the seat is for. The moment it needs to stay
+up, it migrates to a declared platform container.
+
+**You author images; the estate builds them.** If your component ships a container, you
+write the Dockerfile — you do not need, and will not get, a runtime in your seat to
+build it. Ask the orchestrator to **build and run it, and return the evidence**: image
+id, run output, readiness result. That is a complete ask; "give me Docker in my seat" is
+not, and your arch seat will reshape it before it travels.
 
 So when your component needs one, the ask is *"the project stack provides Postgres
 beside my seat"*, never *"my seat should be able to run Postgres"*. Raise it as a need
