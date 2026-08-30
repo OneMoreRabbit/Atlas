@@ -147,8 +147,12 @@ updated: 2026-08-28
 #   - seat doctrine v0.2 (orchestrator field reports): no container runtime in a seat;
 #     images are authored by the component and BUILT BY THE ESTATE, which returns
 #     evidence; prototype-then-migrate is sanctioned; arch seats reshape tool-shaped
-#     asks into outcome-shaped ones; a component seat's token carries Checks/Actions
-#     read so the publish protocol's last step is verifiable
+#     asks into outcome-shaped ones; a component seat's token carries Actions: Read so
+#     the publish protocol's last step is verifiable (Checks is NOT grantable on
+#     fine-grained PATs — `gh run list --commit`, never `gh pr checks`)
+#   - the development ladder (Orchestrator decisions/0005): a component iterates freely
+#     in its seat and dev container; the estate is asked when the ENVIRONMENT changes,
+#     not when the code does
 ---
 
 # Architecture-Above-Code (AAC)

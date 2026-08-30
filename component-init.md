@@ -35,7 +35,9 @@ supersedes: 2.7
 #   (Orchestrator decisions/0004, requested for the method by its seat). Cross-vault
 #   asks documented: ask in your own outbox, the provider sweeps and delivers. Doctrine
 #   v0.2: no container runtime in a seat, prototype-then-migrate, estate-built images,
-#   and the CI-visibility token standard (Checks/Actions read).
+#   the CI-visibility token standard (Actions: Read — Checks is not grantable on
+#   fine-grained PATs), and the development ladder (seat / dev container / staging /
+#   production; ask when the environment changes, not when your code does).
 ---
 
 # Component Init Brief
@@ -159,12 +161,15 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    recoverably, instead of landing silently.
 
    **Your seat's token must be able to see CI.** A component seat publishes through
-   guard CI, so its PAT carries **Checks: Read and Actions: Read** alongside its
-   Contents and Pull-request permissions. Without them `gh pr checks` returns 403 and
-   every publish ends "outcome unknown" — the protocol's last step becomes unverifiable,
-   which is the same class of defect as a guard that cannot run. Issuing and rotating
-   tokens is estate work (the Orchestrator's seat-token manual); this brief states only
-   what the protocol requires of one.
+   guard CI, so its PAT carries **Actions: Read** alongside its Contents and
+   Pull-request permissions. Without it every publish ends "outcome unknown" — the
+   protocol's last step becomes unverifiable, which is the same class of defect as a
+   guard that cannot run. Read results with `gh run list --commit <sha>` and
+   `gh run view`; **`gh pr checks` can never work** — the Checks permission is not
+   grantable on fine-grained PATs, so the check-runs API always 403s (verified by the
+   orchestrator, 2026-08-30). Issuing and rotating tokens is estate work (the
+   Orchestrator's seat-token manual); this brief states only what the protocol
+   requires of one.
 
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
@@ -226,6 +231,19 @@ write the Dockerfile — you do not need, and will not get, a runtime in your se
 build it. Ask the orchestrator to **build and run it, and return the evidence**: image
 id, run output, readiness result. That is a complete ask; "give me Docker in my seat" is
 not, and your arch seat will reshape it before it travels.
+
+**But you are not asking for every iteration.** There is a ladder, and you own the
+bottom of it (Orchestrator `decisions/0005-dev-loop-ladder`):
+
+| Rung | What runs there | Who moves it |
+|---|---|---|
+| **Seat** | code, unit tests, transient runs of your own processes against the project's platform containers | you, freely |
+| **Dev container** | your runtime, built by the estate, running your repo from a **shared checkout mounted into both your seat and the container**, in watch/reload mode | you iterate freely; ask the orchestrator only when your **requirements** change |
+| **Staging / production** | an immutable estate-built image, promoted deliberately | orchestrator |
+
+So the rule is not "ask before you run anything" — it is *ask when the environment must
+change*, not when your code does. Immutability tightens as you climb: the dev rung trades
+it for speed on purpose; staging and production never do.
 
 So when your component needs one, the ask is *"the project stack provides Postgres
 beside my seat"*, never *"my seat should be able to run Postgres"*. Raise it as a need

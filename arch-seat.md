@@ -9,7 +9,8 @@ supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
 # 1.2: platform asks route to the orchestrator; seats run AI, not products. Cross-vault
 #   providers sweep consuming vaults and deliver answers into them. Doctrine v0.2: no
-#   container runtime in a seat, estate-built images, reshape asks before forwarding.
+#   container runtime in a seat, estate-built images, reshape asks before forwarding;
+#   the development ladder decides which asks need the estate at all.
 ---
 
 # Arch Seat Protocol
@@ -89,6 +90,12 @@ the orchestrator declares, provisions and owns its lifecycle. Route the ask ther
 do not answer it in-vault, and never by suggesting the seat install the thing. A seat
 runs AI and the component's own build and test runs; nothing else, and never a container
 runtime (Orchestrator `decisions/0004-seats-and-platforms`).
+
+**Know which rung the ask belongs on** (Orchestrator `decisions/0005-dev-loop-ladder`).
+A component owns its seat and iterates freely in its dev container against a shared
+checkout; the orchestrator is involved when the **environment** changes — new
+requirements, a rebuild, a promotion — not when the component's code does. An ask that
+is really "my code changed" needs no estate round trip at all; say so and close it.
 
 **Reshape the ask before you forward it.** Components ask for the tool they imagine
 using, not the outcome they need, and forwarding that verbatim spends an estate round
