@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.17"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.18"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-08-28
+updated: 2026-08-31
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -132,6 +132,31 @@ updated: 2026-08-28
 #     left the dashboard disagreeing with io-graph.yml until the nightly)
 #   - `external:` entries may omit `pinned:` — declaring an addressable provider is not
 #     the same act as pinning a contract, and a project usually cannot see the version
+# 1.18 (2026-08-31): the seat/platform boundary — a seat runs AI, not products; a
+#   component that needs a platform asks the orchestrator for a container beside it
+#   (component-init 2.8, arch-seat 1.2, §10; owning decision is the Orchestrator's
+#   decisions/0004, referenced not copied). Requested by the orchestrator seat.
+#   - cross-vault delivery: providers sweep consuming vaults and DELIVER answers into
+#     components/<provider>/docs/provides/ there (already fenced by the CI guard);
+#     delivered contracts are compiled into every briefing in that vault, so a seat with
+#     no cross-vault credential still reads them. Pins stay optional bookkeeping.
+#   - addressee matching ignores parentheticals (an aside naming another slug was
+#     silently delivering to it) and warns when a match comes only from prose; `atlas`
+#     joins `nav` as a well-known addressee, so a vault can ask the method owner
+#   - frontmatter parsing tolerates a leading delivered-copy banner
+#   - seat doctrine v0.2 (orchestrator field reports): no container runtime in a seat;
+#     images are authored by the component and BUILT BY THE ESTATE, which returns
+#     evidence; prototype-then-migrate is sanctioned; arch seats reshape tool-shaped
+#     asks into outcome-shaped ones; a component seat's token carries Actions: Read so
+#     the publish protocol's last step is verifiable (Checks is NOT grantable on
+#     fine-grained PATs — `gh run list --commit`, never `gh pr checks`)
+#   - the development ladder (Orchestrator decisions/0005): a component iterates freely
+#     in its seat and dev container; the estate is asked when the ENVIRONMENT changes,
+#     not when the code does
+#   - decision adherence (§7, arch-seat 1.3, component-init 2.8): a structural change is
+#     a design act — re-read decisions/ before extending a mechanism; summarised context
+#     is never the design record. From two field failures of that class in three days,
+#     both caught by the operator rather than by the protocol.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -384,6 +409,18 @@ external:                      # dependencies whose provider is homed in another
     pinned: '0.3'              # quoted, like every version
 ```
 
+**Delivery, not fetching.** A consumer's seats hold no credential for the provider's
+vault, so the *provider* carries the content across: it answers in its own `provides/`
+and delivers a banner-marked copy to `components/<provider-slug>/docs/provides/` in the
+consumer's vault, on branch `atlas/<provider-slug>/<topic>` — which the CI guard already
+fences to exactly that folder, making this the one sanctioned write into another
+project's vault. The provider then appears in the consumer's vault as a component would,
+its contracts land in the plane every seat already reads, and the briefing carries them.
+The copy is read-only where it lands; one home stays true because it is authored and
+versioned only at the source. The provider **sweeps** consuming vaults for `needs/`
+addressed to its slug — the consumer's only obligation is to write the ask in its own
+outbox.
+
 **`pinned:` is optional.** An entry without it *declares a provider you may address*
 without claiming to build against any version of its work — which is what asking for a
 capability is. A project that needs a seat says so before it consumes a seat contract,
@@ -476,6 +513,18 @@ When work in a component implies a change to **shared** architecture:
    manual tracing. Affected edges show as drift until consumers re-pin.
 
 ADRs use the Nygard format: Context → Decision → Status → Consequences.
+
+> **A structural change is a design act.** Before adding a directory, a file kind or a
+> schema key, re-read `architecture/decisions/` for the governing ADR. Extending the
+> mechanism already in front of you is not neutral — it is a design decision taken
+> without consultation, and it presents as momentum rather than as a choice.
+> **Summarised context is never the design record**: not session memory, not what
+> survived compaction, not the briefing's prose. The vault is. Where a briefing and an
+> ADR disagree, the ADR wins and the briefing is stale.
+>
+> The corollary, for deciding where a thing lives: **it belongs to what it serves
+> today, not to whoever created it first.** That is the same test as §3's scope rule,
+> applied to artefacts rather than documents.
 
 ---
 
@@ -661,6 +710,14 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 - **Contract** — a versioned document describing an interface between two components.
 - **Pin** — the contract version a consumer currently builds against.
 - **Drift** — `pinned < latest`. Patch/minor = informational; major = review required.
+- **Seat** — an isolated AI platform: agent CLIs, a persistent home, repo clones, and
+  the component's own build and test runs. Nothing else is installed into it.
+- **Platform container** — a database, broker or product runtime a component needs,
+  running *beside* its seat on the project network and owned by the orchestrator. A
+  component asks for one; it never installs it into its seat, and never a container
+  runtime with which to make its own. Images are authored by the component and built by
+  the estate, which returns the evidence. (Scope 1B decides these —
+  the owning decision is the Orchestrator's `decisions/0004-seats-and-platforms`.)
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.
 - **Nav vault** — `Nav-<Project>`: the human's idea space beside the Atlas vault.

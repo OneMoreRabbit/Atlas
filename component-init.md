@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.7
+version: 2.8
 status: active
 maturity: 1.0
-updated: 2026-08-25
-supersedes: 2.6
+updated: 2026-08-29
+supersedes: 2.7
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -30,6 +30,15 @@ supersedes: 2.6
 # 2.7 (2026-08-25): method 1.12 — --launch-dir persisted to .atlas.conf ($HOME-relative)
 #   and read back by --verify; --verify needs no --vault-remote; multi-repo components
 #   dedupe the briefing by slug; a briefing from a non-work vault branch self-labels STALE.
+# 2.8 (2026-08-29): the seat/platform boundary — a seat runs AI, not products; a
+#   component needing a platform asks the orchestrator for a container beside it
+#   (Orchestrator decisions/0004, requested for the method by its seat). Cross-vault
+#   asks documented: ask in your own outbox, the provider sweeps and delivers. Doctrine
+#   v0.2: no container runtime in a seat, prototype-then-migrate, estate-built images,
+#   the CI-visibility token standard (Actions: Read — Checks is not grantable on
+#   fine-grained PATs), and the development ladder (seat / dev container / staging /
+#   production; ask when the environment changes, not when your code does). A structural
+#   change is a design act: re-read decisions/ before extending a mechanism.
 ---
 
 # Component Init Brief
@@ -152,6 +161,17 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    Protect the `release` branch (PRs only) so wrong-branch work fails at push,
    recoverably, instead of landing silently.
 
+   **Your seat's token must be able to see CI.** A component seat publishes through
+   guard CI, so its PAT carries **Actions: Read** alongside its Contents and
+   Pull-request permissions. Without it every publish ends "outcome unknown" — the
+   protocol's last step becomes unverifiable, which is the same class of defect as a
+   guard that cannot run. Read results with `gh run list --commit <sha>` and
+   `gh run view`; **`gh pr checks` can never work** — the Checks permission is not
+   grantable on fine-grained PATs, so the check-runs API always 403s (verified by the
+   orchestrator, 2026-08-30). Issuing and rotating tokens is estate work (the
+   Orchestrator's seat-token manual); this brief states only what the protocol
+   requires of one.
+
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
    your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
@@ -171,6 +191,75 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
 ---
 
+## Asking a provider in another vault
+
+Some providers are homed in a different vault — shared infrastructure, or another
+project's capability. You need **no access to their vault, ever**:
+
+1. **Ask** in your own outbox: a `docs/needs/` document addressed `to: <provider-slug>`.
+   That is the whole of your side.
+2. The provider **sweeps** the vaults that consume it, finds open needs addressed to it,
+   and answers in its own `provides/` — the authored home.
+3. It then **delivers** a marked copy into your vault at
+   `components/<provider-slug>/docs/provides/`. The provider appears in your vault as a
+   component would, so its contracts arrive in the plane you already read, and your
+   briefing carries them (`Inputs — contracts delivered from other vaults`).
+4. `external:` pins are **optional bookkeeping** — they add a drift row comparing pinned
+   to latest. Delivery is what makes content readable; a pin is what makes a version
+   deliberate.
+
+A delivered copy is **read-only in your vault**: its banner names the authored home, and
+newer versions arrive the same way. Never edit one, and never copy its content anywhere —
+if it looks wrong, raise a need addressed to the provider.
+
+> Address the slug, not prose. `to: agent-skeleton` routes; `to: the seat image people`
+> does not. Anything in parentheses is treated as commentary, not address.
+
+## Your seat is not your runtime
+
+A **seat** is an isolated AI platform: agent CLIs, a persistent home, your repo
+clones. Your component's own build and test runs happen there; **nothing else does.**
+Databases, brokers, queues, the product runtime itself — and **any container runtime** —
+are never installed into a seat. They run as their own **platform containers** beside
+it, on the project network, reachable by service name.
+
+**Prototyping is fine; standing services are not.** Running your own code transiently in
+your seat to try something is exactly what the seat is for. The moment it needs to stay
+up, it migrates to a declared platform container.
+
+**You author images; the estate builds them.** If your component ships a container, you
+write the Dockerfile — you do not need, and will not get, a runtime in your seat to
+build it. Ask the orchestrator to **build and run it, and return the evidence**: image
+id, run output, readiness result. That is a complete ask; "give me Docker in my seat" is
+not, and your arch seat will reshape it before it travels.
+
+**But you are not asking for every iteration.** There is a ladder, and you own the
+bottom of it (Orchestrator `decisions/0005-dev-loop-ladder`):
+
+| Rung | What runs there | Who moves it |
+|---|---|---|
+| **Seat** | code, unit tests, transient runs of your own processes against the project's platform containers | you, freely |
+| **Dev container** | your runtime, built by the estate, running your repo from a **shared checkout mounted into both your seat and the container**, in watch/reload mode | you iterate freely; ask the orchestrator only when your **requirements** change |
+| **Staging / production** | an immutable estate-built image, promoted deliberately | orchestrator |
+
+So the rule is not "ask before you run anything" — it is *ask when the environment must
+change*, not when your code does. Immutability tightens as you climb: the dev rung trades
+it for speed on purpose; staging and production never do.
+
+So when your component needs one, the ask is *"the project stack provides Postgres
+beside my seat"*, never *"my seat should be able to run Postgres"*. Raise it as a need
+addressed to the orchestrator; it declares and provisions the container, and its
+lifecycle (version, extensions, recreate — anything needing superuser or a different
+image) stays orchestrator-owned. Creating and dropping databases inside a running
+platform is your own test-time business and needs no ask.
+
+Two reasons this matters to you rather than being someone else's housekeeping: a seat
+that never grows services keeps a narrow trust boundary, and your product state
+survives an image bump because it was never inside the seat.
+
+> The owning decision is the Orchestrator's `decisions/0004-seats-and-platforms`; this
+> brief states only what it means for a component session. Reference it, don't copy it.
+
 ## Every session — before you touch code
 
 Read `ATLAS-CONTEXT.md`. That is the whole step: the hook has already synced the vault and
@@ -184,6 +273,21 @@ Run `/atlas-publish`. It performs the outbox half of the protocol: provides/, ne
 ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 ---
+
+## Before you extend a mechanism, read the decision
+
+> **A structural change is a design act.** Before you add a directory, a file kind, or
+> a schema key — anywhere — re-read `architecture/decisions/` for the governing ADR.
+> Extending the mechanism already in front of you is not neutral: it is a design
+> decision taken without consultation, and it will look like momentum rather than a
+> choice. **Summarised context is never the design record** — not session memory, not
+> what survived compaction, not the briefing's prose. The vault is.
+
+This applies to your code repo as much as the vault: a new top-level directory, a new
+config key, a new file kind is a structural choice. If an ADR governs it, follow it; if
+none does and the change is shared, raise one (see the checklist below). If your
+briefing seems to conflict with an ADR, the ADR wins and the briefing is stale — say so
+rather than working around it.
 
 ## Decision checklist: where does this document go?
 
