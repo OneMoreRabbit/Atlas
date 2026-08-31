@@ -37,7 +37,8 @@ supersedes: 2.7
 #   v0.2: no container runtime in a seat, prototype-then-migrate, estate-built images,
 #   the CI-visibility token standard (Actions: Read — Checks is not grantable on
 #   fine-grained PATs), and the development ladder (seat / dev container / staging /
-#   production; ask when the environment changes, not when your code does).
+#   production; ask when the environment changes, not when your code does). A structural
+#   change is a design act: re-read decisions/ before extending a mechanism.
 ---
 
 # Component Init Brief
@@ -272,6 +273,21 @@ Run `/atlas-publish`. It performs the outbox half of the protocol: provides/, ne
 ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 ---
+
+## Before you extend a mechanism, read the decision
+
+> **A structural change is a design act.** Before you add a directory, a file kind, or
+> a schema key — anywhere — re-read `architecture/decisions/` for the governing ADR.
+> Extending the mechanism already in front of you is not neutral: it is a design
+> decision taken without consultation, and it will look like momentum rather than a
+> choice. **Summarised context is never the design record** — not session memory, not
+> what survived compaction, not the briefing's prose. The vault is.
+
+This applies to your code repo as much as the vault: a new top-level directory, a new
+config key, a new file kind is a structural choice. If an ADR governs it, follow it; if
+none does and the change is shared, raise one (see the checklist below). If your
+briefing seems to conflict with an ADR, the ADR wins and the briefing is stale — say so
+rather than working around it.
 
 ## Decision checklist: where does this document go?
 

@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.17"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.18"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-08-28
+updated: 2026-08-31
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -132,7 +132,7 @@ updated: 2026-08-28
 #     left the dashboard disagreeing with io-graph.yml until the nightly)
 #   - `external:` entries may omit `pinned:` — declaring an addressable provider is not
 #     the same act as pinning a contract, and a project usually cannot see the version
-# 1.18 (unreleased): the seat/platform boundary — a seat runs AI, not products; a
+# 1.18 (2026-08-31): the seat/platform boundary — a seat runs AI, not products; a
 #   component that needs a platform asks the orchestrator for a container beside it
 #   (component-init 2.8, arch-seat 1.2, §10; owning decision is the Orchestrator's
 #   decisions/0004, referenced not copied). Requested by the orchestrator seat.
@@ -153,6 +153,10 @@ updated: 2026-08-28
 #   - the development ladder (Orchestrator decisions/0005): a component iterates freely
 #     in its seat and dev container; the estate is asked when the ENVIRONMENT changes,
 #     not when the code does
+#   - decision adherence (§7, arch-seat 1.3, component-init 2.8): a structural change is
+#     a design act — re-read decisions/ before extending a mechanism; summarised context
+#     is never the design record. From two field failures of that class in three days,
+#     both caught by the operator rather than by the protocol.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -509,6 +513,18 @@ When work in a component implies a change to **shared** architecture:
    manual tracing. Affected edges show as drift until consumers re-pin.
 
 ADRs use the Nygard format: Context → Decision → Status → Consequences.
+
+> **A structural change is a design act.** Before adding a directory, a file kind or a
+> schema key, re-read `architecture/decisions/` for the governing ADR. Extending the
+> mechanism already in front of you is not neutral — it is a design decision taken
+> without consultation, and it presents as momentum rather than as a choice.
+> **Summarised context is never the design record**: not session memory, not what
+> survived compaction, not the briefing's prose. The vault is. Where a briefing and an
+> ADR disagree, the ADR wins and the briefing is stale.
+>
+> The corollary, for deciding where a thing lives: **it belongs to what it serves
+> today, not to whoever created it first.** That is the same test as §3's scope rule,
+> applied to artefacts rather than documents.
 
 ---
 

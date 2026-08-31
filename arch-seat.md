@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.2
+version: 1.3
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -11,6 +11,8 @@ supersedes: 1.0
 #   providers sweep consuming vaults and deliver answers into them. Doctrine v0.2: no
 #   container runtime in a seat, estate-built images, reshape asks before forwarding;
 #   the development ladder decides which asks need the estate at all.
+# 1.3: a structural change is a design act — re-read decisions/ before extending a
+#   mechanism; summarised context is never the design record.
 ---
 
 # Arch Seat Protocol
@@ -63,6 +65,27 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. Clear the validator's naming and doc-plane warnings.
 6. Merge `dev → main` across the project's repos — the release/deploy signal.
+
+## Before you extend a mechanism, read the decision
+
+> **A structural change is a design act.** Before you add a directory, a file kind, or
+> a schema key — anywhere — re-read `architecture/decisions/` for the governing ADR.
+> Extending the mechanism already in front of you is not neutral: it is a design
+> decision taken without consultation, and it will look like momentum rather than a
+> choice. **Summarised context is never the design record** — not session memory, not
+> what survived compaction, not the briefing's prose. The vault is.
+
+Two failures of this class in three days on the reporting estate, both caught by the
+operator rather than by the protocol: a mechanism trusted over recorded intent
+(external pins), and a product bundle extended in place instead of re-reading the
+repo-shape ADR that already answered it. The design was never missing in either case;
+the consultation was.
+
+The ownership question the second one turned on is worth carrying as a general test:
+**a thing belongs to what it serves today, not to whoever created it first.** A
+component's platform never lives inside another product's bundle; a document owned by
+one component never lives in another's folder (§3). When those disagree, the ADR wins
+and you re-home the thing.
 
 ## Cross-vault providers — sweep and deliver
 
