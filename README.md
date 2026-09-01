@@ -20,6 +20,7 @@ contract drift on each project's dashboard.
 - [`bridge-init.md`](bridge-init.md) — the human/AI interface: `_bridge/` in each project's `Nav-<Project>` vault (owner-tagged tasks + threads), the one place AI writes in the human's idea space. Deliberately simple; iterated from practice.
 - [`manual/`](manual/) — the method's own operation plane (§3 applied to itself): [`atlas-operating-manual.md`](manual/atlas-operating-manual.md) — **how you operate Atlas**: daily and periodic routine, what to discuss with the arch seat, which PRs are yours.
   Estate operation is **not** method documentation and is not kept here (one home per document): GitHub tokens — issue, install, rotate — live in `Atlas-Orchestrator` → `components/ansible-platform/docs/manual/new-seat-3-github-tokens.md`, and vault ↔ GitHub sync on desktop and Android in `…/new-seat-4-obsidian-sync.md`. Both retired at method 1.16. What the method still states for itself is *why* vault CI wants a credential — §8 (`--check-wiring`) and the comment on the secret in `templates/vault-ci/atlas-regen.yml`.
+- [`templates/vault-roadmap/`](templates/vault-roadmap/) — the roadmap artefact: `roadmap.md` (what the project intends to ship, by release) and `roadmap_timeline.py`, which regenerates its Mermaid timeline from the bullets and the frontmatter's `releases:` config. Copy into a vault root and `meta/`. Standard, never required.
 - [`arch-seat.md`](arch-seat.md) — the architecture session's own protocol: what it owns, its every-session checklist (sweep component asks, answer the bridge, dashboard reds, review queue) and its periodic review.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
@@ -101,7 +102,11 @@ so declare it only once the vault actually conforms.
    `registry/io-graph.yml` (default `work: dev`, `release: main`); set every repo's
    default branch to `work` and protect `release` (PRs only). From then on `atlas-sync`
    puts every session on the right branch and the dashboard shows per-repo branch status.
-9. **Open the bridge** (1.7+). Owner renames `Dev-<Project>` → `Nav-<Project>`; the
+9. **Adopt a roadmap** (1.19+, optional but recommended). Copy
+   [`templates/vault-roadmap/roadmap.md`](templates/vault-roadmap/) to the vault root and
+   its generator to `meta/roadmap_timeline.py`; fill the `releases:` config and the
+   bullets, then run the generator. The guard checks the timeline is current on every PR.
+10. **Open the bridge** (1.7+). Owner renames `Dev-<Project>` → `Nav-<Project>`; the
    arch seat creates `_bridge/` (tasks + threads) per [`bridge-init.md`](bridge-init.md)
    and adds the Nav vault to its reading list (write `_bridge/` only, read what tasks
    point at).

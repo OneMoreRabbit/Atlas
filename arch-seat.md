@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.3
+version: 1.4
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -13,6 +13,7 @@ supersedes: 1.0
 #   the development ladder decides which asks need the estate at all.
 # 1.3: a structural change is a design act — re-read decisions/ before extending a
 #   mechanism; summarised context is never the design record.
+# 1.4: roadmap upkeep joins the periodic review — record direction, never invent it.
 ---
 
 # Arch Seat Protocol
@@ -63,8 +64,12 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
 3. Re-pin deliberately: method version, contract versions flagged as drift.
 4. Archive: answered proposals to `architecture/archive/proposals/` with a
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
-5. Clear the validator's naming and doc-plane warnings.
-6. Merge `dev → main` across the project's repos — the release/deploy signal.
+5. **Keep the roadmap honest.** Fold what @nav agreed on the bridge into `roadmap.md`,
+   tick what shipped, and regenerate the timeline (`python3 meta/roadmap_timeline.py`).
+   You **record** direction; you never invent a release. If the roadmap and the bridge
+   disagree, the bridge is the newer truth — reconcile it there first.
+6. Clear the validator's naming and doc-plane warnings.
+7. Merge `dev → main` across the project's repos — the release/deploy signal.
 
 ## Before you extend a mechanism, read the decision
 
