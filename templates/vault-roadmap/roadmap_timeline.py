@@ -100,10 +100,21 @@ def main() -> int:
         print("roadmap_timeline: no `releases:` in frontmatter", file=sys.stderr)
         return 2
     tally = counts(body)
+    configured = {r["name"] for r in fm["releases"]}
     for r in fm["releases"]:
         if r["name"] not in tally:
             print(f"roadmap_timeline: WARN release '{r['name']}' has no '## {r['name']}' "
                   "section — it will render with no feature count", file=sys.stderr)
+    # ...and the mirror: a section nobody configured renders NOWHERE, silently, while
+    # still counting toward the totals. The likely cause is a release added to the body
+    # and forgotten in `releases:`, so say so rather than dropping it.
+    for name, (_, total) in tally.items():
+        # only sections that look like releases: a prose section (no checkboxes) is
+        # documentation, not a forgotten release
+        if name not in configured and total:
+            print(f"roadmap_timeline: WARN section '## {name}' is not in `releases:` — "
+                  "it will not appear on the timeline; add it to the frontmatter",
+                  file=sys.stderr)
 
     head, rest = text.split(BEGIN, 1)
     _, tail = rest.split(END, 1)

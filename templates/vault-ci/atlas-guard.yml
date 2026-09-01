@@ -92,3 +92,13 @@ jobs:
         # If the method repo is private, this checkout also needs a `token:` with access.
       - run: pip install -r .atlas-method/tools/requirements.txt
       - run: python .atlas-method/tools/atlas_validate.py .   # check only; exit 1 blocks merge
+      - name: Roadmap timeline is current
+        # Checked, not regenerated: the block derives from the same file a human just
+        # edited, so having CI rewrite it would race the author (method 1.19). Skipped
+        # entirely when the vault has no roadmap — it is standard, never required.
+        run: |
+          if [ -f roadmap.md ] && [ -f meta/roadmap_timeline.py ]; then
+            python3 meta/roadmap_timeline.py --check
+          else
+            echo "no roadmap.md — skipping"
+          fi
