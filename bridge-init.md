@@ -1,13 +1,15 @@
 ---
 title: Bridge Init — the human/AI interface of a project
 interface: bridge-init
-version: 1.1
+version: 1.2
 status: active
 maturity: 0.1        # deliberately simple; iterate from practice, not design
 updated: 2026-08-24
 supersedes: 1.0
 # 1.1: component asks route via their own needs/ outbox (nav- prefix), mirrored to the
 #   bridge by the arch seat — no component seat needs Nav-vault credentials.
+# 1.2: tasks.md write-loss under syncing clients acknowledged and deferred; threads are
+#   the record, tasks.md an index.
 ---
 
 # Bridge Init
@@ -96,6 +98,15 @@ never by editing the asking component's outbox.
    ```
 
 ## Deliberately deferred
+
+**Known: `tasks.md` can lose writes under a syncing client** (arc-platform finding,
+2026-09-01 — a mobile sync twice resolved the file in favour of the phone's copy,
+silently, discarding an arch-seat withdrawal). It is the bridge's only shared-write
+file and the only one losing data; `threads/` never collides. The operator has chosen
+to keep the single file and fix the client first. Until then: **threads and needs are
+the record; `tasks.md` is an index that may lose entries** — anything that matters is
+also said in a thread. If the client cannot be made to behave, the fix is one file per
+owner (`tasks-nav.md` / `tasks-atlas.md`, owner edits, other side appends).
 
 Keep it this simple and work with it. Not yet built, extracted later from practice if
 practice wants them: mechanical write-scope guards on `_bridge/`, dashboard

@@ -19,8 +19,30 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
+      # The branch policy is declared (§9); enforce it on the PR's base too. Field
+      # evidence: two component PRs targeted `release` before this existed, and the
+      # guard passed them — it checked the head branch's shape but never the base.
+      - name: Enforce base branch (ADR-0002 / ADR-0006)
+        run: |
+          # Read the DECLARED policy (§9) — never assume dev/main. A trunk-only vault
+          # declares `work: main` and no release branch, and must still pass.
+          pol() { sed -n '/^branching:/,/^[^ ]/p' registry/io-graph.yml |
+                  sed -n "s/^[[:space:]]*$1:[[:space:]]*[\"']\{0,1\}\([A-Za-z0-9._\/-]*\)[\"']\{0,1\}[[:space:]]*$/\1/p" |
+                  head -1; }
+          WORK=$(pol work); RELEASE=$(pol release)
+          [ -n "$WORK" ] || { echo "::error::no branching.work in registry/io-graph.yml"; exit 1; }
+          BASE="${{ github.base_ref }}"; HEAD="${{ github.head_ref }}"
+          if [ -n "$RELEASE" ] && [ "$BASE" = "$RELEASE" ] && [ "$HEAD" = "$WORK" ]; then
+            echo "release merge ($WORK -> $RELEASE): arch-reviewed by definition, scope checks skipped"
+            echo "RELEASE_MERGE=1" >> "$GITHUB_ENV"
+          elif [ "$BASE" != "$WORK" ]; then
+            echo "::error::PRs must target the work branch '$WORK'; '$RELEASE' takes only $WORK -> $RELEASE release merges"
+            exit 1
+          fi
+
       - name: Enforce outbox scope (golden rule 2)
         run: |
+          [ "$RELEASE_MERGE" = "1" ] && { echo "release merge — skipping outbox scope"; exit 0; }
           BR="${{ github.head_ref }}"
           case "$BR" in
             atlas/*/*) SLUG=$(echo "$BR" | cut -d/ -f2) ;;
@@ -41,6 +63,7 @@ jobs:
 
       - name: Edge ownership — io-graph.yml edits must name the slug
         run: |
+          [ "$RELEASE_MERGE" = "1" ] && { echo "release merge — skipping edge ownership"; exit 0; }
           git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- registry/io-graph.yml && exit 0
           pip install -q PyYAML
           git show "origin/${{ github.base_ref }}:registry/io-graph.yml" > /tmp/base.yml
@@ -53,6 +76,14 @@ jobs:
               return {frozenset((k, str(v)) for k, v in d.items()) for d in g.get(key, [])}
 
           bad = []
+          # method: and external: are architecture-owned, like architecture/** — a
+          # component branch once carried a method re-pin and the guard admitted it,
+          # because it only diffed `edges` and `components`.
+          def arch_owned(path, key):
+              return (yaml.safe_load(open(path)) or {}).get(key)
+          for key in ("method", "external"):
+              if arch_owned("registry/io-graph.yml", key) != arch_owned("/tmp/base.yml", key):
+                  bad.append((key, {"note": f"{key} is architecture-owned; raise via architecture/proposals/"}))
           for key, owns in (("edges", lambda d: slug in (d.get("from"), d.get("to"))),
                             ("components", lambda d: d.get("slug") == slug)):
               for e in entries("registry/io-graph.yml", key) ^ entries("/tmp/base.yml", key):
@@ -82,8 +113,14 @@ jobs:
           case "$PIN" in
             "") echo "::error::no method pin in registry/io-graph.yml"; exit 1 ;;
           esac
-          echo "ref=v$PIN" >> "$GITHUB_OUTPUT"
-          echo "vault pins method $PIN — checking the method out at v$PIN"
+          # Resolve to an IMMUTABLE tag (method 1.20): a two-part pin takes the highest
+          # vX.Y.* patch, a three-part pin is exact. Tags never move after release.
+          ESC=$(printf '%s' "$PIN" | sed 's/\./\\./g')
+          REF=$(git ls-remote --tags https://github.com/OneMoreRabbit/Atlas.git "v$PIN" "v$PIN.*" |
+                sed 's|.*refs/tags/||; s|\^{}$||' | grep -E "^v${ESC}(\.[0-9]+)?$" | sort -V | tail -1)
+          REF=${REF:-v$PIN}
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "vault pins method $PIN — resolved to $REF"
       - uses: actions/checkout@v4
         with:
           repository: OneMoreRabbit/Atlas
