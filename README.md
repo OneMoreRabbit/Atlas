@@ -67,7 +67,9 @@ so declare it only once the vault actually conforms.
 > `templates/component-repo/` are files a vault or code repo owns a copy of; re-copy them
 > to pick up a fix **at any pin**, and CI keeps running the method version you pin. So a
 > release that only fixes templates needs no re-pin at all: re-copy and carry on. Check a
-> release's changelog for which class it touched.
+> release's changelog for which class it touched. **Release tags are immutable** (1.20+):
+> a pinned tree never changes under you; a fix to pinned artefacts is a new patch tag,
+> and a two-part pin picks it up visibly at the next sync.
 
 
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release

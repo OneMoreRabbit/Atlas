@@ -248,15 +248,23 @@ def method_drift(graph) -> tuple[str, str]:
     if isinstance(pin, float):
         return "🔴", (f"method pin {pin} is an unquoted YAML number — ambiguous "
                       f"(1.10 reads as 1.1). Quote it: pinned: '{mine}'")
+    # The exact tree in use, so a moved or mis-resolved tag is visible on the dashboard
+    # instead of hiding behind a matching version NUMBER (decisions: tags are immutable
+    # from 1.20; this is the detection half of that rule).
+    tag = (run_git(["-C", str(METHOD_ROOT), "describe", "--tags", "--exact-match"]) or
+           run_git(["-C", str(METHOD_ROOT), "describe", "--tags", "--always"]) or "?").strip()
+    sha = (run_git(["-C", str(METHOD_ROOT), "rev-parse", "--short", "HEAD"]) or "?").strip()
+    at = f"{tag} @ {sha}"
     p, m = version_tuple(pin)[:2], version_tuple(str(mine))[:2]
     if p == m:
-        return "🟢", f"pinned {pin} — aligned with the running method"
+        return "🟢", f"pinned {pin} — aligned with the running method ({at})"
     if p > m:
         return "🟠", (f"pinned {pin} but running method {mine} — method checkout is "
                       "older than the pin; re-run atlas-sync")
     if m[0] > p[0]:
         return "🔴", f"BREAKING — pinned {pin}, running method {mine}; review required"
-    return "🟠", f"pinned {pin}, running method {mine} — re-pin deliberately"
+    return "🟠", (f"pinned {pin}, running method {mine} ({at}) — newer release available; "
+                  "adopt at periodic review, never in a sweep")
 
 
 def run_git(args: list, timeout: int = 10, cwd: str | None = None) -> str | None:

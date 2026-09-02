@@ -113,8 +113,14 @@ jobs:
           case "$PIN" in
             "") echo "::error::no method pin in registry/io-graph.yml"; exit 1 ;;
           esac
-          echo "ref=v$PIN" >> "$GITHUB_OUTPUT"
-          echo "vault pins method $PIN — checking the method out at v$PIN"
+          # Resolve to an IMMUTABLE tag (method 1.20): a two-part pin takes the highest
+          # vX.Y.* patch, a three-part pin is exact. Tags never move after release.
+          ESC=$(printf '%s' "$PIN" | sed 's/\./\\./g')
+          REF=$(git ls-remote --tags https://github.com/OneMoreRabbit/Atlas.git "v$PIN" "v$PIN.*" |
+                sed 's|.*refs/tags/||; s|\^{}$||' | grep -E "^v${ESC}(\.[0-9]+)?$" | sort -V | tail -1)
+          REF=${REF:-v$PIN}
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "vault pins method $PIN — resolved to $REF"
       - uses: actions/checkout@v4
         with:
           repository: OneMoreRabbit/Atlas

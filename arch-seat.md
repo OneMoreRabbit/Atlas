@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.4
+version: 1.5
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -14,6 +14,7 @@ supersedes: 1.0
 # 1.3: a structural change is a design act — re-read decisions/ before extending a
 #   mechanism; summarised context is never the design record.
 # 1.4: roadmap upkeep joins the periodic review — record direction, never invent it.
+# 1.5: adopting a method release is a periodic-review/operator act, never a sweep act.
 ---
 
 # Arch Seat Protocol
@@ -43,8 +44,11 @@ Works against the vault's work branch directly (it is the reviewer, not a PR aut
    dedupe by what the bridge already links.
 3. **Answer the bridge.** Every `@atlas` task and thread turn gets a reply or a tick
    before the session ends.
-4. **Read the dashboard.** Act on red: method pin drift, branch policy, wiring,
-   breaking contract drift.
+4. **Read the dashboard.** Act on red: branch policy, wiring, breaking contract drift.
+   **A newer method release is not an action item here.** Note it for periodic review;
+   never re-pin, refresh templates or adopt a new artefact in a session sweep — the
+   operator times releases (§9). A scheduled sweep that re-pins is a design decision
+   nobody took.
 5. **Clear the review queue.** Merge outbox-only PRs that CI passed; review PRs
    touching `architecture/proposals/**` or `registry/io-graph.yml`.
 
@@ -61,7 +65,10 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    Anything that changes **direction, cost, or scope** goes to the bridge for `@nav` —
    stated in plain words, not as a diff — and waits. Escalating a naming or
    folder-placement question is a defect; so is deciding a scope question alone.
-3. Re-pin deliberately: method version, contract versions flagged as drift.
+3. Re-pin deliberately — **and only here, or on the operator's instruction**: method
+   version, contract versions flagged as drift. When re-pinning the method, take the
+   templates and any new standard artefact in the same act, and say what you did on
+   the bridge.
 4. Archive: answered proposals to `architecture/archive/proposals/` with a
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. **Keep the roadmap honest.** Fold what @nav agreed on the bridge into `roadmap.md`,
