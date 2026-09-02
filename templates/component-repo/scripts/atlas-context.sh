@@ -37,7 +37,16 @@ fi
 cleanup() { [ -n "$WT" ] && git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1; }
 trap cleanup EXIT
 
-OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG")
+# Raw contract artifacts (OpenAPI, JSON Schema) are delivered as exact files beside the
+# briefing, never inlined into it (method 1.21). A generator reads them by path; the
+# model's context stays bounded. Local-only: excluded via .git/info/exclude so seats
+# wired before 1.21 need no .gitignore change.
+ART="$ATLAS_REPO_ROOT/ATLAS-CONTEXT.d"
+rm -rf "$ART"
+if [ -d "$ATLAS_REPO_ROOT/.git" ] && ! grep -qs '^ATLAS-CONTEXT.d/$' "$ATLAS_REPO_ROOT/.git/info/exclude" 2>/dev/null; then
+  mkdir -p "$ATLAS_REPO_ROOT/.git/info" && echo 'ATLAS-CONTEXT.d/' >> "$ATLAS_REPO_ROOT/.git/info/exclude"
+fi
+OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG" --artifacts-dir "$ART")
 
 case "$OUT" in
   "# ATLAS-CONTEXT"*) ;;

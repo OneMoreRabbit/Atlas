@@ -615,6 +615,64 @@ def read_doc(path: Path) -> str:
         return f"_[unreadable: {exc}]_"
 
 
+def contract_artifacts(contract: Path, fm: dict) -> tuple[list, list]:
+    """-> (artifacts, errors). A contract may declare machine-readable sidecars that
+    live beside it — OpenAPI, JSON Schema — under `artifacts:` (names, or {file, sha256}).
+    Byte-faithful: nothing here reads the content as anything but bytes. A declared
+    sha256 is VERIFIED; missing files or a mismatch are errors, never warnings — a
+    consumer generating models from these must not be invited to guess (1.21, from a
+    blocks-android need)."""
+    import hashlib
+    decl = fm.get("artifacts") or []
+    arts, errs = [], []
+    for d in decl if isinstance(decl, list) else [decl]:
+        name = d.get("file") if isinstance(d, dict) else str(d)
+        want = (d.get("sha256") if isinstance(d, dict) else None)
+        if not name or "/" in str(name) or str(name).startswith("."):
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: artifact name "
+                        f"{name!r} must be a plain filename beside the contract")
+            continue
+        src = contract.parent / name
+        if not src.is_file():
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: declared artifact "
+                        f"`{name}` is missing beside it")
+            continue
+        data = src.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        if want and str(want).lower() != digest:
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: artifact `{name}` "
+                        f"sha256 {digest[:12]}… does not match declared {str(want)[:12]}… "
+                        "— bytes changed under a published version; bump the contract")
+            continue
+        arts.append({"file": name, "path": src.relative_to(ROOT).as_posix(),
+                     "bytes": len(data), "sha256": digest, "declared": bool(want)})
+    return arts, errs
+
+
+def deliver_artifacts(arts: list, contract: Path, interface: str, version: str,
+                      dest_root: Path | None) -> list:
+    """Copy exact bytes to <dest_root>/<interface>/<file> and return rendered rows.
+    Delivered as FILES beside the briefing, not inline: the invariant forbids browsing
+    the vault, not receiving exact artefacts — and a large schema belongs in a code
+    generator's hands, not in the model's context window."""
+    import shutil
+    rows = []
+    for a in arts:
+        where = ""
+        if dest_root is not None:
+            d = dest_root / interface
+            d.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / a["path"], d / a["file"])   # bytes, never reserialized
+            where = (d / a["file"]).as_posix()
+        rows.append(f"| `{a['file']}` | {version} | {a['bytes']:,} | `{a['sha256'][:16]}…` "
+                    f"| `{a['path']}` | {'`'+where+'`' if where else '_not written (no --artifacts-dir)_'} |")
+    return rows
+
+
+ARTIFACT_TABLE_HEAD = ("| Artifact | Version | Bytes | sha256 | Provider path | Delivered to |\n"
+                       "|---|---|---|---|---|---|")
+
+
 def contract_at_pin(provides_dir: Path, interface: str, pinned: str):
     """-> (path, version, note) — the contract file for `interface` at `pinned`.
 
@@ -723,7 +781,9 @@ def proposal_in_flight(fm: dict, slug: str) -> bool:
     return slug.lower() in scope.lower()
 
 
-def emit_context(slug: str, out: str | None) -> int:
+def emit_context(slug: str, out: str | None, artifacts_dir: str | None = None) -> int:
+    dest = Path(artifacts_dir).resolve() if artifacts_dir else None
+    art_bytes, art_count, art_errors = 0, 0, []
     manifest_path = ROOT / "registry" / ".compiled" / slug / "io-manifest.yml"
     if not manifest_path.exists():
         print(f"No {manifest_path.relative_to(ROOT).as_posix()} in the vault — the compiled "
@@ -763,6 +823,13 @@ def emit_context(slug: str, out: str | None) -> int:
         else:
             sections += [f"{head}\n\n**Source:** `{path.relative_to(ROOT).as_posix()}` "
                          f"(version {ver})\n", read_doc(path)]
+            arts, errs = contract_artifacts(path, parse_frontmatter(path))
+            art_errors += errs
+            if arts:
+                rows = deliver_artifacts(arts, path, str(inp["interface"]), str(ver), dest)
+                art_count += len(arts); art_bytes += sum(a["bytes"] for a in arts)
+                sections += ["\n**Raw artifacts** (exact bytes; generate from these, never "
+                             "from the prose):\n", ARTIFACT_TABLE_HEAD, *rows]
 
     # 2b. external contracts delivered into this vault by their provider
     ext_inputs = reading.get("external_inputs") or []
@@ -777,6 +844,14 @@ def emit_context(slug: str, out: str | None) -> int:
                          f"{x.get('version', '?')}; authored in the provider's own vault "
                          "and delivered here — never edit this copy)\n",
                          read_doc(ROOT / x["path"])]
+            xp = ROOT / x["path"]
+            arts, errs = contract_artifacts(xp, parse_frontmatter(xp))
+            art_errors += errs
+            if arts:
+                rows = deliver_artifacts(arts, xp, str(x["interface"]), str(x.get("version", "?")), dest)
+                art_count += len(arts); art_bytes += sum(a["bytes"] for a in arts)
+                sections += ["\n**Raw artifacts** (exact bytes; delivered with the "
+                             "contract):\n", ARTIFACT_TABLE_HEAD, *rows]
 
     # 3. needs addressed to me — by addressee first, by edge only as the fallback.
     # A document that names an addressee is delivered to that slug wherever it lives:
@@ -858,6 +933,13 @@ def emit_context(slug: str, out: str | None) -> int:
     else:
         sections.append("_no upstream edges._")
 
+    if art_errors:
+        # Fail, do not degrade: a prose warning here invites the consumer to guess at
+        # bytes it was told to generate from. The session-start hook sees the non-zero
+        # exit and reports that no briefing was produced.
+        for e in art_errors:
+            print(f"ATLAS-CONTEXT: ARTIFACT ERROR — {e}", file=sys.stderr)
+        return 2
     text = "\n".join(sections) + "\n"
     if out:
         Path(out).write_text(text, encoding="utf-8")
@@ -866,6 +948,11 @@ def emit_context(slug: str, out: str | None) -> int:
         sys.stdout.write(text)
     size = len(text.encode("utf-8"))
     print(f"ATLAS-CONTEXT for {slug}: {size:,} bytes, ~{size // 4:,} tokens", file=sys.stderr)
+    if art_count:
+        # measured SEPARATELY: these bytes are files beside the briefing, not in it
+        print(f"ATLAS-CONTEXT raw artifacts for {slug}: {art_count} file(s), {art_bytes:,} bytes "
+              f"-> {dest.as_posix() if dest else 'not written (pass --artifacts-dir)'}",
+              file=sys.stderr)
     return 0
 
 
@@ -888,6 +975,9 @@ def main(wiring_flag: bool = False) -> int:
     for c in graph["components"]:
         if not (ROOT / "components" / c["slug"] / "component.md").exists():
             errors.append(f"component '{c['slug']}' has no components/{c['slug']}/component.md")
+    for cpath in ROOT.glob("components/*/docs/provides/*.md"):
+        _, aerrs = contract_artifacts(cpath, parse_frontmatter(cpath))
+        errors += aerrs
     if errors:
         print("INTEGRITY ERRORS:")
         for err in errors:
@@ -987,6 +1077,9 @@ if __name__ == "__main__":
     ap.add_argument("--check-wiring", action="store_true",
                     help="also check each component repo is wired (fetches .atlas.conf "
                          "and AGENTS.md from its source: remote; warn-only; decisions/0001)")
+    ap.add_argument("--artifacts-dir", metavar="DIR",
+                    help="with --emit-context: copy declared contract artifacts (exact "
+                         "bytes) to DIR/<interface>/<file>, beside the briefing")
     ap.add_argument("--out", metavar="PATH",
                     help="with --emit-context: write to PATH instead of stdout")
     args = ap.parse_args()
@@ -996,5 +1089,5 @@ if __name__ == "__main__":
     if args.emit_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.exit(emit_context(args.emit_context, args.out))
+        sys.exit(emit_context(args.emit_context, args.out, args.artifacts_dir))
     sys.exit(main(args.check_wiring))

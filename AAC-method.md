@@ -187,6 +187,11 @@ updated: 2026-09-02
 #   - `status: resolved | closed | done` retire a need like `superseded` does
 #   - the channel table (§6, component-init 2.9, arch-seat 1.6): rule → constitution/
 #     contract; decision → proposal/ADR; ask → needs; one-off instruction → no channel
+#   - raw contract artifacts (blocks-android need): `artifacts:` on a contract declares
+#     OpenAPI/JSON-Schema sidecars; --emit-context delivers exact bytes to
+#     ATLAS-CONTEXT.d/<interface>/ beside the briefing with path, version, size, sha256,
+#     measured separately; a declared sha256 is verified; missing/mismatch FAILS emission
+#     and validation. atlas-context.sh passes --artifacts-dir and excludes the dir locally
 ---
 
 # Architecture-Above-Code (AAC)
@@ -405,8 +410,23 @@ version: 0.2                   # MAJOR.MINOR (.PATCH optional)
 status: draft | active | deprecated | superseded
 updated: 2026-06-30
 supersedes: 0.1                # optional
+artifacts:                     # optional (1.21): machine-readable sidecars beside this file
+  - file: dprox-endpoints-openapi-v0_2.json
+    sha256: 9f2c…              # optional but recommended — verified; a mismatch is an error
+  - dprox-event-envelope-v0_2.schema.json
 ---
 ```
+
+**Raw artifacts.** A contract whose truth lives in a machine-readable file — OpenAPI,
+JSON Schema — declares it under `artifacts:`, beside the contract in `provides/`. The
+compiled briefing then **delivers the exact bytes as files** next to `ATLAS-CONTEXT.md`
+(`ATLAS-CONTEXT.d/<interface>/<file>`) and lists each with its provider path, version,
+size and sha256 — never inlined, never reserialized: a generator reads bytes by path,
+and a large schema belongs in its hands, not in the model's context window. A declared
+`sha256` is verified; **a missing or mismatched artifact fails** both the vault's
+validation and the consumer's briefing, rather than degrading to a prose warning that
+invites the consumer to guess at bytes it was told to generate from. Bytes that change
+under a published version are a contract change: bump the version.
 
 ---
 
@@ -534,6 +554,9 @@ trust-based; a session that starts has already "done the reads."
 > is a channel for one-off orders — those are for the session or the bridge.
 
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
+> Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are
+> reported separately from its size — receiving what a pin entitles you to is retrieval,
+> not browsing.
 > If the context is insufficient for the work, the io-graph is missing an edge — fix
 > `registry/io-graph.yml` and recompile. Free browsing of the vault is how "dump
 > everything into the window" returns; the single generated artefact is the boundary
