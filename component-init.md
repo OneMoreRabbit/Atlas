@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.8
+version: 2.9
 status: active
 maturity: 1.0
-updated: 2026-08-29
-supersedes: 2.7
+updated: 2026-09-02
+supersedes: 2.8
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -39,6 +39,8 @@ supersedes: 2.7
 #   fine-grained PATs), and the development ladder (seat / dev container / staging /
 #   production; ask when the environment changes, not when your code does). A structural
 #   change is a design act: re-read decisions/ before extending a mechanism.
+# 2.9 (unreleased): which channel — a briefing carries obligations, not history; decisions
+#   are proposals, not needs; raisers retire their own asks.
 ---
 
 # Component Init Brief
@@ -214,6 +216,21 @@ if it looks wrong, raise a need addressed to the provider.
 
 > Address the slug, not prose. `to: agent-skeleton` routes; `to: the seat image people`
 > does not. Anything in parentheses is treated as commentary, not address.
+
+## Which channel — rule, decision, ask, or instruction
+
+| You want to convey | Channel | What the addressee's briefing does with it |
+|---|---|---|
+| A durable rule or approach | constitution, a contract | injected **every session**, in full — persistent by design |
+| A **design decision** | a proposal → ADR | injected **while proposed** (`affects:` names them); on acceptance it moves to `decisions/`, *leaves* the briefing, and its consequences land in the constitution and contracts that are injected |
+| An ask that needs an answer | `needs/` addressed to the slug | injected in full **until answered**, then one line until the raiser retires it (`status: resolved`) |
+| A one-off instruction | — none, deliberately | say it in the session, or on the bridge; the vault records rules and decisions, not orders |
+
+A briefing carries **current obligations and inputs, not history**. Writing a decision as
+a need is a category error: nothing ever answers it, so nothing ever retires it, and the
+addressee re-reads it every morning as dead weight. Raisers retire their own asks with
+`status: resolved` (or `closed` / `done`) once satisfied — that is what ends an
+obligation's life in every briefing it reaches.
 
 ## Your seat is not your runtime
 

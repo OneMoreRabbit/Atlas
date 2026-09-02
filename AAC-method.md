@@ -180,6 +180,13 @@ updated: 2026-09-02
 #     external: are architecture-owned — a component branch had rewritten the pin
 #   - bridge tasks.md write-loss under a syncing client: acknowledged, deferred by
 #     the operator pending client fixes (bridge-init 1.2 notes it)
+# 1.21 (unreleased): a briefing carries obligations, not history (operator review with
+#   the orchestrator: a need addressed to a slug was being injected in full, every
+#   session, forever — only `superseded` ever removed it).
+#   - answered needs collapse to one line in the briefing; the body is one read away
+#   - `status: resolved | closed | done` retire a need like `superseded` does
+#   - the channel table (§6, component-init 2.9, arch-seat 1.6): rule → constitution/
+#     contract; decision → proposal/ADR; ask → needs; one-off instruction → no channel
 ---
 
 # Architecture-Above-Code (AAC)
@@ -517,6 +524,14 @@ five, in that order, into a single **`ATLAS-CONTEXT.md`**, each section headed w
 source path and version, plus a drift summary. A `SessionStart` hook in the code repo
 syncs the vault and injects this artefact automatically — the protocol is mechanical, not
 trust-based; a session that starts has already "done the reads."
+
+> **The briefing carries current obligations and inputs, not history.** Rules and
+> contracts are injected in full every session — that persistence is the point. A need
+> is injected in full only while **unanswered**; once answered it is one line, and once
+> its raiser retires it (`status: resolved | closed | done | superseded`) it is gone. A
+> design decision does not travel as a need at all: it is a proposal, visible while
+> proposed, absorbed into constitution and contracts when accepted. Nothing in the vault
+> is a channel for one-off orders — those are for the session or the bridge.
 
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
 > If the context is insufficient for the work, the io-graph is missing an edge — fix

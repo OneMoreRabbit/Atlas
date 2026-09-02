@@ -207,7 +207,7 @@ def addressee_warnings(graph) -> list[str]:
                     + list(ROOT.glob("needs/*.md"))):
         fm = parse_frontmatter(p)
         named = addressee(fm)
-        if named is None or str(fm.get("status", "")).lower().startswith("superseded"):
+        if named is None or is_retired(fm):
             continue
         if not any(names_slug(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
@@ -697,6 +697,17 @@ def names_slug_exactly(value: str, slug: str) -> bool:
     return slug.lower() in addressee_tokens(value)
 
 
+RETIRED_STATUSES = ("superseded", "resolved", "closed", "done")
+
+
+def is_retired(fm: dict) -> bool:
+    """A need the raiser has closed. The raiser owns `status:` and already writes these
+    words; the emitter just ignored all but `superseded`, so a resolved ask kept landing
+    in its addressee's briefing every session, in full, forever (1.21)."""
+    s = str(fm.get("status", "")).lower()
+    return any(s.startswith(w) for w in RETIRED_STATUSES)
+
+
 def addressed_to(fm: dict, slug: str) -> bool:
     """A needs/ doc is in scope if it names the slug, or names nobody at all."""
     value = addressee(fm)
@@ -775,7 +786,7 @@ def emit_context(slug: str, out: str | None) -> int:
     edge_dirs = {(ROOT / fb["path"]).resolve()
                  for fb in reading.get("consumer_feedback", [])}
     answers = responds_to_index(slug)
-    any_needs, outstanding = False, 0
+    any_needs, outstanding, done_count = False, 0, 0
     needs_dirs = sorted(ROOT.glob("components/*/docs/needs"))
     if (ROOT / "needs").is_dir():
         needs_dirs.append(ROOT / "needs")              # vault-level asks (1.16)
@@ -786,7 +797,7 @@ def emit_context(slug: str, out: str | None) -> int:
             continue                                   # my own outbox, not feedback to me
         for p in sorted(needs_dir.glob("*.md")):
             fm = parse_frontmatter(p)
-            if str(fm.get("status", "")).lower().startswith("superseded"):
+            if is_retired(fm):
                 continue
             named = addressee(fm)
             if named is None:
@@ -800,24 +811,31 @@ def emit_context(slug: str, out: str | None) -> int:
                 why = f"addressed to `{named}`"
             any_needs = True
             answered = answers.get(p.stem)
-            if answered is None:
-                outstanding += 1
-                state = "**UNANSWERED**"
-            else:
-                state = f"answered by `{answered.relative_to(ROOT).as_posix()}`"
+            rel_p = p.relative_to(ROOT).as_posix()
             # render the fields a needs document actually carries (need:/status:),
             # not a version: they never have
             bits = [f"{k}: {fm[k]}" for k in ("need", "status", "version") if fm.get(k)]
             meta = "; ".join(bits) or "no metadata"
-            sections += [f"## {state} — from {owner}: "
-                         f"`{p.relative_to(ROOT).as_posix()}`\n\n"
-                         f"_{meta}. Delivered because: {why}._\n", read_doc(p)]
+            if answered is None:
+                outstanding += 1
+                sections += [f"## **UNANSWERED** — from {owner}: `{rel_p}`\n\n"
+                             f"_{meta}. Delivered because: {why}._\n", read_doc(p)]
+            else:
+                # A briefing carries current obligations, not history. An answered ask is
+                # discharged: one line — state, path, who answered — and the body is one
+                # read away if wanted. Full text every session was accumulation with no
+                # end, because nothing ever retired it (1.21).
+                done_count += 1
+                sections.append(f"- answered — `{rel_p}` ({meta}) → "
+                                f"`{answered.relative_to(ROOT).as_posix()}`")
     if not any_needs:
         sections.append("_none pending._")
     else:
         sections.insert(needs_head + 1,
-                        f"_{outstanding} unanswered._ An entry is answered when one of my "
-                        "`docs/provides/` documents carries `responds_to:` naming it.\n")
+                        f"_{outstanding} unanswered, {done_count} answered (one line each; "
+                        "retired asks — resolved/closed/done/superseded — are not shown)._ "
+                        "An entry is answered when one of my `docs/provides/` documents "
+                        "carries `responds_to:` naming it.\n")
 
     # 4. in-flight proposals touching me
     proposals_dir = ROOT / reading.get("proposals", "architecture/proposals/")

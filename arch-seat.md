@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.5
+version: 1.6
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -15,6 +15,8 @@ supersedes: 1.0
 #   mechanism; summarised context is never the design record.
 # 1.4: roadmap upkeep joins the periodic review — record direction, never invent it.
 # 1.5: adopting a method release is a periodic-review/operator act, never a sweep act.
+# 1.6 (unreleased): the channel table — decisions are proposals, not needs; a briefing
+#   carries obligations, not history.
 ---
 
 # Arch Seat Protocol
@@ -142,6 +144,24 @@ code in its seat need no ask at all; anything that must stay up is a platform co
 
 The same test settles the borderline cases: **anything needing superuser or a different
 image is an ask**; using a platform that already exists is not.
+
+## Reaching a component — use the right channel
+
+You can address a `needs/` document to any component and it will land in that seat's
+briefing next session. That makes it tempting to use for everything. Don't.
+
+| You want to convey | Channel | What the addressee's briefing does with it |
+|---|---|---|
+| A durable rule or approach | constitution, a contract | injected **every session**, in full — persistent by design |
+| A **design decision** | a proposal → ADR | injected **while proposed** (`affects:` names them); on acceptance it moves to `decisions/`, *leaves* the briefing, and its consequences land in the constitution and contracts that are injected |
+| An ask that needs an answer | `needs/` addressed to the slug | injected in full **until answered**, then one line until the raiser retires it (`status: resolved`) |
+| A one-off instruction | — none, deliberately | say it in the session, or on the bridge; the vault records rules and decisions, not orders |
+
+A briefing carries **current obligations and inputs, not history**. Writing a decision as
+a need is a category error: nothing ever answers it, so nothing ever retires it, and the
+addressee re-reads it every morning as dead weight. Raisers retire their own asks with
+`status: resolved` (or `closed` / `done`) once satisfied — that is what ends an
+obligation's life in every briefing it reaches.
 
 ## Answering a component's ask
 
