@@ -179,7 +179,7 @@ def responds_to_warnings(graph) -> list[str]:
     A response may legitimately answer a need, a proposal, or a living document, so the
     check is existence — not category. Anything narrower cries wolf on correct links."""
     stems = {p.stem for p in ROOT.rglob("*.md")}
-    warns = []
+    warns, cross_vault = [], 0
     for p in sorted(ROOT.glob("components/*/docs/provides/**/*.md")):
         fm = parse_frontmatter(p)
         val = fm.get("responds_to") or fm.get("responds-to")
@@ -187,9 +187,21 @@ def responds_to_warnings(graph) -> list[str]:
             continue
         for ref in (val if isinstance(val, list) else [val]):
             stem = ref_stem(ref)
-            if stem and stem not in stems:
+            if not stem or stem in stems:
+                continue
+            # A provider serving OTHER vaults (deliver-and-sweep, §5) answers needs that
+            # live in the consuming vault — its responds_to legitimately points outside
+            # this one. A path-shaped reference that does not resolve locally is that
+            # case, not a typo; warning on each trained the estate's busiest provider
+            # to ignore the section (21 false warnings on the Orchestrator, 2026-09-03).
+            if "/" in str(ref):
+                cross_vault += 1
+            else:
                 warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
                              f"'{ref}' names no document in the vault")
+    if cross_vault:
+        warns.append(f"(info) {cross_vault} responds_to link(s) are path-shaped and not "
+                     "in this vault — cross-vault answers, unverified locally by design")
     return warns
 
 
