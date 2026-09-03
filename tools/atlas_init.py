@@ -117,10 +117,10 @@ def conf_launch_dir(repo: Path) -> Path | None:
     return Path(raw).expanduser().resolve()
 
 
-def context_hook_for_slug(launch_dir: Path, slug: str, exclude_root: Path):
-    """A SessionStart atlas-context hook for the same slug, installed from a DIFFERENT
-    repo at this launch dir (a multi-repo component). Its briefing is identical, so a
-    second one would inject the same context twice."""
+def any_context_hook(launch_dir: Path, exclude_root: Path):
+    """ANY SessionStart atlas-context hook installed at this launch dir from another
+    repo. One is enough: since 1.21 the context script emits a seat briefing covering
+    every wired sibling it discovers, so a second hook doubles the whole injection."""
     dst = launch_dir / ".claude" / "settings.json"
     if not dst.exists():
         return None
@@ -131,16 +131,8 @@ def context_hook_for_slug(launch_dir: Path, slug: str, exclude_root: Path):
     for entry in entries:
         for hook in entry.get("hooks", []):
             m = re.search(r'"([^"]+)/scripts/atlas-context\.sh"', hook.get("command", ""))
-            if not m:
-                continue
-            root = Path(m.group(1))
-            if root == exclude_root:
-                continue
-            sm = re.search(r'^SLUG="?([^"\r\n]*)"?',
-                           (root / ".atlas.conf").read_text(encoding="utf-8"),
-                           re.MULTILINE) if (root / ".atlas.conf").exists() else None
-            if sm and sm.group(1) == slug:
-                return root
+            if m and Path(m.group(1)) != exclude_root:
+                return Path(m.group(1))
     return None
 
 
@@ -352,12 +344,15 @@ def main() -> int:
                    repo_root=repo)
     if launch_dir and launch_dir != repo:
         tpl = hook_settings(repo, absolute=True)
-        other = context_hook_for_slug(launch_dir, args.slug, exclude_root=repo)
+        other = any_context_hook(launch_dir, exclude_root=repo)
         if other:
+            # ONE SessionStart per launch dir (method 1.21): the context script emits a
+            # SEAT briefing covering every wired sibling repo it discovers, so a second
+            # hook would inject the whole seat twice. Guards and publish nags stay
+            # per-repo. This subsumes the 1.12 same-slug dedupe.
             tpl["hooks"].pop("SessionStart", None)
-            print(f"  skip   SessionStart at {launch_dir} — slug '{args.slug}' briefing "
-                  f"already injected from {other} (multi-repo component: guards are "
-                  "per-repo, the briefing is per-slug)")
+            print(f"  skip   SessionStart at {launch_dir} — the seat briefing is already "
+                  f"emitted from {other}; it will discover '{args.slug}' automatically")
         merge_settings(launch_dir, tpl, args.force, written, repo_root=repo)
         persist_launch_dir(repo, launch_dir, written)
         print(f"  hooks  also installed at {launch_dir}/.claude/settings.json "

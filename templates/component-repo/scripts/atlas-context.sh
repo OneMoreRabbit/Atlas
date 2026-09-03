@@ -6,6 +6,29 @@ set -e
 . "$(dirname -- "$0")/atlas-common.sh"
 cd "$ATLAS_REPO_ROOT"
 
+# ---- the seat, discovered from the filesystem (method 1.21) ------------------------
+# One SEAT holding N wired repos gets ONE briefing: shared vault content once, then a
+# per-component section each. Members are every launch-dir sibling carrying .atlas.conf
+# — self-describing, so a repo wired later joins with no settings edit. On a
+# single-repo desktop the launch dir is the repo and the seat is just this component.
+# (A 4-repo seat paid ~84KB per session start, 71% of it the same text four times —
+# arc-platform finding, 2026-09-03.)
+LAUNCH=$(printf '%s' "${ATLAS_LAUNCH_DIR:-$ATLAS_REPO_ROOT}" | sed "s|^\$HOME|$HOME|")
+SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"
+if [ "$LAUNCH" != "$ATLAS_REPO_ROOT" ] && [ -d "$LAUNCH" ]; then
+  SEAT_SLUGS=""; SEAT_ROOTS=""
+  for d in "$LAUNCH"/*/; do
+    [ -f "${d}.atlas.conf" ] || continue
+    _s=$(sed -n 's/^SLUG="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
+    _v=$(sed -n 's/^ATLAS_VAULT_REMOTE="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
+    [ -n "$_s" ] || continue
+    [ "$_v" = "$ATLAS_VAULT_REMOTE" ] || continue   # this hook serves this vault's members
+    SEAT_SLUGS="${SEAT_SLUGS:+$SEAT_SLUGS,}$_s"
+    SEAT_ROOTS="${SEAT_ROOTS:+$SEAT_ROOTS }${d%/}"
+    rm -f "$(atlas_nag_sentinel "${d%/}")"          # new session: re-arm every member's nag
+  done
+  [ -n "$SEAT_SLUGS" ] || { SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"; }
+fi
 rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
 
 sh scripts/atlas-sync.sh >&2
@@ -55,12 +78,18 @@ fi
 # Only pass the flag if the PINNED method's validator knows it: this script may be
 # newer than the vault's pin during an upgrade window, and an unknown flag exits 2 —
 # a failed briefing for a version-skew reason (caught by --verify's new rung).
-if "$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --help 2>/dev/null | grep -q -- '--artifacts-dir'; then
-  OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG" --artifacts-dir "$ART")
-else
-  echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2
-  OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG")
-fi
+HELP=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --help 2>/dev/null || true)
+EMIT="$SLUG"
+case "$HELP" in *"SLUG[,SLUG"*) EMIT="$SEAT_SLUGS" ;;      # pinned method understands seats
+  *) [ "$SEAT_SLUGS" = "$SLUG" ] || echo "atlas-context: pinned method predates seat briefings — emitting per-slug for $SLUG only" >&2 ;;
+esac
+case "$HELP" in
+  *"--artifacts-dir"*)
+    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT" --artifacts-dir "$ART") ;;
+  *)
+    echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2
+    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT") ;;
+esac
 
 case "$OUT" in
   "# ATLAS-CONTEXT"*) ;;

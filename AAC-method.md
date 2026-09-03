@@ -196,6 +196,14 @@ updated: 2026-09-02
 #     ATLAS-CONTEXT.d/<interface>/ beside the briefing with path, version, size, sha256,
 #     measured separately; a declared sha256 is verified; missing/mismatch FAILS emission
 #     and validation. atlas-context.sh passes --artifacts-dir and excludes the dir locally
+#   - one seat, one briefing: --emit-context takes N comma-separated slugs and emits a
+#     single seat briefing (shared sections once, per-component sections each); the
+#     context script discovers seat members from the launch dir; session total reported.
+#     A 4-repo seat was injecting shared docs 4x (71% waste). affects: routes like to:
+#     ('all'/'all components' reach every slug — the old substring test matched nobody).
+#   - the design record is reachable: accepted decisions + standalone architecture/*.md
+#     appear in the briefing as an on-demand index (reading them is retrieval, not
+#     browsing), closing the contradiction between §6 and §7.
 ---
 
 # Architecture-Above-Code (AAC)
