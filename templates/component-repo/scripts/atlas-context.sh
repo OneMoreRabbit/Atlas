@@ -34,7 +34,10 @@ if [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ]; then
     echo "atlas-context: WARNING — could not check out origin/$BWORK; briefing compiled from '$VBR' and may be historical" >&2
   fi
 fi
-cleanup() { [ -n "$WT" ] && git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1; }
+# cleanup must NEVER fail: under `set -e` a failing EXIT trap becomes the script's
+# status, and `[ -n "" ] && …` is 1 — so the healthy path (no worktree) exited 1
+# (arc-platform platform seat, 2026-09-03).
+cleanup() { [ -n "$WT" ] || return 0; git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG")

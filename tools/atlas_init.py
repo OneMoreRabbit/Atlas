@@ -246,6 +246,20 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
                           f"{resolved} — launched elsewhere? re-run with --launch-dir")
                 elif path:
                     check(Path(path).exists(), f"{event} script resolves", path)
+    # Installed -> firing -> SUCCEEDING: run the SessionStart script and assert exit 0.
+    ctx = repo / "scripts" / "atlas-context.sh"
+    if ctx.exists():
+        import subprocess
+        try:
+            r = subprocess.run(["sh", str(ctx)], cwd=repo, capture_output=True, text=True,
+                               timeout=300)
+            good = r.returncode == 0 and "# ATLAS-CONTEXT" in r.stdout
+            tail = (r.stderr.strip().splitlines() or [""])[-1][:140]
+            check(good, "scripts/atlas-context.sh runs, exits 0, emits a briefing",
+                  f"exit {r.returncode}; {tail}" if not good else f"{len(r.stdout.encode()):,} bytes")
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            check(False, "scripts/atlas-context.sh runs", str(exc)[:140])
+
     print("\natlas_init --verify: " + ("all checks passed" if ok else
           "FAILURES above — the hook layer is not live; fix before trusting the write guard"))
     return 0 if ok else 1

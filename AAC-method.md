@@ -178,6 +178,10 @@ updated: 2026-09-02
 #   - guard (PR #4, AgentEco): the PR base branch must match the declared policy
 #     (component PRs had targeted the release branch and passed); method: and
 #     external: are architecture-owned — a component branch had rewritten the pin
+#   - 1.20.1 (2026-09-03, patch): atlas-context.sh exited 1 on the healthy path (EXIT
+#     trap under set -e); CI policy/pin readers rejected trailing comments — the §5
+#     example itself failed the guard; --verify now runs the context script and
+#     asserts exit 0 (installed -> firing -> succeeding). Both from ARCPlatform's seat.
 #   - bridge tasks.md write-loss under a syncing client: acknowledged, deferred by
 #     the operator pending client fixes (bridge-init 1.2 notes it)
 ---
