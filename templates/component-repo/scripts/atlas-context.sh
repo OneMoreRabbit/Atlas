@@ -34,7 +34,13 @@ if [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ]; then
     echo "atlas-context: WARNING — could not check out origin/$BWORK; briefing compiled from '$VBR' and may be historical" >&2
   fi
 fi
-cleanup() { [ -n "$WT" ] && git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1; }
+# cleanup must NEVER fail: under `set -e` the shell adopts a failing EXIT trap's status
+# as its own, and `[ -n "" ] && …` returns 1 — so the script exited 1 on exactly the
+# healthy path (clone on the work branch, no worktree) and 0 on the degraded one.
+# Inverted polarity, in the script that carries the retrieval invariant (arc-platform
+# platform seat, 2026-09-03). A worktree that cannot be removed is housekeeping, not a
+# failed briefing.
+cleanup() { [ -n "$WT" ] || return 0; git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 # Raw contract artifacts (OpenAPI, JSON Schema) are delivered as exact files beside the
@@ -46,7 +52,15 @@ rm -rf "$ART"
 if [ -d "$ATLAS_REPO_ROOT/.git" ] && ! grep -qs '^ATLAS-CONTEXT.d/$' "$ATLAS_REPO_ROOT/.git/info/exclude" 2>/dev/null; then
   mkdir -p "$ATLAS_REPO_ROOT/.git/info" && echo 'ATLAS-CONTEXT.d/' >> "$ATLAS_REPO_ROOT/.git/info/exclude"
 fi
-OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG" --artifacts-dir "$ART")
+# Only pass the flag if the PINNED method's validator knows it: this script may be
+# newer than the vault's pin during an upgrade window, and an unknown flag exits 2 —
+# a failed briefing for a version-skew reason (caught by --verify's new rung).
+if "$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --help 2>/dev/null | grep -q -- '--artifacts-dir'; then
+  OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG" --artifacts-dir "$ART")
+else
+  echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2
+  OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG")
+fi
 
 case "$OUT" in
   "# ATLAS-CONTEXT"*) ;;
