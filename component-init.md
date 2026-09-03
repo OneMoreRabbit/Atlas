@@ -92,6 +92,17 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 2. **Declare your edges.** For every component you depend on, add an edge
    `{from: <them>, to: <you>, interface: …, pinned: …}`. For every component that depends on
    you, they add the edge. The graph must agree at both ends.
+
+   **If an upstream of yours lives in another vault**, it is not an edge: there is no
+   in-vault provider to name at the `from:` end. It belongs in `external:` (§5) — which
+   is **architecture-owned**, so you cannot add it yourself and the guard will refuse the
+   commit. Ask for it in `architecture/proposals/`, quoting the four lines you need. A
+   component whose *only* upstream is cross-vault therefore completes this step with no
+   edges at all and a proposal open; that is correct, not incomplete.
+
+   Do not leave it undeclared because the guard refused it. An unpinned cross-vault
+   upstream makes your drift summary read "no upstream edges" — inaccurate rather than
+   empty, and a new version of that contract arrives unnoticed.
 3. **Validate and publish the registration.** Run the validator **as a check**, discard
    its regenerated files, and push only what you authored — derived views are produced by
    CI on the vault's default branch after merge (AAC-method §9), never from a session:
