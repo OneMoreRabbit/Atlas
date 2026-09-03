@@ -35,7 +35,6 @@ jobs:
           # Read as raw text, never through a YAML loader: an unquoted 1.10 parses as
           # the float 1.1 and would check out the wrong tag (method 1.10 changelog).
           PIN=$(sed -n '/^method:/,/^[^ ]/p' registry/io-graph.yml |
-                sed 's/[[:space:]]*#.*$//' |
                 sed -n "s/^[[:space:]]*pinned:[[:space:]]*[\"']\{0,1\}\([0-9][0-9.]*\)[\"']\{0,1\}[[:space:]]*$/\1/p" |
                 head -1)
           case "$PIN" in

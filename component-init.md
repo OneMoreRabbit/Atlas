@@ -40,8 +40,7 @@ supersedes: 2.8
 #   production; ask when the environment changes, not when your code does). A structural
 #   change is a design act: re-read decisions/ before extending a mechanism.
 # 2.9 (unreleased): which channel — a briefing carries obligations, not history; decisions
-#   are proposals, not needs; raisers retire their own asks. Raw contract artifacts:
-#   declare with artifacts:, receive in ATLAS-CONTEXT.d/, generate from bytes.
+#   are proposals, not needs; raisers retire their own asks.
 ---
 
 # Component Init Brief
@@ -92,17 +91,6 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 2. **Declare your edges.** For every component you depend on, add an edge
    `{from: <them>, to: <you>, interface: …, pinned: …}`. For every component that depends on
    you, they add the edge. The graph must agree at both ends.
-
-   **If an upstream of yours lives in another vault**, it is not an edge: there is no
-   in-vault provider to name at the `from:` end. It belongs in `external:` (§5) — which
-   is **architecture-owned**, so you cannot add it yourself and the guard will refuse the
-   commit. Ask for it in `architecture/proposals/`, quoting the four lines you need. A
-   component whose *only* upstream is cross-vault therefore completes this step with no
-   edges at all and a proposal open; that is correct, not incomplete.
-
-   Do not leave it undeclared because the guard refused it. An unpinned cross-vault
-   upstream makes your drift summary read "no upstream edges" — inaccurate rather than
-   empty, and a new version of that contract arrives unnoticed.
 3. **Validate and publish the registration.** Run the validator **as a check**, discard
    its regenerated files, and push only what you authored — derived views are produced by
    CI on the vault's default branch after merge (AAC-method §9), never from a session:
@@ -228,28 +216,6 @@ if it looks wrong, raise a need addressed to the provider.
 
 > Address the slug, not prose. `to: agent-skeleton` routes; `to: the seat image people`
 > does not. Anything in parentheses is treated as commentary, not address.
-
-## Machine-readable contracts — declare them, generate from them
-
-If a contract you **provide** has a machine-readable truth (OpenAPI, JSON Schema), put the
-file beside the contract in `provides/` and declare it in the contract's frontmatter:
-
-```yaml
-artifacts:
-  - file: <interface>-openapi-v0_1.json
-    sha256: <digest>        # recommended: verified on every validation and every briefing
-  - <interface>-event-v0_1.schema.json
-```
-
-Compute the digest once (`sha256sum <file>`). If the bytes change, the contract version
-changes — a mismatch under a published version fails validation, by design.
-
-If a contract you **consume** declares artifacts, your briefing delivers their exact bytes
-to `ATLAS-CONTEXT.d/<interface>/` in your repo (local, never committed), and lists each
-with path, version, size and sha256. **Generate models from those files; never hand-copy
-shapes from the prose contract** — a hand-written DTO is an accidental fourth contract.
-A missing or mismatched artifact makes your session's briefing fail loudly rather than
-hand you something to guess from; that is the correct outcome.
 
 ## Which channel — rule, decision, ask, or instruction
 
