@@ -1,7 +1,7 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.9
+version: 2.10
 status: active
 maturity: 1.0
 updated: 2026-09-02
@@ -257,8 +257,16 @@ hand you something to guess from; that is the correct outcome.
 |---|---|---|
 | A durable rule or approach | constitution, a contract | injected **every session**, in full — persistent by design |
 | A **design decision** | a proposal → ADR | injected **while proposed** (`affects:` names them); on acceptance it moves to `decisions/`, *leaves* the briefing, and its consequences land in the constitution and contracts that are injected |
-| An ask that needs an answer | `needs/` addressed to the slug | injected in full **until answered**, then one line until the raiser retires it (`status: resolved`) |
-| A one-off instruction | — none, deliberately | say it in the session, or on the bridge; the vault records rules and decisions, not orders |
+| An ask for **another component** | `needs/` addressed to **that component's slug** | delivered into *its* briefing — this is how one seat reaches another, human never involved |
+| An ask that needs the **human's** judgment | `needs/` addressed to **`nav`** | mirrored to the bridge for @nav; use it only for direction/decisions, never to reach another seat |
+| A one-off instruction | — none, deliberately | say it in the session; the vault records rules and decisions, not orders |
+
+> **`nav` is a person, not a message bus.** A seat reaching another seat addresses that
+> **slug** — the ask lands in the other component's briefing directly. Addressing `nav`
+> to get to another component routes your message through a human relay, which is slow,
+> lossy, and not what the bridge is for. The bridge carries human↔AI only. (Real-time
+> seat-to-seat messaging is a separate concern, for the `agent-comms` component, not the
+> vault.)
 
 A briefing carries **current obligations and inputs, not history**. Writing a decision as
 a need is a category error: nothing ever answers it, so nothing ever retires it, and the

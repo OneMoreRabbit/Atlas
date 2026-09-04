@@ -204,6 +204,11 @@ updated: 2026-09-02
 #   - the design record is reachable: accepted decisions + standalone architecture/*.md
 #     appear in the briefing as an on-demand index (reading them is retrieval, not
 #     browsing), closing the contradiction between §6 and §7.
+#   - routing tightened (two seats tried to converse via the bridge): `nav` is the
+#     human, the bridge is human<->AI ONLY, never a seat-to-seat relay. A seat reaches
+#     another by addressing its slug; the arch seat redirects a misrouted `to: nav` ask
+#     instead of mirroring it; validator warns when an addressee mixes `nav` with a
+#     component slug. Real seat-to-seat messaging is agent-comms' job, not the vault's.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -314,7 +319,8 @@ components/<slug>/
 > about an obligation should look like an obligation.
 
 > **Address your asks.** Every `needs/` document carries **`to:`** naming the addressee's
-> **slug** (a list for several; `nav` for the human, via the bridge). Delivery follows the
+> **slug** (a list for several; `nav` — the human — only when it needs human judgment,
+> never to reach another component through the bridge). Delivery follows the
 > addressee, not the graph: a document naming a slug reaches it wherever it sits, even
 > with no edge between you — which is exactly when a component most needs to hear from a
 > stranger. `addressed-to:` is accepted as an alias. A document naming nobody is

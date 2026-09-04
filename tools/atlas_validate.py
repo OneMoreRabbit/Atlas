@@ -239,6 +239,15 @@ def addressee_warnings(graph) -> list[str]:
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
                          "resolved by prose, not a slug; write the slug (or a list of "
                          "slugs) so delivery cannot turn on wording")
+        # nav (the human) mixed with a component slug: the bridge is human<->AI only, so
+        # this is a seat trying to reach another seat through the human. Pick one channel.
+        comp = [c["slug"] for c in graph.get("components", [])]
+        toks = addressee_tokens(named)
+        if BRIDGE_ADDRESSEE in toks and any(s in toks for s in comp):
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' names "
+                         "both `nav` (the human) and a component; the bridge is not a "
+                         "seat-to-seat relay — address the component's slug alone, or "
+                         "`nav` alone for a human decision")
     return warns
 
 

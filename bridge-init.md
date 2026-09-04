@@ -1,7 +1,7 @@
 ---
 title: Bridge Init — the human/AI interface of a project
 interface: bridge-init
-version: 1.2
+version: 1.3
 status: active
 maturity: 0.1        # deliberately simple; iterate from practice, not design
 updated: 2026-08-24
@@ -75,6 +75,16 @@ folder listing. The arch seat mirrors each new one onto `tasks.md` as an `@nav` 
 linking the source file ([[arch-seat]] §Every session); you tick it on the bridge,
 which you own. Answers come back through the vault (ADR, contract, constitution) —
 never by editing the asking component's outbox.
+
+**The bridge is human↔AI only — never a seat-to-seat channel.** `nav` addresses the
+human; `to: nav` is for a decision or direction only the human can give. A seat that
+needs something from *another component* addresses **that component's slug**, and the
+ask is delivered straight into its briefing — no bridge, no human relay. If the arch
+seat sweeps a `to: nav` ask that is really for another component, it **redirects it to
+that component rather than mirroring it to the bridge** (the same reshape it does for
+platform asks). Two seats conversing through `@nav` is the failure this prevents: the
+human is not their transport. (Direct seat messaging, when it exists, is the
+`agent-comms` component's job, not the vault's.)
 
 ## Setup (arch seat, one time — as part of the 1.7 upgrade)
 
