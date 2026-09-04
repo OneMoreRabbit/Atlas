@@ -47,5 +47,10 @@ atlas_work_branch() {
   atlas_branching_work "$(atlas_graph_text "$_bw")"
 }
 
+# The publish-nag sentinel for ANY repo root (the seat briefing clears every member's)
+atlas_nag_sentinel() {
+  printf '%s' "${TMPDIR:-/tmp}/atlas-nag.$(printf '%s' "$1" | cksum | cut -d' ' -f1)"
+}
+
 ATLAS_SENTINEL="${TMPDIR:-/tmp}/atlas-nag.$(printf '%s' "$ATLAS_REPO_ROOT" | cksum | cut -d' ' -f1)"
 export ATLAS_REPO_ROOT ATLAS_VAULT ATLAS_METHOD ATLAS_METHOD_REMOTE ATLAS_SENTINEL SLUG

@@ -55,10 +55,11 @@ DELIVERED_EXTERNAL: list = []   # set in main(); vault-level, same for every com
 FRONTMATTER_RE = re.compile(r"^(?:\s*(?:>[^\n]*)?\n)*?---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
-# Documents whose frontmatter will not parse. Collected, not raised: one bad file
-# must not stop the run, but it must never pass as "a document with no fields" —
-# that renders a published contract indistinguishable from one that never existed.
-FRONTMATTER_ERRORS: list[tuple[str, str]] = []
+# Documents whose frontmatter will not parse. Collected, not raised (PR #7, AgentEco):
+# one bad file must not stop the run, but an unparseable block is NOT an empty one —
+# swallowing it makes a published contract read as never-published (🟢 -> ⚪) and a
+# needs doc route to nobody, while looking correct to any human who opens it.
+FRONTMATTER_ERRORS: list = []
 
 
 def parse_frontmatter_text(text: str, source: str | None = None) -> dict:
@@ -68,19 +69,15 @@ def parse_frontmatter_text(text: str, source: str | None = None) -> dict:
     try:
         return yaml.safe_load(m.group(1)) or {}
     except yaml.YAMLError as exc:
-        # NEVER swallow this. An unparseable block is not an empty one: the document
-        # loses its `interface`, `version` and `to`, so a published contract silently
-        # un-publishes (🟢 -> ⚪, the pre-existence state) and a needs doc routes to
-        # nobody — while looking correct to every human who opens it.
-        detail = str(exc).splitlines()[0].strip()
-        FRONTMATTER_ERRORS.append((source or "<text>", detail))
-        return {}
+        if source is not None:   # remote blobs (wiring/external probes) are the
+            FRONTMATTER_ERRORS.append((source, str(exc).splitlines()[0].strip()))
+        return {}                # provider's own vault's problem, not this one's
 
 
 def parse_frontmatter(path: Path) -> dict:
-    return parse_frontmatter_text(path.read_text(encoding="utf-8"),
-                                  source=path.relative_to(ROOT).as_posix()
-                                  if path.is_absolute() else path.as_posix())
+    src = (path.relative_to(ROOT).as_posix()
+           if path.is_absolute() and str(path).startswith(str(ROOT)) else path.as_posix())
+    return parse_frontmatter_text(path.read_text(encoding="utf-8"), source=src)
 
 
 def version_tuple(v) -> tuple:
@@ -193,7 +190,7 @@ def responds_to_warnings(graph) -> list[str]:
     A response may legitimately answer a need, a proposal, or a living document, so the
     check is existence — not category. Anything narrower cries wolf on correct links."""
     stems = {p.stem for p in ROOT.rglob("*.md")}
-    warns = []
+    warns, cross_vault = [], 0
     for p in sorted(ROOT.glob("components/*/docs/provides/**/*.md")):
         fm = parse_frontmatter(p)
         val = fm.get("responds_to") or fm.get("responds-to")
@@ -201,9 +198,21 @@ def responds_to_warnings(graph) -> list[str]:
             continue
         for ref in (val if isinstance(val, list) else [val]):
             stem = ref_stem(ref)
-            if stem and stem not in stems:
+            if not stem or stem in stems:
+                continue
+            # A provider serving OTHER vaults (deliver-and-sweep, §5) answers needs that
+            # live in the consuming vault — its responds_to legitimately points outside
+            # this one. A path-shaped reference that does not resolve locally is that
+            # case, not a typo; warning on each trained the estate's busiest provider
+            # to ignore the section (21 false warnings on the Orchestrator, 2026-09-03).
+            if "/" in str(ref):
+                cross_vault += 1
+            else:
                 warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
                              f"'{ref}' names no document in the vault")
+    if cross_vault:
+        warns.append(f"(info) {cross_vault} responds_to link(s) are path-shaped and not "
+                     "in this vault — cross-vault answers, unverified locally by design")
     return warns
 
 
@@ -629,6 +638,64 @@ def read_doc(path: Path) -> str:
         return f"_[unreadable: {exc}]_"
 
 
+def contract_artifacts(contract: Path, fm: dict) -> tuple[list, list]:
+    """-> (artifacts, errors). A contract may declare machine-readable sidecars that
+    live beside it — OpenAPI, JSON Schema — under `artifacts:` (names, or {file, sha256}).
+    Byte-faithful: nothing here reads the content as anything but bytes. A declared
+    sha256 is VERIFIED; missing files or a mismatch are errors, never warnings — a
+    consumer generating models from these must not be invited to guess (1.21, from a
+    blocks-android need)."""
+    import hashlib
+    decl = fm.get("artifacts") or []
+    arts, errs = [], []
+    for d in decl if isinstance(decl, list) else [decl]:
+        name = d.get("file") if isinstance(d, dict) else str(d)
+        want = (d.get("sha256") if isinstance(d, dict) else None)
+        if not name or "/" in str(name) or str(name).startswith("."):
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: artifact name "
+                        f"{name!r} must be a plain filename beside the contract")
+            continue
+        src = contract.parent / name
+        if not src.is_file():
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: declared artifact "
+                        f"`{name}` is missing beside it")
+            continue
+        data = src.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        if want and str(want).lower() != digest:
+            errs.append(f"{contract.relative_to(ROOT).as_posix()}: artifact `{name}` "
+                        f"sha256 {digest[:12]}… does not match declared {str(want)[:12]}… "
+                        "— bytes changed under a published version; bump the contract")
+            continue
+        arts.append({"file": name, "path": src.relative_to(ROOT).as_posix(),
+                     "bytes": len(data), "sha256": digest, "declared": bool(want)})
+    return arts, errs
+
+
+def deliver_artifacts(arts: list, contract: Path, interface: str, version: str,
+                      dest_root: Path | None) -> list:
+    """Copy exact bytes to <dest_root>/<interface>/<file> and return rendered rows.
+    Delivered as FILES beside the briefing, not inline: the invariant forbids browsing
+    the vault, not receiving exact artefacts — and a large schema belongs in a code
+    generator's hands, not in the model's context window."""
+    import shutil
+    rows = []
+    for a in arts:
+        where = ""
+        if dest_root is not None:
+            d = dest_root / interface
+            d.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / a["path"], d / a["file"])   # bytes, never reserialized
+            where = (d / a["file"]).as_posix()
+        rows.append(f"| `{a['file']}` | {version} | {a['bytes']:,} | `{a['sha256'][:16]}…` "
+                    f"| `{a['path']}` | {'`'+where+'`' if where else '_not written (no --artifacts-dir)_'} |")
+    return rows
+
+
+ARTIFACT_TABLE_HEAD = ("| Artifact | Version | Bytes | sha256 | Provider path | Delivered to |\n"
+                       "|---|---|---|---|---|---|")
+
+
 def contract_at_pin(provides_dir: Path, interface: str, pinned: str):
     """-> (path, version, note) — the contract file for `interface` at `pinned`.
 
@@ -728,60 +795,134 @@ def addressed_to(fm: dict, slug: str) -> bool:
     return True if value is None else names_slug(value, slug)
 
 
+ALL_TOKENS = ("all", "all components", "everyone", "*")
+
+
+def affects_slug(fm: dict, slug: str) -> bool:
+    """Does a document's scope (`affects:` / `target_component:` / `related:`) name this
+    slug? Routed with the same token-aware matching `to:` gets (§3) — the old bare
+    substring test meant `affects: [all components]` matched NOBODY, so a project-wide
+    proposal reached no briefing precisely while in flight (arc-platform finding,
+    2026-09-03). The well-known tokens 'all' / 'all components' reach every slug."""
+    vals = []
+    for k in ("affects", "target_component", "related"):
+        v = fm.get(k)
+        if v is None:
+            continue
+        vals += [str(x) for x in v] if isinstance(v, list) else [str(v)]
+    for v in vals:
+        head = addressee_head(v).strip().lower()
+        if head in ALL_TOKENS or names_slug(v, slug):
+            return True
+    return False
+
+
 def proposal_in_flight(fm: dict, slug: str) -> bool:
     status = str(fm.get("status", "proposed")).lower()
     if any(s in status for s in ("accepted", "rejected", "implemented", "superseded",
                                  "withdrawn", "done", "closed")):
         return False
-    scope = " ".join(str(fm.get(k, "")) for k in ("affects", "target_component", "related"))
-    return slug.lower() in scope.lower()
+    return affects_slug(fm, slug)
 
 
-def emit_context(slug: str, out: str | None) -> int:
-    manifest_path = ROOT / "registry" / ".compiled" / slug / "io-manifest.yml"
-    if not manifest_path.exists():
-        print(f"No {manifest_path.relative_to(ROOT).as_posix()} in the vault — the compiled "
-              "manifests must be committed (AAC-method §5); regenerate with the validator "
-              "(no flags) on the vault's default branch.", file=sys.stderr)
-        return 2
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    reading = manifest.get("read_before_working", {})
+def architecture_in_force() -> list:
+    """The 'architecture in force' index: accepted decisions and standalone
+    architecture documents, as a LIST the session reads on demand. The briefing is a
+    reading list (§6) — an entry here makes reading that document retrieval, not
+    browsing. Bodies are deliberately not embedded: a decision binds every component,
+    and N slugs on one seat would carry it N times (arc-platform findings, 2026-09-03).
+    An index also honours 'summarised context is never the design record' exactly —
+    the session reads the record itself, not a summary of it."""
+    lines = []
+    dec = sorted((ROOT / "architecture" / "decisions").glob("*.md"))         if (ROOT / "architecture" / "decisions").is_dir() else []
+    for p in dec:
+        fm = parse_frontmatter(p)
+        aff = fm.get("affects", "")
+        aff = ", ".join(str(a) for a in aff) if isinstance(aff, list) else str(aff)
+        lines.append(f"- `{p.relative_to(ROOT).as_posix()}` — "
+                     f"{fm.get('title', p.stem)} (status: {fm.get('status', '?')}"
+                     + (f"; affects: {aff}" if aff else "") + ")")
+    for p in sorted((ROOT / "architecture").glob("*.md")):
+        if p.name == "constitution.md":
+            continue
+        fm = parse_frontmatter(p)
+        lines.append(f"- `{p.relative_to(ROOT).as_posix()}` — "
+                     f"{fm.get('title', p.stem)} (status: {fm.get('status', 'active')})")
+    return lines
+
+
+def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = None) -> int:
+    """Emit the briefing for one slug, or ONE seat briefing for several
+    (comma-separated). A seat holding N components pays for its briefing once per
+    SESSION, not once per slug: shared sections — constitution, architecture index,
+    delivered external contracts, needs addressed to several held slugs, proposals —
+    appear exactly once, then each slug gets its own inputs, solo needs and drift.
+    On a real four-repo seat the per-slug shape injected 84KB of which 71% was the
+    same text repeated (arc-platform finding, 2026-09-03)."""
+    slugs = [s.strip() for s in str(slug_arg).split(",") if s.strip()]
+    seat = len(slugs) > 1
+    dest = Path(artifacts_dir).resolve() if artifacts_dir else None
+    art_bytes, art_count, art_errors = 0, 0, []
+    delivered_ifaces: set = set()
+
+    readings = {}
+    for s in slugs:
+        mp = ROOT / "registry" / ".compiled" / s / "io-manifest.yml"
+        if not mp.exists():
+            print(f"No {mp.relative_to(ROOT).as_posix()} in the vault — the compiled "
+                  "manifests must be committed (AAC-method §5); regenerate with the "
+                  "validator (no flags) on the vault's default branch.", file=sys.stderr)
+            return 2
+        readings[s] = yaml.safe_load(mp.read_text(encoding="utf-8")).get(
+            "read_before_working", {})
+
+    who = slugs[0] if not seat else "seat briefing — " + ", ".join(slugs)
     sections: list[str] = [
-        f"# ATLAS-CONTEXT — {slug}",
+        f"# ATLAS-CONTEXT — {who}",
         "",
-        f"> Generated by tools/atlas_validate.py --emit-context from "
-        f"`{manifest_path.relative_to(ROOT).as_posix()}`. Do not edit.",
+        "> Generated by tools/atlas_validate.py --emit-context from the committed",
+        "> io-manifests. Do not edit.",
         "> This is the session's complete reading list. Consult the wider vault only if",
         "> this file is insufficient — and treat that as a defect in `registry/io-graph.yml`:",
         "> fix the graph, don't browse.",
     ]
+    if seat:
+        sections.append("> One briefing for every component this seat holds: shared "
+                        "sections appear once; per-component sections follow (1.21).")
 
-    # 1. constitution
-    const_rel = reading.get("constitution", "architecture/constitution.md")
+    # ---- shared: constitution ------------------------------------------------------
+    const_rel = readings[slugs[0]].get("constitution", "architecture/constitution.md")
     sections += [f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel)]
 
-    # 2. pinned upstream contracts
-    inputs = reading.get("inputs", [])
-    sections.append("\n---\n\n# Inputs — upstream contracts I build against\n")
-    if not inputs:
-        sections.append("_none — no upstream edges._")
-    for inp in inputs:
-        path, ver, note = contract_at_pin(
-            ROOT / inp["path"], inp["interface"], str(inp["pinned"]))
-        head = (f"## `{inp['interface']}` from {inp['provider']} — "
-                f"pinned {inp['pinned']}, state: {inp.get('state', '?')}")
-        if note:
-            head += f"\n\n> ⚠ {note}"
-        if path is None:
-            sections += [head, "_contract not yet published._"]
-        else:
-            sections += [f"{head}\n\n**Source:** `{path.relative_to(ROOT).as_posix()}` "
-                         f"(version {ver})\n", read_doc(path)]
+    # ---- shared: architecture in force (index — reading it is retrieval) -----------
+    arch_idx = architecture_in_force()
+    if arch_idx:
+        sections += ["\n---\n\n# Architecture in force — read on demand (this is "
+                     "retrieval, not browsing)\n",
+                     "The documents below govern this vault. **Reading a document "
+                     "listed here is part of the protocol** — a structural change is a "
+                     "design act, and the design record is these files, never this "
+                     "briefing's prose.\n", *arch_idx]
 
-    # 2b. external contracts delivered into this vault by their provider
-    ext_inputs = reading.get("external_inputs") or []
+    def emit_artifacts(contract_path: Path, iface: str, ver: str, delivered: bool):
+        nonlocal art_bytes, art_count
+        arts, errs = contract_artifacts(contract_path, parse_frontmatter(contract_path))
+        art_errors.extend(errs)
+        if arts:
+            rows = deliver_artifacts(arts, contract_path, iface, ver, dest)
+            art_count += len(arts)
+            art_bytes += sum(a["bytes"] for a in arts)
+            label = ("delivered with the contract" if delivered
+                     else "generate from these, never from the prose")
+            sections.extend([f"\n**Raw artifacts** (exact bytes; {label}):\n",
+                             ARTIFACT_TABLE_HEAD, *rows])
+
+    # ---- shared: contracts delivered from other vaults (vault-scoped by definition) -
+    ext_inputs = readings[slugs[0]].get("external_inputs") or []
     if ext_inputs:
-        sections.append("\n---\n\n# Inputs — contracts delivered from other vaults\n")
+        sections.append("\n---\n\n# Inputs — contracts delivered from other vaults"
+                        + (" (vault-scoped: shown once for the whole seat)" if seat else "")
+                        + "\n")
         for x in ext_inputs:
             head = (f"## `{x['interface']}` from {x['provider']}"
                     + (f" — pinned {x['pinned']}" if x.get("pinned") else " — not pinned"))
@@ -791,87 +932,155 @@ def emit_context(slug: str, out: str | None) -> int:
                          f"{x.get('version', '?')}; authored in the provider's own vault "
                          "and delivered here — never edit this copy)\n",
                          read_doc(ROOT / x["path"])]
+            emit_artifacts(ROOT / x["path"], str(x["interface"]),
+                           str(x.get("version", "?")), delivered=True)
 
-    # 3. needs addressed to me — by addressee first, by edge only as the fallback.
-    # A document that names an addressee is delivered to that slug wherever it lives:
-    # the edge list says who my consumers are, not who may write to me (decisions/0003).
-    sections.append("\n---\n\n# Consumer feedback — needs addressed to me\n")
-    needs_head = len(sections) - 1
-    edge_dirs = {(ROOT / fb["path"]).resolve()
-                 for fb in reading.get("consumer_feedback", [])}
-    answers = responds_to_index(slug)
-    any_needs, outstanding, done_count = False, 0, 0
+    # ---- needs: ONE scan, each doc classified by which held slugs it reaches -------
+    edge_dirs = {s: {(ROOT / fb["path"]).resolve()
+                     for fb in readings[s].get("consumer_feedback", [])} for s in slugs}
+    answers = {s: responds_to_index(s) for s in slugs}
     needs_dirs = sorted(ROOT.glob("components/*/docs/needs"))
     if (ROOT / "needs").is_dir():
-        needs_dirs.append(ROOT / "needs")              # vault-level asks (1.16)
+        needs_dirs.append(ROOT / "needs")
+    shared_needs, solo_needs = [], {s: [] for s in slugs}
+    outstanding, done_count = 0, 0
     for needs_dir in needs_dirs:
         rel = needs_dir.relative_to(ROOT)
         owner = rel.parts[1] if rel.parts[0] == "components" else "the vault"
-        if owner == slug:
-            continue                                   # my own outbox, not feedback to me
         for p in sorted(needs_dir.glob("*.md")):
             fm = parse_frontmatter(p)
             if is_retired(fm):
                 continue
             named = addressee(fm)
-            if named is None:
-                # no addressee: keep the historic edge-scoped, fail-open behaviour
-                if needs_dir.resolve() not in edge_dirs:
-                    continue
-                why = "no addressee — delivered because {} is my consumer".format(owner)
-            else:
-                if not names_slug(named, slug):
-                    continue
-                why = f"addressed to `{named}`"
-            any_needs = True
-            answered = answers.get(p.stem)
-            rel_p = p.relative_to(ROOT).as_posix()
-            # render the fields a needs document actually carries (need:/status:),
-            # not a version: they never have
-            bits = [f"{k}: {fm[k]}" for k in ("need", "status", "version") if fm.get(k)]
-            meta = "; ".join(bits) or "no metadata"
-            if answered is None:
-                outstanding += 1
-                sections += [f"## **UNANSWERED** — from {owner}: `{rel_p}`\n\n"
-                             f"_{meta}. Delivered because: {why}._\n", read_doc(p)]
-            else:
-                # A briefing carries current obligations, not history. An answered ask is
-                # discharged: one line — state, path, who answered — and the body is one
-                # read away if wanted. Full text every session was accumulation with no
-                # end, because nothing ever retired it (1.21).
-                done_count += 1
-                sections.append(f"- answered — `{rel_p}` ({meta}) → "
-                                f"`{answered.relative_to(ROOT).as_posix()}`")
-    if not any_needs:
-        sections.append("_none pending._")
-    else:
-        sections.insert(needs_head + 1,
-                        f"_{outstanding} unanswered, {done_count} answered (one line each; "
-                        "retired asks — resolved/closed/done/superseded — are not shown)._ "
-                        "An entry is answered when one of my `docs/provides/` documents "
-                        "carries `responds_to:` naming it.\n")
+            matches = []
+            for s in slugs:
+                if owner == s:
+                    continue                       # its own outbox, not feedback to it
+                if named is None:
+                    if needs_dir.resolve() in edge_dirs[s]:
+                        matches.append(s)
+                elif names_slug(named, s):
+                    matches.append(s)
+            if not matches:
+                continue
+            why = (f"addressed to `{named}`" if named is not None
+                   else f"no addressee — delivered because {owner} is a consumer's provider")
+            entry = (p, fm, owner, why, matches)
+            (shared_needs if len(matches) > 1 else solo_needs[matches[0]]).append(entry)
 
-    # 4. in-flight proposals touching me
-    proposals_dir = ROOT / reading.get("proposals", "architecture/proposals/")
-    sections.append("\n---\n\n# In-flight proposals affecting me\n")
-    hits = [p for p in sorted(proposals_dir.glob("*.md"))
-            if proposal_in_flight(parse_frontmatter(p), slug)]
+    def render_need(entry, for_slugs):
+        nonlocal outstanding, done_count
+        p, fm, owner, why, matches = entry
+        rel_p = p.relative_to(ROOT).as_posix()
+        bits = [f"{k}: {fm[k]}" for k in ("need", "status", "version") if fm.get(k)]
+        meta = "; ".join(bits) or "no metadata"
+        states = {s: answers[s].get(p.stem) for s in for_slugs}
+        unanswered = [s for s, a in states.items() if a is None]
+        if not unanswered:
+            done_count += 1
+            by = "; ".join(f"`{a.relative_to(ROOT).as_posix()}`"
+                           for a in dict.fromkeys(states.values()))
+            sections.append(f"- answered — `{rel_p}` ({meta}) → {by}")
+            return
+        outstanding += 1
+        tag = "**UNANSWERED**" if len(for_slugs) == 1 else \
+              f"**UNANSWERED** for {', '.join(unanswered)}" + \
+              ("".join(f"; answered by `{states[s].relative_to(ROOT).as_posix()}` ({s})"
+                       for s in for_slugs if states[s] is not None))
+        aud = f" — to {', '.join(matches)}" if len(matches) > 1 else ""
+        sections.extend([f"## {tag} — from {owner}: `{rel_p}`{aud}\n\n"
+                         f"_{meta}. Delivered because: {why}._\n", read_doc(p)])
+
+    if seat and shared_needs:
+        sections.append("\n---\n\n# Needs addressed to several of my components "
+                        "(shown once)\n")
+        for e in shared_needs:
+            render_need(e, e[4])
+
+    # ---- per-slug sections ---------------------------------------------------------
+    drift_rows = []
+    for s in slugs:
+        reading = readings[s]
+        inputs = reading.get("inputs", [])
+        if seat:
+            sections.append(f"\n---\n\n# Component: {s}\n")
+        sections.append("\n---\n\n" + (f"## {s} — inputs" if seat else
+                        "# Inputs — upstream contracts I build against") + "\n")
+        if not inputs:
+            sections.append("_none — no upstream edges._")
+        for inp in inputs:
+            path, ver, note = contract_at_pin(
+                ROOT / inp["path"], inp["interface"], str(inp["pinned"]))
+            head = (f"## `{inp['interface']}` from {inp['provider']} — "
+                    f"pinned {inp['pinned']}, state: {inp.get('state', '?')}")
+            if note:
+                head += f"\n\n> ⚠ {note}"
+            if path is None:
+                sections += [head, "_contract not yet published._"]
+            else:
+                key = (path, inp["interface"])
+                already = key in delivered_ifaces
+                delivered_ifaces.add(key)
+                sections += [f"{head}\n\n**Source:** `{path.relative_to(ROOT).as_posix()}` "
+                             f"(version {ver})\n",
+                             ("_full text above (shared input of this seat)._"
+                              if already else read_doc(path))]
+                if not already:
+                    emit_artifacts(path, str(inp["interface"]), str(ver), delivered=False)
+            drift_rows += [(s, inp)]
+        solo = solo_needs[s]
+        sections.append("\n" + (f"## {s} — needs addressed to me" if seat else
+                        "\n---\n\n# Consumer feedback — needs addressed to me") + "\n")
+        if not solo and not (seat and shared_needs):
+            sections.append("_none pending._")
+        for e in solo:
+            render_need(e, [s])
+
+    if outstanding or done_count:
+        sections.append(f"\n_{outstanding} unanswered, {done_count} answered (one line "
+                        "each; retired asks — resolved/closed/done/superseded — are not "
+                        "shown). An entry is answered when the addressee's "
+                        "`docs/provides/` carries `responds_to:` naming it._")
+
+    # ---- shared: proposals (union, once) -------------------------------------------
+    proposals_dir = ROOT / readings[slugs[0]].get("proposals", "architecture/proposals/")
+    sections.append("\n---\n\n# In-flight proposals affecting "
+                    + ("this seat's components" if seat else "me") + "\n")
+    hits = []
+    for p in sorted(proposals_dir.glob("*.md")):
+        fm = parse_frontmatter(p)
+        mine = [s for s in slugs if proposal_in_flight(fm, s)]
+        if mine:
+            hits.append((p, fm, mine))
     if not hits:
         sections.append("_none in flight._")
-    for p in hits:
-        fm = parse_frontmatter(p)
-        sections += [f"## `{p.relative_to(ROOT).as_posix()}` (status: {fm.get('status', '?')})\n",
-                     read_doc(p)]
+    for p, fm, mine in hits:
+        aff = f" — affects (of mine): {', '.join(mine)}" if seat else ""
+        sections += [f"## `{p.relative_to(ROOT).as_posix()}` "
+                     f"(status: {fm.get('status', '?')}){aff}\n", read_doc(p)]
 
-    # 5. drift summary
+    # ---- drift summary --------------------------------------------------------------
     sections.append("\n---\n\n# Drift summary (pinned vs latest, per edge)\n")
-    if inputs:
-        sections.append("| Provider | Interface | Pinned | State |\n|---|---|---|---|")
-        sections += [f"| {i['provider']} | `{i['interface']}` | {i['pinned']} "
-                     f"| {i.get('state', '?')} |" for i in inputs]
+    if drift_rows:
+        cols = "| Slug | Provider | Interface | Pinned | State |" if seat else \
+               "| Provider | Interface | Pinned | State |"
+        sections.append(cols)
+        sections.append("|---|---|---|---|---|" if seat else "|---|---|---|---|")
+        for s, i in drift_rows:
+            lead = f"| {s} " if seat else ""
+            sections.append(f"{lead}| {i['provider']} | `{i['interface']}` | "
+                            f"{i['pinned']} | {i.get('state', '?')} |")
     else:
         sections.append("_no upstream edges._")
 
+    if art_errors:
+        for e in art_errors:
+            print(f"ATLAS-CONTEXT: ARTIFACT ERROR — {e}", file=sys.stderr)
+        return 2
+    for src, detail in dict.fromkeys(FRONTMATTER_ERRORS):
+        print(f"ATLAS-CONTEXT: WARNING — frontmatter of `{src}` does not parse "
+              f"({detail}); it has NO fields for this briefing — a contract there reads "
+              "as unpublished, an ask as unaddressed", file=sys.stderr)
     text = "\n".join(sections) + "\n"
     if out:
         Path(out).write_text(text, encoding="utf-8")
@@ -879,7 +1088,13 @@ def emit_context(slug: str, out: str | None) -> int:
     else:
         sys.stdout.write(text)
     size = len(text.encode("utf-8"))
-    print(f"ATLAS-CONTEXT for {slug}: {size:,} bytes, ~{size // 4:,} tokens", file=sys.stderr)
+    label = who if not seat else f"seat ({len(slugs)} components)"
+    print(f"ATLAS-CONTEXT for {label}: {size:,} bytes, ~{size // 4:,} tokens"
+          + (" — SESSION TOTAL in one artefact" if seat else ""), file=sys.stderr)
+    if art_count:
+        print(f"ATLAS-CONTEXT raw artifacts: {art_count} file(s), {art_bytes:,} bytes "
+              f"-> {dest.as_posix() if dest else 'not written (pass --artifacts-dir)'}",
+              file=sys.stderr)
     return 0
 
 
@@ -902,6 +1117,9 @@ def main(wiring_flag: bool = False) -> int:
     for c in graph["components"]:
         if not (ROOT / "components" / c["slug"] / "component.md").exists():
             errors.append(f"component '{c['slug']}' has no components/{c['slug']}/component.md")
+    for cpath in ROOT.glob("components/*/docs/provides/*.md"):
+        _, aerrs = contract_artifacts(cpath, parse_frontmatter(cpath))
+        errors += aerrs
     if errors:
         print("INTEGRITY ERRORS:")
         for err in errors:
@@ -969,11 +1187,11 @@ def main(wiring_flag: bool = False) -> int:
 
     # -- frontmatter that will not parse — NOT warn-only (see parse_frontmatter_text) --
     if FRONTMATTER_ERRORS:
-        print(f"\nFRONTMATTER — {len(FRONTMATTER_ERRORS)} document(s) whose frontmatter "
-              "does not parse; they have NO fields as far as every check above is "
-              "concerned (a published contract reads as never published, a needs doc "
-              "reaches nobody):")
-        for src, detail in FRONTMATTER_ERRORS:
+        uniq = list(dict.fromkeys(FRONTMATTER_ERRORS))
+        print(f"\nFRONTMATTER — {len(uniq)} document(s) whose frontmatter does not parse; "
+              "they have NO fields as far as every check above is concerned (a published "
+              "contract reads as never published, a needs doc reaches nobody):")
+        for src, detail in uniq:
             print(f"  \U0001F534 {src} — {detail}")
         worst = max(worst, 1)
 
@@ -1006,11 +1224,15 @@ if __name__ == "__main__":
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("root", nargs="?", default=".",
                     help="project-vault root (default: cwd)")
-    ap.add_argument("--emit-context", metavar="SLUG",
-                    help="emit the component's ATLAS-CONTEXT.md instead of validating")
+    ap.add_argument("--emit-context", metavar="SLUG[,SLUG...]",
+                    help="emit ATLAS-CONTEXT.md instead of validating; comma-separated "
+                         "slugs emit ONE seat briefing with shared sections deduplicated")
     ap.add_argument("--check-wiring", action="store_true",
                     help="also check each component repo is wired (fetches .atlas.conf "
                          "and AGENTS.md from its source: remote; warn-only; decisions/0001)")
+    ap.add_argument("--artifacts-dir", metavar="DIR",
+                    help="with --emit-context: copy declared contract artifacts (exact "
+                         "bytes) to DIR/<interface>/<file>, beside the briefing")
     ap.add_argument("--out", metavar="PATH",
                     help="with --emit-context: write to PATH instead of stdout")
     args = ap.parse_args()
@@ -1020,5 +1242,5 @@ if __name__ == "__main__":
     if args.emit_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.exit(emit_context(args.emit_context, args.out))
+        sys.exit(emit_context(args.emit_context, args.out, args.artifacts_dir))
     sys.exit(main(args.check_wiring))
