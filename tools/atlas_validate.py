@@ -129,9 +129,11 @@ def replace_block(path: Path, marker: str, body: str) -> bool:
     return True
 
 
-NAME_EXEMPT = {"README.md", "component.md", "AGENTS.md", "dashboard.md"}
+NAME_EXEMPT = {"README.md", "component.md", "AGENTS.md", "dashboard.md", "INDEX.md"}
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*(-v\d+_\d+)?\.md$")
-NAME_SKIP_DIRS = {"archive", "_triage"}  # archives keep historical names; triage is quarantine
+# archives keep historical names; triage is quarantine; reference/ holds provider-homed
+# library docs delivered verbatim — the copy is not this vault's to rename (1.21).
+NAME_SKIP_DIRS = {"archive", "_triage", "reference"}
 
 
 def naming_warnings() -> list[str]:
@@ -860,6 +862,26 @@ def architecture_in_force() -> list:
     return lines
 
 
+def reference_library() -> list:
+    """The reference/ index: provider-homed library docs delivered on demand to this
+    vault (method 1.21, orchestrator ADR-0007). Listed, not embedded — shared know-how a
+    session reads when a task points at it; reading a listed file is retrieval, not
+    browsing. Delivered verbatim and read-only; the one home is the provider's
+    docs/library/, named in each copy's banner."""
+    ref = ROOT / "reference"
+    if not ref.is_dir():
+        return []
+    lines = []
+    for p in sorted(ref.rglob("*.md")):
+        if p.name == "INDEX.md":
+            continue
+        fm = parse_frontmatter(p)
+        lines.append(f"- `{p.relative_to(ROOT).as_posix()}` — "
+                     f"{fm.get('title', p.stem)}"
+                     + (f" (from {fm.get('interface', '?')})" if fm.get('library') else ""))
+    return lines
+
+
 def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = None) -> int:
     """Emit the briefing for one slug, or ONE seat briefing for several
     (comma-separated). A seat holding N components pays for its briefing once per
@@ -912,6 +934,15 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                      "listed here is part of the protocol** — a structural change is a "
                      "design act, and the design record is these files, never this "
                      "briefing's prose.\n", *arch_idx]
+
+    ref_idx = reference_library()
+    if ref_idx:
+        sections += ["\n---\n\n# Reference library — delivered here, read on demand "
+                     "(retrieval, not browsing)\n",
+                     "Provider-homed reference docs delivered to `reference/`. Shared "
+                     "know-how, read when a task needs it — not a contract, not a "
+                     "dependency, and never edited here (the one home is the provider's "
+                     "`docs/library/`, named in each file's banner).\n", *ref_idx]
 
     def emit_artifacts(contract_path: Path, iface: str, ver: str, delivered: bool):
         nonlocal art_bytes, art_count

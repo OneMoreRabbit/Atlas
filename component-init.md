@@ -357,6 +357,8 @@ rather than working around it.
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)
 - A design *spanning 2+ components* → `architecture/` (reference it from your contract; never keep a copy)
 - A retired MAJOR/MINOR version of any of the above → its `archive/` sibling
+- Reusable know-how *I author* for several projects → `docs/library/` (delivered on demand to consumers' `reference/`; one home stays here)
+- A reference doc *delivered to me* by a provider → `reference/` at the vault root (read-only, banner-marked; never edit — ask the provider)
 - Inherited material you haven't sorted yet → `docs/_triage/` (outside the protocol; empty it, don't reference it)
 
 **Never** put another component's document in your folders. Reference it where it lives.

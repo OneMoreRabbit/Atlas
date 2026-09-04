@@ -209,6 +209,11 @@ updated: 2026-09-02
 #     another by addressing its slug; the arch seat redirects a misrouted `to: nav` ask
 #     instead of mirroring it; validator warns when an addressee mixes `nav` with a
 #     component slug. Real seat-to-seat messaging is agent-comms' job, not the vault's.
+#   - reference library (orchestrator ADR-0007): reusable know-how homed once in a
+#     provider's components/<slug>/docs/library/, delivered on demand to the consumer
+#     vault's root reference/ folder (verbatim, banner-marked, read-only — NOT a
+#     contract/dependency). Validator indexes reference/ in the briefing on demand and
+#     skips it in the naming lint (delivered copies keep their names); INDEX.md exempt.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -351,6 +356,17 @@ components/<slug>/
 > `templates/vault-roadmap/` — the generator lives at `meta/roadmap_timeline.py` in the
 > vault, admin tooling outside the protocol. Nothing pins a roadmap and nothing drifts
 > from it: it is a record of direction, not a contract.
+
+> **The reference library.** Reusable know-how that several projects need — an estate
+> integration guide, a shared how-to — has **one home, in its provider's vault** under
+> `components/<slug>/docs/library/`, and is **delivered on demand** to a consumer, never
+> pre-distributed. The delivered copy lands in the consumer vault's root **`reference/`**
+> folder: verbatim, banner-marked with its provider home, read-only. It is **not** a
+> contract and **not** a dependency — no `external:` pin, no edge, no drift; it is shared
+> knowledge, referenced where a task needs it (the briefing indexes `reference/` on
+> demand, §6). A consumer asks for a library doc in its `needs/`, or a provider serves
+> one while answering a related need — the same deliver-and-sweep as `provides/`, with
+> `reference/` as the sink. `INDEX.md` may list a library folder.
 
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the

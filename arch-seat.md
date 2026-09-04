@@ -125,6 +125,12 @@ A consumer needs no `external:` pin to read what you delivered; the pin is optio
 bookkeeping that gives them a drift row. **Deliver on every version bump** — a stale
 delivered copy is silent, since an unpinned consumer has no drift signal.
 
+**Reference library.** Reusable know-how you author lives once in
+`components/<slug>/docs/library/` and is delivered on demand — when a consumer asks, or
+alongside a related answer — into that consumer's root `reference/` folder, verbatim and
+banner-marked. Not a contract: no pin, no edge, no drift. Same one-home, provider-delivers
+rule as `provides/`; `reference/` is the sink.
+
 ## Platform asks are not yours to answer
 
 A component asking for a database, broker or product runtime is asking for a **platform
