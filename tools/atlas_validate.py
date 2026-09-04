@@ -55,18 +55,32 @@ DELIVERED_EXTERNAL: list = []   # set in main(); vault-level, same for every com
 FRONTMATTER_RE = re.compile(r"^(?:\s*(?:>[^\n]*)?\n)*?---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
-def parse_frontmatter_text(text: str) -> dict:
+# Documents whose frontmatter will not parse. Collected, not raised: one bad file
+# must not stop the run, but it must never pass as "a document with no fields" —
+# that renders a published contract indistinguishable from one that never existed.
+FRONTMATTER_ERRORS: list[tuple[str, str]] = []
+
+
+def parse_frontmatter_text(text: str, source: str | None = None) -> dict:
     m = FRONTMATTER_RE.match(text)
     if not m:
         return {}
     try:
         return yaml.safe_load(m.group(1)) or {}
-    except yaml.YAMLError:
+    except yaml.YAMLError as exc:
+        # NEVER swallow this. An unparseable block is not an empty one: the document
+        # loses its `interface`, `version` and `to`, so a published contract silently
+        # un-publishes (🟢 -> ⚪, the pre-existence state) and a needs doc routes to
+        # nobody — while looking correct to every human who opens it.
+        detail = str(exc).splitlines()[0].strip()
+        FRONTMATTER_ERRORS.append((source or "<text>", detail))
         return {}
 
 
 def parse_frontmatter(path: Path) -> dict:
-    return parse_frontmatter_text(path.read_text(encoding="utf-8"))
+    return parse_frontmatter_text(path.read_text(encoding="utf-8"),
+                                  source=path.relative_to(ROOT).as_posix()
+                                  if path.is_absolute() else path.as_posix())
 
 
 def version_tuple(v) -> tuple:
@@ -952,6 +966,16 @@ def main(wiring_flag: bool = False) -> int:
           f"{sum(r['emoji'] == '🟠' for r in rows)} minor drift, "
           f"{sum(r['emoji'] == '🔴' for r in rows)} breaking, "
           f"{sum(r['emoji'] == '⚪' for r in rows)} unpublished")
+
+    # -- frontmatter that will not parse — NOT warn-only (see parse_frontmatter_text) --
+    if FRONTMATTER_ERRORS:
+        print(f"\nFRONTMATTER — {len(FRONTMATTER_ERRORS)} document(s) whose frontmatter "
+              "does not parse; they have NO fields as far as every check above is "
+              "concerned (a published contract reads as never published, a needs doc "
+              "reaches nobody):")
+        for src, detail in FRONTMATTER_ERRORS:
+            print(f"  \U0001F534 {src} — {detail}")
+        worst = max(worst, 1)
 
     # -- naming canon (AAC-method §4) — warn-only, never affects the exit code --
     unroutable = addressee_warnings(graph)
