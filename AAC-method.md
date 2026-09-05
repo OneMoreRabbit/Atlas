@@ -214,6 +214,13 @@ updated: 2026-09-02
 #     vault's root reference/ folder (verbatim, banner-marked, read-only — NOT a
 #     contract/dependency). Validator indexes reference/ in the briefing on demand and
 #     skips it in the naming lint (delivered copies keep their names); INDEX.md exempt.
+# 1.22 (2026-09-05): communication planes (orchestrator + AgentEco agent-comms work,
+#   ADR-0009). comms.md governs three planes — nav (arch↔human, the bridge), atlas
+#   (arch↔component and component↔component, the vault: design & change management), and
+#   an OPTIONAL hub (arch↔own-components, ephemeral chat: blockers/next-steps/proceed).
+#   "Atlas holds what is true; chat carries what is next." Hub is opt-in via a comms:
+#   block in io-graph; four convention-enforced rules (own-arch-only, chat-not-record,
+#   stop-at-stage, lookup-vs-decision). Mechanics stay the estate's/agent-comms'.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -477,6 +484,9 @@ method:
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
+comms:                         # OPTIONAL (1.22): this project's seats share a chat hub
+  hub: true                    # omit the block, or hub: false, for no hub — most projects
+  channel: "#<project>"        # ephemeral chat only; design stays in the vault ([[comms]])
 components:
   - slug: agent-image
     name: Agent Image
@@ -586,6 +596,12 @@ trust-based; a session that starts has already "done the reads."
 > design decision does not travel as a need at all: it is a proposal, visible while
 > proposed, absorbed into constitution and contracts when accepted. Nothing in the vault
 > is a channel for one-off orders — those are for the session or the bridge.
+
+> **Three planes carry every message** ([[comms]]): the **bridge** (`nav`) to the human;
+> the **vault** (atlas) for design, change management and contracts — durable; and an
+> optional **hub** for ephemeral chat between an arch seat and its own components ("what
+> is next", never the record). Atlas holds what is true; chat carries what is next. A
+> design decision never travels the hub or the human as a relay — it is a proposal (§7).
 
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
 > Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are

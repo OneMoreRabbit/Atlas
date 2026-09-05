@@ -494,6 +494,11 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
     head = (f"**Branch policy:** work `{work}`"
             + (f" → release `{release}` (merged by the architecture session at periodic review)"
                if release else ""))
+    # Communication planes (§6, comms.md): the hub is opt-in; nav and atlas are always on.
+    comms = graph.get("comms") or {}
+    hub = ("on" + (f" ({comms.get('channel')})" if comms.get("channel") else "")
+           if comms.get("hub") else "off — nav + vault only")
+    head += f"\n\n**Comms:** bridge (nav) + vault (atlas) always; hub {hub}."
     md = [head, "", "| Repo | Default branch | Work vs release | Latest tag | Wired |",
           "|---|---|---|---|---|"]
     console.append(f"  🧭 branching  work {work}" + (f" -> release {release}" if release else ""))
