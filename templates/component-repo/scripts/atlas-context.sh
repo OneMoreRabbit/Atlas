@@ -133,6 +133,18 @@ case "$ATLAS_SRC" in
     OUT=$(printf '%s\n\n%s' "$REORIENT" "$OUT") ;;
 esac
 
+# Record which vault commit this briefing was compiled from, for every seat member —
+# the Stop guard compares it against the remote at each turn end (alignment gate, 1.24):
+# an arch push then reaches a running seat at the end of its CURRENT turn, not at its
+# next compaction.
+FULLSHA=$(git -C "$SRC" rev-parse HEAD 2>/dev/null || true)
+if [ -n "$FULLSHA" ]; then
+  for _r in $SEAT_ROOTS; do
+    [ -d "$_r/.git/info" ] || mkdir -p "$_r/.git/info" 2>/dev/null || continue
+    printf '%s\n' "$FULLSHA" > "$_r/.git/info/atlas-compiled-sha" 2>/dev/null || true
+  done
+fi
+
 # Report the size of what we inject. Growth here is a defect in the io-graph,
 # not a fact of life — the retrieval invariant is only worth anything if measured.
 printf '%s' "$OUT" | wc -c |
