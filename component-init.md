@@ -141,9 +141,17 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    Non-zero means the hook layer is not live; a WARN about a defaulted launch dir means
    the verify proved nothing — re-install with `--launch-dir`. "Wired" on the dashboard
    means *installed* (decisions/0001); only `--verify` means *firing*.
-   **A component spanning several code repos** (one slug, N repos): run the installer in
-   each repo. Guards and publish nags are per-repo; the SessionStart briefing is
-   per-slug — the installer skips a duplicate briefing automatically.
+   **A seat holding several repos** (multi-repo seat, 1.21): run the installer in each
+   repo. Guards and publish nags stay per-repo; the installer leaves exactly **one**
+   SessionStart hook per launch dir, and the context script discovers every wired
+   sibling and emits **one seat briefing** covering them all — shared vault content
+   once, a section per component. The set is read from the launch dir, so a repo wired
+   later joins automatically.
+
+   **Alignment is mechanical** (1.24): if the vault's work branch moves while you are
+   mid-session, the Stop guard will refuse to end your turn until you re-run
+   `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end
+   of the turn it lands in, not at your next session.
    `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
    gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
    re-running skips existing files (`--force` re-copies drifted scripts). Installing by

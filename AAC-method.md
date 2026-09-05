@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.23"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.24"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-09-05
@@ -233,6 +233,13 @@ updated: 2026-09-05
 #   equivalent: validator --emit-arch-context (constitution + architecture-in-force +
 #   estate/drift + review queue + bridge pointer) and templates/arch-seat/ (a
 #   SessionStart hook that emits it). Seat provisioning installs it.
+# 1.24 (2026-09-05): the alignment gate — arch→component cascade at turn-end speed.
+#   atlas-context records the compiled vault SHA (per seat member); the Stop guard
+#   ls-remotes the work branch each turn end (30s throttle) and refuses to end the turn
+#   while the vault is ahead of the briefing: re-brief, reconcile, then finish. Running
+#   seats align by the end of their current turn — no hub, git remains the transport.
+#   Fail-open (offline never blocked); stop_hook_active prevents loops. Copied-artefact
+#   change: seats re-copy scripts/; works at any pin.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -606,6 +613,15 @@ re-orients itself rather than waiting to be asked (1.23). An **arch seat**, whic
 slug and works the vault directly, gets the same via `--emit-arch-context` and the
 `templates/arch-seat/` hook — otherwise a compacted arch seat loses its bearings with
 nothing to restore them.
+
+> **The alignment gate (1.24): an arch update reaches a running seat by the end of its
+> current turn.** The briefing records which vault commit it was compiled from; the Stop
+> guard compares that against the remote work branch (one `ls-remote`, 30s-throttled) at
+> every turn end, and if the vault has moved it refuses to end the turn: *re-run
+> `scripts/atlas-context.sh`, reconcile your in-flight work against the fresh briefing,
+> then finish.* Cascade latency drops from "next compaction" to "end of current turn",
+> with git still the only transport — no hub, no push channel, no polling loop. Fails
+> open (offline work is never blocked); the once-per-turn flag prevents loops.
 
 > **The briefing carries current obligations and inputs, not history.** Rules and
 > contracts are injected in full every session — that persistence is the point. A need
