@@ -1143,6 +1143,70 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     return 0
 
 
+def emit_arch_context(out: str | None) -> int:
+    """The arch seat's reorientation briefing (method 1.23). Component seats re-orient
+    from their io-manifest; an arch seat has no slug and works the vault directly, so
+    when it compacts nothing re-injects its bearings (the orchestrator lost orientation
+    this way, 2026-09-04). This is the arch equivalent: constitution + the architecture
+    in force + the estate/drift picture + open proposals + where the bridge is, headed by
+    a pointer to the protocol. It reads the vault, never mutates it."""
+    graph = load_graph()
+    const_rel = "architecture/constitution.md"
+    pol = graph.get("branching") or {}
+    sections = [
+        "# ATLAS-CONTEXT — arch seat",
+        "",
+        "> The architecture session's reorientation. You own `architecture/**` and the "
+        "io-graph; you review component outboxes but never author them; you write only "
+        "`_bridge/` in the Nav vault. Full protocol: `arch-seat.md` in the method repo.",
+        f"> Work branch: `{pol.get('work', '?')}`"
+        + (f"; release `{pol.get('release')}` (you merge it at periodic review)." if pol.get('release') else "."),
+        "",
+        "## Every session, before acting: sync; sweep components' `docs/needs/nav-*.md` "
+        "and mirror genuine human asks to the bridge; answer every `@atlas` bridge item; "
+        "act on dashboard reds; clear the review queue. (arch-seat.md §Every session.)",
+        f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel),
+    ]
+    arch_idx = architecture_in_force()
+    if arch_idx:
+        sections += ["\n---\n\n# Architecture in force — the design record (read on demand)\n",
+                     *arch_idx]
+    ref_idx = reference_library()
+    if ref_idx:
+        sections += ["\n---\n\n# Reference library delivered here\n", *ref_idx]
+    # the estate/drift picture the dashboard shows
+    branch_md, _ = gen_branch_section(graph)
+    sections += ["\n---\n\n# Estate & drift (dashboard view)\n", branch_md]
+    latest = latest_contract_versions()
+    rows = edge_rows(graph, latest)
+    hot = [r for r in rows if r["emoji"] in ("🔴", "🟠")]
+    if hot:
+        sections.append("\n**Contract drift needing attention:**")
+        sections += [f"- {r['emoji']} {r['from']} → {r['to']} `{r['interface']}` "
+                     f"pinned {r['pinned']} ({r['label']})" for r in hot]
+    # in-flight proposals — the arch seat's review queue
+    proposals_dir = ROOT / "architecture" / "proposals"
+    props = [p for p in sorted(proposals_dir.glob("*.md"))
+             if not str(parse_frontmatter(p).get("status", "proposed")).lower().startswith(
+                 ("accepted", "rejected", "withdrawn", "superseded", "implemented"))]         if proposals_dir.is_dir() else []
+    sections.append("\n---\n\n# Proposals in flight — your review queue\n")
+    sections += ([f"- `{p.relative_to(ROOT).as_posix()}` — "
+                  f"{parse_frontmatter(p).get('title', p.stem)}" for p in props]
+                 if props else ["_none._"])
+    sections.append("\n---\n\n# The bridge\n"
+                    "Read `_bridge/tasks.md` and `_bridge/threads/` in the project's Nav "
+                    "vault; answer `@atlas` items before ending. (You write only there.)")
+    text = "\n".join(sections) + "\n"
+    if out:
+        Path(out).write_text(text, encoding="utf-8")
+        print(f"wrote {out}", file=sys.stderr)
+    else:
+        sys.stdout.write(text)
+    size = len(text.encode("utf-8"))
+    print(f"ATLAS-CONTEXT arch seat: {size:,} bytes, ~{size // 4:,} tokens", file=sys.stderr)
+    return 0
+
+
 def main(wiring_flag: bool = False) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -1272,6 +1336,9 @@ if __name__ == "__main__":
     ap.add_argument("--emit-context", metavar="SLUG[,SLUG...]",
                     help="emit ATLAS-CONTEXT.md instead of validating; comma-separated "
                          "slugs emit ONE seat briefing with shared sections deduplicated")
+    ap.add_argument("--emit-arch-context", action="store_true",
+                    help="emit the ARCH SEAT's reorientation briefing (no slug); for the "
+                         "arch seat's own SessionStart hook (method 1.23)")
     ap.add_argument("--check-wiring", action="store_true",
                     help="also check each component repo is wired (fetches .atlas.conf "
                          "and AGENTS.md from its source: remote; warn-only; decisions/0001)")
@@ -1284,6 +1351,10 @@ if __name__ == "__main__":
     ROOT = Path(args.root).resolve()
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    if args.emit_arch_context:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.exit(emit_arch_context(args.out))
     if args.emit_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")

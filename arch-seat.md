@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.7
+version: 1.8
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -35,6 +35,14 @@ does, every session and at review. Components had a mechanical protocol from met
 | **Never commits** | generated views (`registry/graph.md`, `dashboard.md`, `component.md` edge blocks, `registry/.compiled/**`) — CI regenerates them on the work branch |
 
 Works against the vault's work branch directly (it is the reviewer, not a PR author).
+
+**Reorientation is mechanical.** Install the `templates/arch-seat/` hook in your launch
+dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
+`atlas_validate.py --emit-arch-context` — constitution, architecture in force,
+estate/drift, your review queue, and where the bridge is. Because it fires on **compact**
+as well as startup, a compaction re-injects your bearings with a directive to resume;
+you never need the operator to re-orient you. (Component seats get this from their own
+SessionStart hook; this is the arch equivalent, since you have no slug.)
 
 ## Every session
 

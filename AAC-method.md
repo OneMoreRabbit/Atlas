@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.22"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.23"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-09-05
@@ -225,6 +225,14 @@ updated: 2026-09-05
 #   carries them operationally to any seat that pins it; comms.md is the source of truth.
 #   Bridges are human comms: agent-to-agent notices go via the hub or a delivered doc,
 #   never a project bridge. Mechanics stay the estate's/agent-comms'.
+# 1.23 (2026-09-05): reorientation after compaction is automatic (orchestrator lost
+#   orientation on compaction). The SessionStart hook already fires on compact (no
+#   matcher); atlas-context.sh now reads the source and, on compact/resume/clear,
+#   prepends a REORIENT directive so the re-injected briefing is acted on, not read past.
+#   Arch seats — no slug, work the vault directly, previously NO hook — get the
+#   equivalent: validator --emit-arch-context (constitution + architecture-in-force +
+#   estate/drift + review queue + bridge pointer) and templates/arch-seat/ (a
+#   SessionStart hook that emits it). Seat provisioning installs it.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -591,7 +599,13 @@ perform them by browsing. The validator's `--emit-context <slug>` mode (§8) com
 five, in that order, into a single **`ATLAS-CONTEXT.md`**, each section headed with its
 source path and version, plus a drift summary. A `SessionStart` hook in the code repo
 syncs the vault and injects this artefact automatically — the protocol is mechanical, not
-trust-based; a session that starts has already "done the reads."
+trust-based; a session that starts has already "done the reads." The hook carries **no
+matcher, so it fires on compact, resume and clear as well as startup**: after a
+compaction the briefing is re-injected, headed by a reorientation directive, so a seat
+re-orients itself rather than waiting to be asked (1.23). An **arch seat**, which has no
+slug and works the vault directly, gets the same via `--emit-arch-context` and the
+`templates/arch-seat/` hook — otherwise a compacted arch seat loses its bearings with
+nothing to restore them.
 
 > **The briefing carries current obligations and inputs, not history.** Rules and
 > contracts are injected in full every session — that persistence is the point. A need
