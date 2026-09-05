@@ -220,7 +220,11 @@ updated: 2026-09-02
 #   an OPTIONAL hub (arch↔own-components, ephemeral chat: blockers/next-steps/proceed).
 #   "Atlas holds what is true; chat carries what is next." Hub is opt-in via a comms:
 #   block in io-graph; four convention-enforced rules (own-arch-only, chat-not-record,
-#   stop-at-stage, lookup-vs-decision). Mechanics stay the estate's/agent-comms'.
+#   stop-at-stage, lookup-vs-decision, plus no-reply-when-no-action and
+#   limits-are-invisible — six, aligned to the shipped agent-comms-client 0.5 §4, which
+#   carries them operationally to any seat that pins it; comms.md is the source of truth.
+#   Bridges are human comms: agent-to-agent notices go via the hub or a delivered doc,
+#   never a project bridge. Mechanics stay the estate's/agent-comms'.
 ---
 
 # Architecture-Above-Code (AAC)

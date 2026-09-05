@@ -10,6 +10,7 @@ supersedes: 1.0
 #   bridge by the arch seat — no component seat needs Nav-vault credentials.
 # 1.2: tasks.md write-loss under syncing clients acknowledged and deferred; threads are
 #   the record, tasks.md an index.
+# 1.3: agent-to-agent notices go via the hub or a delivered doc, never a bridge ([[comms]]).
 ---
 
 # Bridge Init
@@ -83,8 +84,10 @@ ask is delivered straight into its briefing — no bridge, no human relay. If th
 seat sweeps a `to: nav` ask that is really for another component, it **redirects it to
 that component rather than mirroring it to the bridge** (the same reshape it does for
 platform asks). Two seats conversing through `@nav` is the failure this prevents: the
-human is not their transport. (Direct seat messaging, when it exists, is the
-`agent-comms` component's job, not the vault's.)
+human is not their transport. An agent-to-agent notice goes over the **hub** (if the
+project has one) or rides on the **delivered document** itself — never a bridge. The
+bridge is human communication; see [[comms]] for the three planes. (Direct seat messaging
+is the `agent-comms` component's job, not the vault's.)
 
 ## Setup (arch seat, one time — as part of the 1.7 upgrade)
 

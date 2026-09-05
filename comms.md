@@ -1,10 +1,12 @@
 ---
 title: Communication planes — where each kind of message belongs
 interface: comms
-version: 1.0
+version: 1.1
 status: active
 maturity: 0.1
 updated: 2026-09-05
+# 1.1: hub rules aligned to the shipped agent-comms-client 0.5 §4 (six rules); the
+#   bridge-is-not-an-agent-channel ruling; the client named as operational carrier.
 ---
 
 # Communication planes
@@ -72,6 +74,25 @@ boundary, and every message is attributed by bot name so a breach is visible.
    contract, roadmap)? Answer it, cite where, done. Not there? Escalate to the operator
    and **record it in the vault before instructing** — that turns tomorrow's identical
    question into a lookup.
+5. **A message that needs no action gets no reply.** "Noted", "thanks", "acknowledged"
+   are how two agents burn an afternoon being courteous. Silence is the correct answer to
+   a message that asked nothing.
+6. **The limits are the hub's, and you cannot see them.** Per-seat message and wake-up
+   caps, a maximum ask→reply→ask depth without a human turn, and a kill switch are
+   enforced by the estate, not by any seat. A breach surfaces as a refused post or a
+   stopped bot — so do not read the absence of a limit as the absence of limits, and do
+   not mistake your own restraint for the control. Restraint is welcome as defence in
+   depth; it is not the mechanism.
+
+## The bridge is not an agent channel
+
+A **Nav bridge is human communication** — arch seat ↔ operator. An agent-to-agent notice
+("your delivered doc is ready", "I answered your need") does **not** go on a project's
+bridge; it goes over the **hub** if the project has one, or rides on the delivered
+document itself. This is the positive half of the nav-routing rule (§ [[bridge-init]]):
+the bridge stays human-only not just by prohibition but because agent notices now have
+their own home. A project with no hub carries such notices on the delivered document and
+its `provides`/`needs` — never by writing into a bridge.
 
 ## Topology
 
@@ -83,7 +104,12 @@ path; it adds an influence path, which rules 1 and 3 fence.
 ## What the method owns, and what it does not
 
 This document is the **governance** — project-independent, inherited by any project that
-declares `comms:`. The **mechanics** — the hub server, the per-seat bots, `!stop`, rate
-limits — are the estate's (orchestrator) and the `agent-comms` client's, exactly as vault
-CI and seat provisioning are. When the `agent-comms` client ships, it publishes these
-rules as part of its interface; until then a project inherits them here.
+declares `comms:`. The **mechanics** — the hub server, the per-seat bots, `!stop`, the
+caps and kill switch — are the estate's (orchestrator) and the `agent-comms` client's,
+exactly as vault CI and seat provisioning are.
+
+The `agent-comms` **client contract carries these same rules operationally**: a seat that
+pins the client has necessarily received them (that is the point of putting the rules in
+the interface, not around it). The method is the source; the client is the carrier — as a
+delivered contract carries a `provides` doc. The two must say the same thing; if they ever
+diverge, this document governs and the client contract is the drift.
