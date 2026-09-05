@@ -1,7 +1,7 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.5
+version: 1.7
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
 updated: 2026-08-25
@@ -15,6 +15,8 @@ supersedes: 1.0
 #   mechanism; summarised context is never the design record.
 # 1.4: roadmap upkeep joins the periodic review — record direction, never invent it.
 # 1.5: adopting a method release is a periodic-review/operator act, never a sweep act.
+# 1.6 (unreleased): the channel table — decisions are proposals, not needs; a briefing
+#   carries obligations, not history.
 ---
 
 # Arch Seat Protocol
@@ -42,6 +44,12 @@ Works against the vault's work branch directly (it is the reviewer, not a PR aut
    `- [ ] @nav — <ask> (from <slug>, <date>) — components/<slug>/docs/needs/<file>`
    Do **not** edit the component's file to mark it mirrored — it is their outbox;
    dedupe by what the bridge already links.
+   **Mirror only asks that genuinely need the human.** A `to: nav` ask that is really
+   for another component — one seat trying to reach another through you — does not go on
+   the bridge. Note back to the asking seat (in your reply to its need) that it should
+   address the other component's slug directly; `nav` is not a relay between seats. Same
+   reshape as a platform ask: the bridge carries decisions and direction, not
+   seat-to-seat traffic.
 3. **Answer the bridge.** Every `@atlas` task and thread turn gets a reply or a tick
    before the session ends.
 4. **Read the dashboard.** Act on red: branch policy, wiring, breaking contract drift.
@@ -117,6 +125,12 @@ A consumer needs no `external:` pin to read what you delivered; the pin is optio
 bookkeeping that gives them a drift row. **Deliver on every version bump** — a stale
 delivered copy is silent, since an unpinned consumer has no drift signal.
 
+**Reference library.** Reusable know-how you author lives once in
+`components/<slug>/docs/library/` and is delivered on demand — when a consumer asks, or
+alongside a related answer — into that consumer's root `reference/` folder, verbatim and
+banner-marked. Not a contract: no pin, no edge, no drift. Same one-home, provider-delivers
+rule as `provides/`; `reference/` is the sink.
+
 ## Platform asks are not yours to answer
 
 A component asking for a database, broker or product runtime is asking for a **platform
@@ -142,6 +156,32 @@ code in its seat need no ask at all; anything that must stay up is a platform co
 
 The same test settles the borderline cases: **anything needing superuser or a different
 image is an ask**; using a platform that already exists is not.
+
+## Reaching a component — use the right channel
+
+You can address a `needs/` document to any component and it will land in that seat's
+briefing next session. That makes it tempting to use for everything. Don't.
+
+| You want to convey | Channel | What the addressee's briefing does with it |
+|---|---|---|
+| A durable rule or approach | constitution, a contract | injected **every session**, in full — persistent by design |
+| A **design decision** | a proposal → ADR | injected **while proposed** (`affects:` names them); on acceptance it moves to `decisions/`, *leaves* the briefing, and its consequences land in the constitution and contracts that are injected |
+| An ask for **another component** | `needs/` addressed to **that component's slug** | delivered into *its* briefing — this is how one seat reaches another, human never involved |
+| An ask that needs the **human's** judgment | `needs/` addressed to **`nav`** | mirrored to the bridge for @nav; use it only for direction/decisions, never to reach another seat |
+| A one-off instruction | — none, deliberately | say it in the session; the vault records rules and decisions, not orders |
+
+> **`nav` is a person, not a message bus.** A seat reaching another seat addresses that
+> **slug** — the ask lands in the other component's briefing directly. Addressing `nav`
+> to get to another component routes your message through a human relay, which is slow,
+> lossy, and not what the bridge is for. The bridge carries human↔AI only. (Real-time
+> seat-to-seat messaging is a separate concern, for the `agent-comms` component, not the
+> vault.)
+
+A briefing carries **current obligations and inputs, not history**. Writing a decision as
+a need is a category error: nothing ever answers it, so nothing ever retires it, and the
+addressee re-reads it every morning as dead weight. Raisers retire their own asks with
+`status: resolved` (or `closed` / `done`) once satisfied — that is what ends an
+obligation's life in every briefing it reaches.
 
 ## Answering a component's ask
 

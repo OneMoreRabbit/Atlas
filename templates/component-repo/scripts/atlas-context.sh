@@ -6,6 +6,29 @@ set -e
 . "$(dirname -- "$0")/atlas-common.sh"
 cd "$ATLAS_REPO_ROOT"
 
+# ---- the seat, discovered from the filesystem (method 1.21) ------------------------
+# One SEAT holding N wired repos gets ONE briefing: shared vault content once, then a
+# per-component section each. Members are every launch-dir sibling carrying .atlas.conf
+# — self-describing, so a repo wired later joins with no settings edit. On a
+# single-repo desktop the launch dir is the repo and the seat is just this component.
+# (A 4-repo seat paid ~84KB per session start, 71% of it the same text four times —
+# arc-platform finding, 2026-09-03.)
+LAUNCH=$(printf '%s' "${ATLAS_LAUNCH_DIR:-$ATLAS_REPO_ROOT}" | sed "s|^\$HOME|$HOME|")
+SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"
+if [ "$LAUNCH" != "$ATLAS_REPO_ROOT" ] && [ -d "$LAUNCH" ]; then
+  SEAT_SLUGS=""; SEAT_ROOTS=""
+  for d in "$LAUNCH"/*/; do
+    [ -f "${d}.atlas.conf" ] || continue
+    _s=$(sed -n 's/^SLUG="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
+    _v=$(sed -n 's/^ATLAS_VAULT_REMOTE="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
+    [ -n "$_s" ] || continue
+    [ "$_v" = "$ATLAS_VAULT_REMOTE" ] || continue   # this hook serves this vault's members
+    SEAT_SLUGS="${SEAT_SLUGS:+$SEAT_SLUGS,}$_s"
+    SEAT_ROOTS="${SEAT_ROOTS:+$SEAT_ROOTS }${d%/}"
+    rm -f "$(atlas_nag_sentinel "${d%/}")"          # new session: re-arm every member's nag
+  done
+  [ -n "$SEAT_SLUGS" ] || { SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"; }
+fi
 rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
 
 sh scripts/atlas-sync.sh >&2
@@ -34,10 +57,39 @@ if [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ]; then
     echo "atlas-context: WARNING — could not check out origin/$BWORK; briefing compiled from '$VBR' and may be historical" >&2
   fi
 fi
-cleanup() { [ -n "$WT" ] && git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1; }
+# cleanup must NEVER fail: under `set -e` the shell adopts a failing EXIT trap's status
+# as its own, and `[ -n "" ] && …` returns 1 — so the script exited 1 on exactly the
+# healthy path (clone on the work branch, no worktree) and 0 on the degraded one.
+# Inverted polarity, in the script that carries the retrieval invariant (arc-platform
+# platform seat, 2026-09-03). A worktree that cannot be removed is housekeeping, not a
+# failed briefing.
+cleanup() { [ -n "$WT" ] || return 0; git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$SLUG")
+# Raw contract artifacts (OpenAPI, JSON Schema) are delivered as exact files beside the
+# briefing, never inlined into it (method 1.21). A generator reads them by path; the
+# model's context stays bounded. Local-only: excluded via .git/info/exclude so seats
+# wired before 1.21 need no .gitignore change.
+ART="$ATLAS_REPO_ROOT/ATLAS-CONTEXT.d"
+rm -rf "$ART"
+if [ -d "$ATLAS_REPO_ROOT/.git" ] && ! grep -qs '^ATLAS-CONTEXT.d/$' "$ATLAS_REPO_ROOT/.git/info/exclude" 2>/dev/null; then
+  mkdir -p "$ATLAS_REPO_ROOT/.git/info" && echo 'ATLAS-CONTEXT.d/' >> "$ATLAS_REPO_ROOT/.git/info/exclude"
+fi
+# Only pass the flag if the PINNED method's validator knows it: this script may be
+# newer than the vault's pin during an upgrade window, and an unknown flag exits 2 —
+# a failed briefing for a version-skew reason (caught by --verify's new rung).
+HELP=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --help 2>/dev/null || true)
+EMIT="$SLUG"
+case "$HELP" in *"SLUG[,SLUG"*) EMIT="$SEAT_SLUGS" ;;      # pinned method understands seats
+  *) [ "$SEAT_SLUGS" = "$SLUG" ] || echo "atlas-context: pinned method predates seat briefings — emitting per-slug for $SLUG only" >&2 ;;
+esac
+case "$HELP" in
+  *"--artifacts-dir"*)
+    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT" --artifacts-dir "$ART") ;;
+  *)
+    echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2
+    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT") ;;
+esac
 
 case "$OUT" in
   "# ATLAS-CONTEXT"*) ;;

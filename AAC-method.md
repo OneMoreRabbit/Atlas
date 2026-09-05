@@ -1,10 +1,10 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.20"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.22"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-09-02
+updated: 2026-09-05
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -178,8 +178,53 @@ updated: 2026-09-02
 #   - guard (PR #4, AgentEco): the PR base branch must match the declared policy
 #     (component PRs had targeted the release branch and passed); method: and
 #     external: are architecture-owned — a component branch had rewritten the pin
+#   - 1.20.1 (2026-09-03, patch): atlas-context.sh exited 1 on the healthy path (EXIT
+#     trap under set -e); CI policy/pin readers rejected trailing comments — the §5
+#     example itself failed the guard; --verify now runs the context script and
+#     asserts exit 0 (installed -> firing -> succeeding). Both from ARCPlatform's seat.
 #   - bridge tasks.md write-loss under a syncing client: acknowledged, deferred by
 #     the operator pending client fixes (bridge-init 1.2 notes it)
+# 1.21 (unreleased): a briefing carries obligations, not history (operator review with
+#   the orchestrator: a need addressed to a slug was being injected in full, every
+#   session, forever — only `superseded` ever removed it).
+#   - answered needs collapse to one line in the briefing; the body is one read away
+#   - `status: resolved | closed | done` retire a need like `superseded` does
+#   - the channel table (§6, component-init 2.9, arch-seat 1.6): rule → constitution/
+#     contract; decision → proposal/ADR; ask → needs; one-off instruction → no channel
+#   - raw contract artifacts (blocks-android need): `artifacts:` on a contract declares
+#     OpenAPI/JSON-Schema sidecars; --emit-context delivers exact bytes to
+#     ATLAS-CONTEXT.d/<interface>/ beside the briefing with path, version, size, sha256,
+#     measured separately; a declared sha256 is verified; missing/mismatch FAILS emission
+#     and validation. atlas-context.sh passes --artifacts-dir and excludes the dir locally
+#   - one seat, one briefing: --emit-context takes N comma-separated slugs and emits a
+#     single seat briefing (shared sections once, per-component sections each); the
+#     context script discovers seat members from the launch dir; session total reported.
+#     A 4-repo seat was injecting shared docs 4x (71% waste). affects: routes like to:
+#     ('all'/'all components' reach every slug — the old substring test matched nobody).
+#   - the design record is reachable: accepted decisions + standalone architecture/*.md
+#     appear in the briefing as an on-demand index (reading them is retrieval, not
+#     browsing), closing the contradiction between §6 and §7.
+#   - routing tightened (two seats tried to converse via the bridge): `nav` is the
+#     human, the bridge is human<->AI ONLY, never a seat-to-seat relay. A seat reaches
+#     another by addressing its slug; the arch seat redirects a misrouted `to: nav` ask
+#     instead of mirroring it; validator warns when an addressee mixes `nav` with a
+#     component slug. Real seat-to-seat messaging is agent-comms' job, not the vault's.
+#   - reference library (orchestrator ADR-0007): reusable know-how homed once in a
+#     provider's components/<slug>/docs/library/, delivered on demand to the consumer
+#     vault's root reference/ folder (verbatim, banner-marked, read-only — NOT a
+#     contract/dependency). Validator indexes reference/ in the briefing on demand and
+#     skips it in the naming lint (delivered copies keep their names); INDEX.md exempt.
+# 1.22 (2026-09-05): communication planes (orchestrator + AgentEco agent-comms work,
+#   ADR-0009). comms.md governs three planes — nav (arch↔human, the bridge), atlas
+#   (arch↔component and component↔component, the vault: design & change management), and
+#   an OPTIONAL hub (arch↔own-components, ephemeral chat: blockers/next-steps/proceed).
+#   "Atlas holds what is true; chat carries what is next." Hub is opt-in via a comms:
+#   block in io-graph; four convention-enforced rules (own-arch-only, chat-not-record,
+#   stop-at-stage, lookup-vs-decision, plus no-reply-when-no-action and
+#   limits-are-invisible — six, aligned to the shipped agent-comms-client 0.5 §4, which
+#   carries them operationally to any seat that pins it; comms.md is the source of truth.
+#   Bridges are human comms: agent-to-agent notices go via the hub or a delivered doc,
+#   never a project bridge. Mechanics stay the estate's/agent-comms'.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -290,7 +335,8 @@ components/<slug>/
 > about an obligation should look like an obligation.
 
 > **Address your asks.** Every `needs/` document carries **`to:`** naming the addressee's
-> **slug** (a list for several; `nav` for the human, via the bridge). Delivery follows the
+> **slug** (a list for several; `nav` — the human — only when it needs human judgment,
+> never to reach another component through the bridge). Delivery follows the
 > addressee, not the graph: a document naming a slug reaches it wherever it sits, even
 > with no edge between you — which is exactly when a component most needs to hear from a
 > stranger. `addressed-to:` is accepted as an alias. A document naming nobody is
@@ -321,6 +367,17 @@ components/<slug>/
 > `templates/vault-roadmap/` — the generator lives at `meta/roadmap_timeline.py` in the
 > vault, admin tooling outside the protocol. Nothing pins a roadmap and nothing drifts
 > from it: it is a record of direction, not a contract.
+
+> **The reference library.** Reusable know-how that several projects need — an estate
+> integration guide, a shared how-to — has **one home, in its provider's vault** under
+> `components/<slug>/docs/library/`, and is **delivered on demand** to a consumer, never
+> pre-distributed. The delivered copy lands in the consumer vault's root **`reference/`**
+> folder: verbatim, banner-marked with its provider home, read-only. It is **not** a
+> contract and **not** a dependency — no `external:` pin, no edge, no drift; it is shared
+> knowledge, referenced where a task needs it (the briefing indexes `reference/` on
+> demand, §6). A consumer asks for a library doc in its `needs/`, or a provider serves
+> one while answering a related need — the same deliver-and-sweep as `provides/`, with
+> `reference/` as the sink. `INDEX.md` may list a library folder.
 
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the
@@ -398,8 +455,23 @@ version: 0.2                   # MAJOR.MINOR (.PATCH optional)
 status: draft | active | deprecated | superseded
 updated: 2026-06-30
 supersedes: 0.1                # optional
+artifacts:                     # optional (1.21): machine-readable sidecars beside this file
+  - file: dprox-endpoints-openapi-v0_2.json
+    sha256: 9f2c…              # optional but recommended — verified; a mismatch is an error
+  - dprox-event-envelope-v0_2.schema.json
 ---
 ```
+
+**Raw artifacts.** A contract whose truth lives in a machine-readable file — OpenAPI,
+JSON Schema — declares it under `artifacts:`, beside the contract in `provides/`. The
+compiled briefing then **delivers the exact bytes as files** next to `ATLAS-CONTEXT.md`
+(`ATLAS-CONTEXT.d/<interface>/<file>`) and lists each with its provider path, version,
+size and sha256 — never inlined, never reserialized: a generator reads bytes by path,
+and a large schema belongs in its hands, not in the model's context window. A declared
+`sha256` is verified; **a missing or mismatched artifact fails** both the vault's
+validation and the consumer's briefing, rather than degrading to a prose warning that
+invites the consumer to guess at bytes it was told to generate from. Bytes that change
+under a published version are a contract change: bump the version.
 
 ---
 
@@ -416,6 +488,9 @@ method:
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
+comms:                         # OPTIONAL (1.22): this project's seats share a chat hub
+  hub: true                    # omit the block, or hub: false, for no hub — most projects
+  channel: "#<project>"        # ephemeral chat only; design stays in the vault ([[comms]])
 components:
   - slug: agent-image
     name: Agent Image
@@ -518,7 +593,24 @@ source path and version, plus a drift summary. A `SessionStart` hook in the code
 syncs the vault and injects this artefact automatically — the protocol is mechanical, not
 trust-based; a session that starts has already "done the reads."
 
+> **The briefing carries current obligations and inputs, not history.** Rules and
+> contracts are injected in full every session — that persistence is the point. A need
+> is injected in full only while **unanswered**; once answered it is one line, and once
+> its raiser retires it (`status: resolved | closed | done | superseded`) it is gone. A
+> design decision does not travel as a need at all: it is a proposal, visible while
+> proposed, absorbed into constitution and contracts when accepted. Nothing in the vault
+> is a channel for one-off orders — those are for the session or the bridge.
+
+> **Three planes carry every message** ([[comms]]): the **bridge** (`nav`) to the human;
+> the **vault** (atlas) for design, change management and contracts — durable; and an
+> optional **hub** for ephemeral chat between an arch seat and its own components ("what
+> is next", never the record). Atlas holds what is true; chat carries what is next. A
+> design decision never travels the hub or the human as a relay — it is a proposal (§7).
+
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
+> Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are
+> reported separately from its size — receiving what a pin entitles you to is retrieval,
+> not browsing.
 > If the context is insufficient for the work, the io-graph is missing an edge — fix
 > `registry/io-graph.yml` and recompile. Free browsing of the vault is how "dump
 > everything into the window" returns; the single generated artefact is the boundary
