@@ -1,10 +1,21 @@
 #!/bin/sh
 # atlas-context — emit this component's ATLAS-CONTEXT.md to stdout.
-# A SessionStart hook injects stdout into the session context automatically.
+# A SessionStart hook injects stdout into the session context automatically. The hook
+# has no matcher, so it fires on startup, resume, clear AND compact — the last is why
+# reorientation is automatic: after a compaction the briefing is re-injected. On those
+# non-startup sources we prepend an imperative directive so the model RE-ORIENTS from it
+# rather than treating re-injected context as passive reference (method 1.23).
 set -e
 # shellcheck source=atlas-common.sh disable=SC1091
 . "$(dirname -- "$0")/atlas-common.sh"
 cd "$ATLAS_REPO_ROOT"
+
+# The SessionStart payload arrives on stdin as JSON carrying "source". Read it only when
+# stdin is not a terminal, so a manual `sh scripts/atlas-context.sh` never blocks on cat.
+ATLAS_SRC=""
+if [ ! -t 0 ]; then
+  ATLAS_SRC=$(cat 2>/dev/null | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -1)
+fi
 
 # ---- the seat, discovered from the filesystem (method 1.21) ------------------------
 # One SEAT holding N wired repos gets ONE briefing: shared vault content once, then a
@@ -107,6 +118,20 @@ if [ -z "$WT" ] && [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ]; then
   NOTE="> ⚠⚠ **STALE SOURCE** — compiled from vault branch \`$VBR\` @ \`$SHA\`, not the work branch \`$BWORK\`. Pins, ADRs and contracts may be historical. Switch the vault clone to \`$BWORK\` and re-run \`sh scripts/atlas-context.sh\` before relying on this."
 fi
 OUT=$(printf '%s\n\n%s' "$NOTE" "$OUT")
+
+# Reorientation directive on a non-startup source. After a compaction (or resume/clear)
+# the conversation that held "who I am and what I was doing" is gone or summarised; the
+# briefing below is the durable orientation, so instruct the model to act on it rather
+# than read past it. On a fresh startup the agent reads AGENTS.md anyway, so no banner.
+case "$ATLAS_SRC" in
+  compact|resume|clear)
+    REORIENT="> ⟳ **REORIENT — session was ${ATLAS_SRC}ed.** Your working context was just
+> rebuilt. Before your next action: read the briefing below in full, confirm which
+> component (\`$SLUG\`) you are and what you were doing, and resume from it. This is your
+> complete orientation — do **not** ask the operator to re-orient you, and do not act on
+> a half-remembered task until you have reconciled it against what follows."
+    OUT=$(printf '%s\n\n%s' "$REORIENT" "$OUT") ;;
+esac
 
 # Report the size of what we inject. Growth here is a defect in the io-graph,
 # not a fact of life — the retrieval invariant is only worth anything if measured.
