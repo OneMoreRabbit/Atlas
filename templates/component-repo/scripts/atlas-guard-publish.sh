@@ -19,7 +19,11 @@ case "$PAYLOAD" in *'"stop_hook_active":true'*|*'"stop_hook_active": true'*) exi
 REC=$(cat "$ATLAS_REPO_ROOT/.git/info/atlas-compiled-sha" 2>/dev/null | tr -d '[:space:]' || true)
 BWORK=$(atlas_work_branch 2>/dev/null || true)
 if [ -n "$REC" ] && [ -n "$BWORK" ] && [ -n "$ATLAS_VAULT_REMOTE" ]; then
-  THROTTLE="${TMPDIR:-/tmp}/atlas-fresh.$(printf '%s' "$ATLAS_REPO_ROOT" | cksum | cut -d' ' -f1)"
+  # keyed by VAULT, not repo: a multi-repo seat runs one Stop hook per repo, and per-repo
+  # keys would ls-remote the same vault N times per window (measured 0.4s each). One
+  # check per vault per 30s serves the whole seat — whichever hook draws it, the
+  # re-brief it triggers updates every member's recorded sha.
+  THROTTLE="${TMPDIR:-/tmp}/atlas-fresh.$(printf '%s %s' "$ATLAS_VAULT_REMOTE" "$BWORK" | cksum | cut -d' ' -f1)"
   NOW=$(date +%s); LAST=$(cat "$THROTTLE" 2>/dev/null || echo 0)
   case "$LAST" in *[!0-9]*|"") LAST=0 ;; esac
   if [ $((NOW - LAST)) -ge 30 ]; then
