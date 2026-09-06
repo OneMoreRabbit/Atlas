@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.25"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.24"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-09-05
@@ -242,7 +242,7 @@ updated: 2026-09-05
 #   change: seats re-copy scripts/; works at any pin.
 #   1.24.1: alignment-gate throttle keyed by vault (a multi-repo seat did N identical
 #   ls-remotes per window).
-# 1.25 (2026-09-06): arch seats get the alignment gate too (the vault moves under a
+#   1.24.2 (2026-09-06): arch seats get the alignment gate too (the vault moves under a
 #   running arch seat: outbox PR merges, CI regen, deliveries) — templates/arch-seat/
 #   atlas-arch-guard.sh (Stop): quiet when local is equal or AHEAD (unpushed work is not
 #   staleness), blocks when origin holds commits the checkout lacks: pull, re-orient,

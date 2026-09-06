@@ -265,7 +265,7 @@ ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-se
 
 
 def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
-    """Arch-seat mode (1.25): symmetric to the component install, keyed on role — an
+    """Arch-seat mode (1.24.2): symmetric to the component install, keyed on role — an
     arch seat works the VAULT checkout and has no slug. Installs the reorientation hook
     (SessionStart -> atlas-arch-context.sh) and the alignment gate (Stop ->
     atlas-arch-guard.sh) into the launch dir, with scripts beside the settings."""
@@ -309,7 +309,7 @@ def main() -> int:
                     help="install the ARCH SEAT hooks instead (no slug): reorientation "
                          "(SessionStart -> --emit-arch-context) and the alignment gate "
                          "(Stop). Run from, or --repo, the vault checkout; --launch-dir "
-                         "if the agent starts elsewhere (method 1.25, orchestrator ask)")
+                         "if the agent starts elsewhere (1.24.2, orchestrator ask)")
     ap.add_argument("--vault-remote",
                     help="git URL of the project's Atlas-<Project> vault repo "
                          "(required for install; unused by --verify)")

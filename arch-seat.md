@@ -46,7 +46,7 @@ as well as startup, a compaction re-injects your bearings with a directive to re
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)
 
-**Alignment is mechanical too** (1.25): the same install wires a Stop-hook gate — if
+**Alignment is mechanical too** (1.24.2): the same install wires a Stop-hook gate — if
 `origin/<work>` gains commits your checkout lacks (a component publish, CI regen, a
 delivery) the gate refuses to end your turn until you pull, re-orient and reconcile.
 Your own unpushed work never triggers it.
