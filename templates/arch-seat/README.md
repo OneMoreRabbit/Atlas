@@ -5,6 +5,10 @@ Component seats re-orient after a compaction because their `SessionStart` hook r
 so it needs the equivalent: a `SessionStart` hook that emits the arch briefing
 (`atlas_validate.py --emit-arch-context`).
 
+**Install with one command:** `python .atlas-method/tools/atlas_init.py --arch` from
+the vault checkout (add `--launch-dir <path>` if the agent starts elsewhere). It copies
+both scripts and merges the settings; the manual steps below are the equivalent.
+
 Install in the arch seat's launch dir (where the agent starts — the vault checkout, or
 its `~/work` parent):
 

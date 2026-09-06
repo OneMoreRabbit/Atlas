@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -260,10 +261,55 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     return 0 if ok else 1
 
 
+ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-seat"
+
+
+def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
+    """Arch-seat mode (1.25): symmetric to the component install, keyed on role — an
+    arch seat works the VAULT checkout and has no slug. Installs the reorientation hook
+    (SessionStart -> atlas-arch-context.sh) and the alignment gate (Stop ->
+    atlas-arch-guard.sh) into the launch dir, with scripts beside the settings."""
+    if not (vault / "registry" / "io-graph.yml").exists():
+        print(f"atlas_init --arch: {vault} has no registry/io-graph.yml — point --repo "
+              "at the project VAULT checkout (the arch seat's working copy)",
+              file=sys.stderr)
+        return 2
+    written = []
+    for name in ("atlas-arch-context.sh", "atlas-arch-guard.sh"):
+        src, dst = ARCH_TEMPLATES / name, launch_dir / name
+        if dst.exists() and not force and read(dst) == read(src):
+            pass
+        elif dst.exists() and not force:
+            print(f"  skip   {dst} exists and differs — re-run with --force to overwrite")
+            continue
+        dst.write_text(read(src), encoding="utf-8", newline="\n")
+        os.chmod(dst, 0o755)
+        written.append(dst)
+        print(f"  write  {dst}")
+    tpl = json.loads(read(ARCH_TEMPLATES / ".claude" / "settings.json"))
+    for entry_list in tpl["hooks"].values():   # scripts live beside settings: abs paths
+        for entry in entry_list:
+            for h in entry.get("hooks", []):
+                h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}",
+                                                    str(launch_dir))
+    merge_settings(launch_dir, tpl, force, written, repo_root=vault)
+    if vault != launch_dir:
+        print(f"  note   set ATLAS_VAULT={vault} in the seat's environment (scripts "
+              "default to '.', which is only right when launching in the vault)")
+    print("atlas_init --arch: done — reorientation (SessionStart) + alignment gate "
+          "(Stop) installed; both fire on compact as well as startup")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--slug", required=True, help="this component's Atlas slug")
+    ap.add_argument("--slug", help="this component's Atlas slug (component mode)")
+    ap.add_argument("--arch", action="store_true",
+                    help="install the ARCH SEAT hooks instead (no slug): reorientation "
+                         "(SessionStart -> --emit-arch-context) and the alignment gate "
+                         "(Stop). Run from, or --repo, the vault checkout; --launch-dir "
+                         "if the agent starts elsewhere (method 1.25, orchestrator ask)")
     ap.add_argument("--vault-remote",
                     help="git URL of the project's Atlas-<Project> vault repo "
                          "(required for install; unused by --verify)")
@@ -292,6 +338,12 @@ def main() -> int:
     if not repo.is_dir():
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
+    if args.arch:
+        return install_arch(repo,
+                            Path(args.launch_dir).resolve() if args.launch_dir else repo,
+                            args.force)
+    if not args.slug:
+        ap.error("--slug is required (component mode; use --arch for an arch seat)")
     if args.verify:
         return verify(repo, args.slug,
                       Path(args.launch_dir).resolve() if args.launch_dir else None)
