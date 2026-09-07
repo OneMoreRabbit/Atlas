@@ -313,6 +313,11 @@ updated: 2026-09-05
 #   registries sanctioned as derived views (generated/ joins the naming-lint skip);
 #   the serve-audit/never-author boundary; isolation as a DEFINITIONAL role property
 #   (operator-gated, hub send-only, tooling must refuse to make it deliverable).
+#   1.25.7 (release-convention v0.2 rollout learnings, all encoded in §9): a release
+#   tag is exactly annotated vX.Y.Z (bare vX.Y aliases non-normative; none minted from
+#   here); the tag names the SHIPPED commit, not the tip; declared version == tag at
+#   the tagged commit; bootstrap = release branch mechanically, first tag deliberately;
+#   the default branch is ergonomics only — consumption is always a pinned tag.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -918,6 +923,26 @@ be a transient position of that branch — no tag, no artifact, nothing to pin t
    The number is never overloaded to mean "released" — the tag is what releases.
 5. **A commit-sha pin is a stopgap** for a component with no tags yet: reproducible but
    blessed by nobody — a defect to close, never a resting state.
+
+Rolled out estate-wide (2026-09-07, 20 repos audited), the convention gained five
+precise definitions the audit forced:
+
+6. **A release tag is exactly annotated `vX.Y.Z`** — nothing else counts as a release.
+   Milestone tags take a visibly different shape (`v1.0-repo-shape` is a milestone,
+   not a release). Bare `vX.Y` aliases are **non-normative** where they exist
+   historically; the method mints no new ones from 1.25.6.
+7. **The tag names the shipped commit, not the branch tip.** What was actually built
+   and shipped is often an *ancestor* of the release branch's current head; tag that
+   commit, never "whatever the tip is now".
+8. **Declared version == tag, at the tagged commit**: `v0.3.0` tags a commit whose own
+   manifest says `0.3.0` — otherwise no registry can join "what is tagged" to "what
+   runs", which is exactly how a client drifted invisibly.
+9. **Bootstrap for pre-discipline repos**: creating the release branch from the
+   current work head is a mechanical, additive act anyone may execute; the **first
+   tag stays the seat's deliberate release act**, naming the commit it means.
+10. **The default branch is developer ergonomics only** — both failure shapes were
+    observed (default=work fed a moving-ref install; default=release served a stale
+    tree silently). Consumption is always an explicit pinned tag, never a branch.
 
 Who holds which half: the method states the convention; **the estate owns the pins and
 the rolls** (scope 1B — it declares each seat's pinned versions, levels seats onto a
