@@ -965,10 +965,35 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     # ---- shared: contracts delivered from other vaults (vault-scoped by definition) -
     ext_inputs = readings[slugs[0]].get("external_inputs") or []
     if ext_inputs:
-        sections.append("\n---\n\n# Inputs — contracts delivered from other vaults"
-                        + (" (vault-scoped: shown once for the whole seat)" if seat else "")
-                        + "\n")
+        # Routed by consumer, not vault-scoped (1.25.2, rbac-compile finding: 44% of an
+        # unrelated component's briefing was another component's delivery traffic). A
+        # delivery naming a consumer (`to:`/`consumers:`) is FULL TEXT for that slug and
+        # one index line for everyone else — reading a listed doc is retrieval (§6). A
+        # delivery naming nobody stays vault-wide in full, the historic fail-open.
+        full, idx = [], []
         for x in ext_inputs:
+            xfm = parse_frontmatter(ROOT / x["path"])
+            named = addressee(xfm)
+            cons = xfm.get("consumers") or []
+            cons = [str(c) for c in (cons if isinstance(cons, list) else [cons])]
+            # third signal: a response's own responds_to names whose need it answers —
+            # `components/<slug>/docs/...` identifies the consumer mechanically
+            rto = xfm.get("responds_to") or xfm.get("responds-to")
+            rto_slugs = {m.group(1) for ref in (rto if isinstance(rto, list) else [rto])
+                         if ref
+                         for m in [re.search(r"components/([\w.-]+)/docs/", str(ref))]
+                         if m}
+            addressed = named is not None or bool(cons) or bool(rto_slugs)
+            mine = (not addressed) \
+                or (named is not None and any(names_slug(named, s) for s in slugs)) \
+                or any(names_slug(c, s) for c in cons for s in slugs) \
+                or bool(rto_slugs & set(slugs))
+            (full if mine else idx).append(x)
+        sections.append("\n---\n\n# Inputs — contracts delivered from other vaults"
+                        + (" (shown once for the whole seat)" if seat else "") + "\n")
+        if not ext_inputs:
+            pass
+        for x in full:
             head = (f"## `{x['interface']}` from {x['provider']}"
                     + (f" — pinned {x['pinned']}" if x.get("pinned") else " — not pinned"))
             if x.get("note"):
@@ -979,6 +1004,13 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                          read_doc(ROOT / x["path"])]
             emit_artifacts(ROOT / x["path"], str(x["interface"]),
                            str(x.get("version", "?")), delivered=True)
+        if not full:
+            sections.append("_none addressed to me._")
+        if idx:
+            sections += ["\n**Delivered to other components of this vault** (read on "
+                         "demand — retrieval, not browsing):\n",
+                         *[f"- `{x['path']}` — `{x['interface']}` from {x['provider']} "
+                           f"(v{x.get('version', '?')})" for x in idx]]
 
     # ---- needs: ONE scan, each doc classified by which held slugs it reaches -------
     edge_dirs = {s: {(ROOT / fb["path"]).resolve()

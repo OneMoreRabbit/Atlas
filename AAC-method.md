@@ -277,6 +277,13 @@ updated: 2026-09-05
 #   hooks, both Stop guards and --verify, with no visible error. All four scripts now
 #   read via a 2s-bounded helper (timeout, else a single read -t line; never bare cat);
 #   --verify runs the context script with stdin explicitly closed.
+#   1.25.2: delivered external contracts route by CONSUMER, not vault-wide (rbac-compile
+#   finding: 44% of an unrelated component's briefing was another component's delivery
+#   traffic — 3-5x growth once the comms pilot made deliveries frequent). Routing
+#   signals, in order: to:, consumers:, or the response's own responds_to naming
+#   components/<slug>/. Named consumer gets full text; every other slug gets one index
+#   line (read on demand = retrieval, §6); a delivery naming nobody stays vault-wide in
+#   full (fail-open). Measured: rbac-compile 52.8KB -> 32.3KB; agent-comms unchanged.
 ---
 
 # Architecture-Above-Code (AAC)
