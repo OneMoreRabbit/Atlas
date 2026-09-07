@@ -148,6 +148,13 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    once, a section per component. The set is read from the launch dir, so a repo wired
    later joins automatically.
 
+   **Releasing your software** (1.24.4, AAC-method §9): a release is a **tag** —
+   merge `work` → `release` per the vault's `branching:` policy, tag `vX.Y.Z`. An
+   untagged commit is not a release, and no consumer may be told to install from a
+   branch. `0.x` versions are pilot-only; `1.0.0` is the first generally consumable
+   release. Iterate on `work` as fast as you like — reaching someone's seat is what
+   requires the tag.
+
    **Alignment is mechanical** (1.24): if the vault's work branch moves while you are
    mid-session, the Stop guard will refuse to end your turn until you re-run
    `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end

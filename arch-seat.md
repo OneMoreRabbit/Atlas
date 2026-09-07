@@ -46,6 +46,12 @@ as well as startup, a compaction re-injects your bearings with a directive to re
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)
 
+**Consumed software is pinned, never tracked** (1.24.4, AAC-method §9): anything your
+project installs from another component names an exact tag — a branch or bare-URL
+install is a defect to raise. Upgrading is a deliberate act: move the declared pin,
+then roll; a sha-pin is a stopgap to replace with a tag. The estate holds the pins and
+levels seats; you review that the pin moves are deliberate.
+
 **Alignment is mechanical too** (1.24.2): the same install wires a Stop-hook gate — if
 `origin/<work>` gains commits your checkout lacks (a component publish, CI regen, a
 delivery) the gate refuses to end your turn until you pull, re-orient and reconcile.

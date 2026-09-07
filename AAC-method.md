@@ -252,6 +252,11 @@ updated: 2026-09-05
 #   1.24.3: arch scripts resolve WHICH sibling is the vault (an arch seat's launch dir
 #   holds Atlas-<P> and Nav-<P>): env > .atlas-arch.conf (written by atlas_init --arch)
 #   > the unique registry/io-graph.yml fingerprint (a Nav vault never has one) > cwd.
+#   1.24.4: component release convention (§9; operator ruling 2026-09-07, orchestrator
+#   proposal 0001): a release is a tag on the declared release branch; consumers pin
+#   exact versions, never a moving ref; upgrades are deliberate pin moves; semver with
+#   0.x pilot-only; sha-pins are stopgaps. The estate owns pins and rolls (1B); the
+#   method states the rule — the same tag-and-pin discipline it applies to itself.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -823,6 +828,32 @@ every point where a session meets a repo:
   branch against policy, work-vs-release divergence (unreleased changes awaiting the
   periodic review), and the latest release tag. Misalignment is visible red, but
   branch status never fails the run — it is seat configuration, not contract truth.
+
+### Component releases — a release is a tag; consumers pin, never track
+
+The method releases by immutable tag and is consumed by pin — and it is the one part of
+the estate that has never suffered a version surprise. The same convention binds **every
+component's software** (operator ruling 2026-09-07; orchestrator proposal 0001, after a
+client was installed from a moving default branch and the wanted version turned out to
+be a transient position of that branch — no tag, no artifact, nothing to pin to):
+
+1. **A component release is a tag.** Merge `work` → `release` per the declared
+   `branching:` policy and tag `vX.Y.Z` (a trunk-only project tags on its `work`
+   branch). An untagged commit is not a release; `work` stays free to move fast.
+2. **A consumer pins an exact version and never installs a moving ref** — not a branch,
+   not the default branch, not "latest". An install command with no ref is a defect.
+3. **Upgrading is a deliberate, reviewable act**: change the declared pin, then roll. A
+   component publishing a new version changes nothing until a consumer moves its pin.
+4. **Semver, with the tag carrying release status**: `0.x` is in development, consumed
+   only by a named pilot; `1.0.0` is the first version blessed for general consumption.
+   The number is never overloaded to mean "released" — the tag is what releases.
+5. **A commit-sha pin is a stopgap** for a component with no tags yet: reproducible but
+   blessed by nobody — a defect to close, never a resting state.
+
+Who holds which half: the method states the convention; **the estate owns the pins and
+the rolls** (scope 1B — it declares each seat's pinned versions, levels seats onto a
+tag, and reports divergence between declared and running). Fast iteration on `work` is
+healthy and untouched; reaching a consumer's seat is what requires a tag and a pin.
 
 ### The bridge — where direction meets implementation
 
