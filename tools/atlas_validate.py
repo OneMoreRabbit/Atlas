@@ -225,8 +225,16 @@ def addressee_warnings(graph) -> list[str]:
     addressee must be visible. Warn-only, like naming."""
     slugs = [c["slug"] for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
     # an external provider is a legitimate addressee: asks travel to it by the normal
-    # route, picked up when its arch seat reads this vault (§5, decisions/0006)
-    slugs += [str(e.get("provider")) for e in graph.get("external") or [] if e.get("provider")]
+    # route, picked up when its arch seat reads this vault (§5, decisions/0006).
+    # Each declared external answers to its provider slug AND its project name derived
+    # from the vault URL (Atlas-Orchestrator -> orchestrator): seats think in projects,
+    # and requiring the internal component slug of another vault was a quiz (1.25.3).
+    for e in graph.get("external") or []:
+        if e.get("provider"):
+            slugs.append(str(e["provider"]))
+        m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", str(e.get("vault", "")))
+        if m:
+            slugs.append(m.group(1).lower())
     warns = []
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
                     + list(ROOT.glob("needs/*.md"))):
@@ -249,7 +257,12 @@ def addressee_warnings(graph) -> list[str]:
             continue                    # the same delivery, declared instead of implied
         if not any(names_slug(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
-                         f"'{named}' matches no component; it will reach nobody")
+                         f"'{named}' matches no component and no declared external "
+                         "provider; it will reach nobody. If this is another vault's "
+                         "seat, have the architecture session declare it under "
+                         "`external:` (the estate's service directory in `reference/` "
+                         "lists what exists) — declared providers are addressable by "
+                         "slug or project name")
         elif not any(names_slug_exactly(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
                          "resolved by prose, not a slug; write the slug (or a list of "
