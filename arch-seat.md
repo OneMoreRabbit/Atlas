@@ -46,6 +46,14 @@ as well as startup, a compaction re-injects your bearings with a directive to re
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)
 
+**Your credentials — two tokens, by standard** (1.24.6, operator ruling 2026-09-05):
+your write token covers your vault and the bridge; a second, read-only
+`<project>-arch-read` token covers your project's component code repos (Contents +
+Pull requests + Actions, read) so you can review component PRs and verify CI. Never
+write there (arch never authors in component repos), and never org-wide — you cannot
+read another project's code or any Nav vault. The estate mints, routes and rotates
+both; repos in scope derive from the project's component seats.
+
 **Consumed software is pinned, never tracked** (1.24.4, AAC-method §9): anything your
 project installs from another component names an exact tag — a branch or bare-URL
 install is a defect to raise. Upgrading is a deliberate act: move the declared pin,

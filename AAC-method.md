@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.24"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.25"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-09-05
@@ -263,6 +263,14 @@ updated: 2026-09-05
 #   refused) and the publish nag names the direct-to-work flow. Declared never
 #   inferred; ordinary seats unchanged. Transitional: the both→arch+component
 #   migration is defined in §9 (six invariants; the estate runbook executes it).
+#   1.24.6: arch-read-token standard blessed (operator ruling 2026-09-05): every arch
+#   seat gets a second READ-ONLY <project>-arch-read token over its project's component
+#   code repos (Contents+PRs+Actions read; never write, never org-wide). The estate
+#   owns mint/route/rotate; the method states the standard (arch-seat.md).
+# 1.25.0 (2026-09-07): ESTATE RELEASE — rolls up the 1.24 line: alignment gates
+#   (component + arch, turn-end cascade), atlas_init --arch and vault fingerprint
+#   resolution, component release convention (tag + pin), both-hats mode with defined
+#   migration, arch-read-token standard.
 ---
 
 # Architecture-Above-Code (AAC)
