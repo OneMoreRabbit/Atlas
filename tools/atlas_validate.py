@@ -232,8 +232,21 @@ def addressee_warnings(graph) -> list[str]:
                     + list(ROOT.glob("needs/*.md"))):
         fm = parse_frontmatter(p)
         named = addressee(fm)
-        if named is None or is_retired(fm):
+        if is_retired(fm):
             continue
+        # No addressee at all is the *broad* failure, and it was the silent one: the
+        # warning fired when `to:` was wrong (narrow, one doc lost) and said nothing
+        # when `to:` was absent (fail-open, one doc delivered to everyone in reach) —
+        # a check declining to run under the condition it exists to catch. §5 permits
+        # omission for a genuine "all my providers" broadcast, so this stays warn-only:
+        # it asks you to say you meant it, and costs one line to silence.
+        if named is None:
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — no addressee; delivery "
+                         "fails open, so this rides into every seat whose edges scan "
+                         "this folder. Name the slug(s), or `to: all` if you mean it")
+            continue
+        if is_broadcast(named):
+            continue                    # the same delivery, declared instead of implied
         if not any(names_slug(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
                          f"'{named}' matches no component; it will reach nobody")
@@ -806,12 +819,21 @@ def is_retired(fm: dict) -> bool:
 
 
 def addressed_to(fm: dict, slug: str) -> bool:
-    """A needs/ doc is in scope if it names the slug, or names nobody at all."""
+    """A needs/ doc is in scope if it names the slug, names `all`, or names nobody."""
     value = addressee(fm)
-    return True if value is None else names_slug(value, slug)
+    if value is None or is_broadcast(value):
+        return True
+    return names_slug(value, slug)
 
 
 ALL_TOKENS = ("all", "all components", "everyone", "*")
+
+
+def is_broadcast(value: str) -> bool:
+    """`to: all` — the fail-open delivery, chosen rather than left blank. It must route
+    exactly like an absent addressee, or declaring your intent would narrow your reach
+    to nothing (there is no component called `all`)."""
+    return addressee_head(value).strip().lower() in ALL_TOKENS
 
 
 def affects_slug(fm: dict, slug: str) -> bool:
@@ -1033,7 +1055,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
             for s in slugs:
                 if owner == s:
                     continue                       # its own outbox, not feedback to it
-                if named is None:
+                if named is None or is_broadcast(named):
                     if needs_dir.resolve() in edge_dirs[s]:
                         matches.append(s)
                 elif names_slug(named, s):

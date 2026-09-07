@@ -400,8 +400,10 @@ components/<slug>/
 > with no edge between you — which is exactly when a component most needs to hear from a
 > stranger. `addressed-to:` is accepted as an alias. A document naming nobody is
 > delivered to the components whose edges scan your folder, so name your addressee unless
-> you mean "all my providers". An addressee matching no component reaches nobody and the
-> validator says so (§8).
+> you mean "all my providers" — and when you do mean that, **write `to: all`**, which
+> delivers identically but says you chose it. An addressee matching no component reaches
+> nobody, and an absent one reaches everyone in range; the validator says so in both
+> cases (§8).
 
 > **Vault-level `needs/`.** A project may need something that belongs to **no single
 > component of it** — most commonly a dependency on another vault ("this project needs a
