@@ -29,14 +29,16 @@ contract drift on each project's dashboard.
 
 ## Starting from nothing (a bare clone of this repo)
 
-The method is self-sufficient: no orchestrator, no particular estate stack, git as the
-only transport. Day one is **one both-hats seat**: create your first project vault
-(below), then from your code repo
-`python .atlas-method/tools/atlas_init.py --slug <x> --role both --vault-remote <vault-url>`.
-Grow along the estate ladder in AAC-method §10 — split arch/component when a second
-component arrives, promote an orchestrator seat when estate chores (tokens, machines,
-provisioning) deserve one. The `Atlas-Orchestrator`/`agent-skeleton`/`agent-comms`
-stack is one estate's reference implementation of that role, not a dependency.
+The method is self-sufficient (git as the only transport — a directory of bare repos
+on one PC is a complete offline estate), and there are **two ways in** (AAC-method §10):
+**method-first** — one both-hats seat of your first project
+(`python .atlas-method/tools/atlas_init.py --slug <x> --role both --vault-remote <url>`),
+growing arch/component splits and an orchestrator only when estate chores deserve a
+seat; or **orchestrator-first** — stand up the estate seat first and let it provision
+machines, credentials, vaults and seats for everything else. Either way the
+orchestrator accelerates setup and never joins the method's runtime. The
+`Atlas-Orchestrator`/`agent-skeleton`/`agent-comms` stack is one estate's reference
+implementation of that role, not a dependency.
 
 ## Starting a new project
 1. Create an `Atlas-<Project>` vault as a **private git repo with a remote** — this is the

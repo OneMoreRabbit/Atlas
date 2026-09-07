@@ -296,6 +296,14 @@ updated: 2026-09-05
 #   boundaries stated); plus the bootstrap ladder from a bare open-source clone: first
 #   agent is a both-hats seat of project one, orchestrator promoted at estate scale;
 #   AgentEco's skeleton/comms named as reference implementation, not a dependency.
+#   1.25.5 (operator correction): TWO front doors, not a prescribed ladder —
+#   method-first (both-hats seat, grow organically, promote an orchestrator at estate
+#   scale) OR orchestrator-first (estate seat stood up first provisions machines,
+#   credentials, vaults and seats for everything else; the right door when
+#   infrastructure exists from day one). Invariant either way: the orchestrator
+#   accelerates setup, never joins the method's runtime. Plus the minimal substrate:
+#   a complete offline estate on one PC via bare file-path git remotes (§9 requires
+#   git, not GitHub); the forge adds the CI backstop when the estate outgrows the box.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -1034,23 +1042,41 @@ much as powers:
 - **Its services release like software** (§9): tagged, pinned by consumers, upgraded
   deliberately. An estate service nobody can pin is not a service.
 
-### Bootstrapping from a bare clone — the estate ladder
+### Bootstrapping from a bare clone — two ways in
 
-The method is deliberately **self-sufficient at every rung**; nothing below requires
-any particular estate stack:
+The method is **self-sufficient** (nothing below requires any particular estate stack),
+and an estate has two legitimate front doors. They end in the same place; which comes
+first is a question of what you already have.
 
-1. **One project, one agent (day one).** Clone this repo; create `Atlas-<Project>`
-   (README §Starting a new project); the first agent is a **both-hats seat** of that
-   project — `atlas_init --slug <x> --role both`. No orchestrator exists or is needed:
-   no SSH, no org tokens, git as the only transport. This is the whole method, running.
-2. **The project grows.** Second component → the §9 migration splits both-hats into
-   arch + component. More seats, same vault, same rules.
-3. **A second project.** Repeat rung 1. The operator now carries estate chores by hand
-   (tokens, machines, prompts) — tolerable at two, tax at five.
-4. **The estate rung — promote an orchestrator.** When the chores deserve a seat,
-   create the estate project (its vault is just another `Atlas-<X>`) and give its
-   both-hats seat the service contract, the org credentials and the machine access.
-   From here new seats are provisioned by ask, not by hand.
+**Method-first (no infrastructure yet).** Clone this repo; create `Atlas-<Project>`
+(README §Starting a new project); the first agent is a **both-hats seat** of that
+project — `atlas_init --slug <x> --role both`. No orchestrator exists or is needed: no
+SSH, no org tokens, git as the only transport. Grow organically: a second component →
+the §9 split into arch + component; a second project → repeat; and when the estate
+chores (tokens, machines, prompts) deserve a seat of their own, **promote an
+orchestrator** — the estate project is just another `Atlas-<X>`, its both-hats seat
+given the service contract, the org credentials and the machine access. From there
+seats are provisioned by ask, not by hand.
+
+**Orchestrator-first (you have, or want, infrastructure from day one).** Stand up the
+**orchestrator as the first seat**: the estate project's vault, its both-hats seat, and
+whatever executes its services — containers via a seat image, a cloud API, plain SSH.
+It then *provisions the method for everyone else*: mints credentials, builds seat
+machines, seeds the first project's vault from this repo's templates, runs
+`atlas_init` on each seat, and hands the operator a running project. This is the
+right door when machines and credentials already exist to be managed — the estate this
+method was extracted from effectively runs this way. The invariant either way: the
+orchestrator **accelerates** the method's setup and never becomes part of its runtime —
+a project it provisioned runs identically to one built by hand, and keeps running if
+the orchestrator disappears.
+
+**The minimal substrate — an estate on one PC.** §9 requires git remotes, not GitHub:
+a directory of bare repos (`~/estate/remotes/Atlas-<P>.git` …) with working clones
+beside them is a complete, offline estate — briefings, guards, pins, tags and the
+alignment gate all run against file-path remotes (this is exactly how the method's own
+release tests run). What you forgo without a forge is the server-side backstop: vault
+CI (the PR path guard, regen-on-merge) and protected branches. The local guards still
+hold; add the forge when the estate outgrows the machine.
 
 **The reference implementation is not a dependency.** `Atlas-Orchestrator` /
 `ansible-platform` (provisioning), `agent-skeleton` (seat image) and `agent-comms`
