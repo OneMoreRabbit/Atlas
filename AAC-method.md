@@ -290,6 +290,12 @@ updated: 2026-09-05
 #   all three delivery sites). (b) declared external providers are addressable by slug
 #   OR project name derived from the vault URL (Atlas-Orchestrator -> orchestrator);
 #   the unroutable warning now names the external: route and the reference/ directory.
+#   1.25.4: §10 the seat model — operator/arch/component/both-hats/orchestrator defined
+#   in the method (the orchestrator as a role: an ordinary both-hats seat of the estate
+#   project whose JOB is scope-1B services on ask, holding what nobody else may hold —
+#   boundaries stated); plus the bootstrap ladder from a bare open-source clone: first
+#   agent is a both-hats seat of project one, orchestrator promoted at estate scale;
+#   AgentEco's skeleton/comms named as reference implementation, not a dependency.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -998,7 +1004,64 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 
 ---
 
-## 10. Glossary
+## 10. The seat model — who sits where, and how an estate grows
+
+A **seat** is one agent with a standing role, a working directory, declared credentials,
+and the hooks that make its protocol mechanical. Four seat types and one human:
+
+| Seat | Owns / writes | Reads | Credentials | Defined by |
+|---|---|---|---|---|
+| **operator** (@nav, human) | Nav vaults; ticks the bridge; rules and releases | everything | everything | being the human |
+| **arch** — one per project | `architecture/**`, io-graph, derived views; merges `release` at periodic review; writes `_bridge/` in the Nav vault and nothing else there | the vault, the bridge, component repos (read-only) | vault write + `<project>-arch-read` (Contents/PRs/Actions **read** over the project's component repos; never write, never org-wide) | works the vault checkout, no slug; `atlas_init --arch` |
+| **component** — per component; may hold several repos | its code repo(s) and `components/<slug>/**` outbox (via guarded PRs) | its `ATLAS-CONTEXT.md` — never the wider vault | its repos' write + outbox path | `SLUG` in a wired repo's `.atlas.conf`; `atlas_init --slug` |
+| **both-hats** — a single-seat project | the union: outbox + `architecture/**` + own edges | as arch | as both, one identity | `ATLAS_ROLE="both"`; transitional — the §9 migration is the exit |
+| **orchestrator** — at most one per ESTATE | its own project's vault (as a both-hats seat of the estate project) + the estate services it delivers | every repo it serves (org read); machine access to every seat (SSH) | **the widest in the estate**: org-scoped tokens it mints and rotates for everyone else; infrastructure access | its service contract, below |
+
+**The orchestrator is a role, not a mechanic.** In Atlas terms it is an ordinary
+both-hats seat of its own project (the estate project — vault, outbox, guards, releases
+by tag, all the same rules). What makes it unique is scope **1B**: it is the one seat
+whose *job* is delivering estate services to other seats **on ask** — provisioning a
+seat, minting and rotating credentials, deploying, running the hub, publishing the
+service directory (`reference/`). Three properties follow, and they are boundaries as
+much as powers:
+
+- **It holds what nobody else may hold** — org-wide credentials and SSH to every seat —
+  so its actions are the most deliberate in the estate: on operator instruction or a
+  delivered ask (`needs/` naming it), never on its own initiative into another
+  project's design. It answers asks through deliver-and-sweep like any provider.
+- **It never does another seat's job.** It provisions the arch seat; it does not do
+  architecture. Its writes into other vaults are delivered responses, banner-marked.
+- **Its services release like software** (§9): tagged, pinned by consumers, upgraded
+  deliberately. An estate service nobody can pin is not a service.
+
+### Bootstrapping from a bare clone — the estate ladder
+
+The method is deliberately **self-sufficient at every rung**; nothing below requires
+any particular estate stack:
+
+1. **One project, one agent (day one).** Clone this repo; create `Atlas-<Project>`
+   (README §Starting a new project); the first agent is a **both-hats seat** of that
+   project — `atlas_init --slug <x> --role both`. No orchestrator exists or is needed:
+   no SSH, no org tokens, git as the only transport. This is the whole method, running.
+2. **The project grows.** Second component → the §9 migration splits both-hats into
+   arch + component. More seats, same vault, same rules.
+3. **A second project.** Repeat rung 1. The operator now carries estate chores by hand
+   (tokens, machines, prompts) — tolerable at two, tax at five.
+4. **The estate rung — promote an orchestrator.** When the chores deserve a seat,
+   create the estate project (its vault is just another `Atlas-<X>`) and give its
+   both-hats seat the service contract, the org credentials and the machine access.
+   From here new seats are provisioned by ask, not by hand.
+
+**The reference implementation is not a dependency.** `Atlas-Orchestrator` /
+`ansible-platform` (provisioning), `agent-skeleton` (seat image) and `agent-comms`
+(the optional hub) are ONE estate's implementations of the orchestrator's service
+contract — the estate this method was extracted from. Any stack that delivers the same
+contract fills the role; a fresh clone of Atlas can reach rung 4 with nothing but git,
+a config-management tool of its choice, and this section. The hub was optional by
+design (`comms.md`); provisioning is whatever executes the runbooks; the method's own
+machinery (vault, pins, guards, briefings, CI) never calls out to any of them.
+
+## 11. Glossary
 
 - **Upstream** — a component you depend on (it provides; you consume). A *relationship*
   term — the folder holding material aimed at your upstreams is `docs/needs/`.

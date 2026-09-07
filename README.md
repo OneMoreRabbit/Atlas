@@ -27,6 +27,17 @@ contract drift on each project's dashboard.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
 
+## Starting from nothing (a bare clone of this repo)
+
+The method is self-sufficient: no orchestrator, no particular estate stack, git as the
+only transport. Day one is **one both-hats seat**: create your first project vault
+(below), then from your code repo
+`python .atlas-method/tools/atlas_init.py --slug <x> --role both --vault-remote <vault-url>`.
+Grow along the estate ladder in AAC-method §10 — split arch/component when a second
+component arrives, promote an orchestrator seat when estate chores (tokens, machines,
+provisioning) deserve one. The `Atlas-Orchestrator`/`agent-skeleton`/`agent-comms`
+stack is one estate's reference implementation of that role, not a dependency.
+
 ## Starting a new project
 1. Create an `Atlas-<Project>` vault as a **private git repo with a remote** — this is the
    transport; there are no shares, mirrors, or machine paths (AAC-method §9). Seed it with
