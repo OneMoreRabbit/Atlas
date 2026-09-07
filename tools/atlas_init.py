@@ -305,6 +305,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--slug", help="this component's Atlas slug (component mode)")
+    ap.add_argument("--role", choices=["component", "both"], default="component",
+                    help="'both' declares a both-hats seat (a single-seat project whose "
+                         "one agent is the vault's architecture AND its component's "
+                         "author): the write guard grants the union scope and the "
+                         "publish nag names the direct-to-work flow. Declared here, "
+                         "reviewable in the committed .atlas.conf; never inferred "
+                         "(1.24.5). Transitional: split back when a second component "
+                         "arrives (AAC-method §9)")
     ap.add_argument("--arch", action="store_true",
                     help="install the ARCH SEAT hooks instead (no slug): reorientation "
                          "(SessionStart -> --emit-arch-context) and the alignment gate "
@@ -366,6 +374,10 @@ def main() -> int:
             .replace('SLUG="<slug>"', f'SLUG="{args.slug}"')
             .replace('ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"',
                      f'ATLAS_VAULT_REMOTE="{args.vault_remote}"'))
+    if args.role == "both":
+        conf += ('\n# Both hats (AAC-method §9): this seat is the vault\'s architecture AND this\n'
+                 '# component\'s author — a single-seat project. Transitional by design.\n'
+                 'ATLAS_ROLE="both"\n')
     install(repo / ".atlas.conf", conf, args.force, written)
 
     # AGENTS.md — committed entry hook

@@ -57,11 +57,22 @@ case "$P" in
   *) exit 0 ;;                                    # not a vault write
 esac
 
+# Both-hats mode (1.24.5, orchestrator brief): a single-seat project's one agent is its
+# vault's architecture AND its component's author. DECLARED, never inferred —
+# ATLAS_ROLE="both" in .atlas.conf, reviewable in git. Scope is the union and nothing
+# more; an ordinary component seat (ATLAS_ROLE unset or "component") is exactly as
+# constrained as before. Transitional by design: the moment the vault gains a second
+# component, the seat goes back to one hat (see AAC-method §9, the migration).
 case "$REL" in
   components/"$SLUG"/*)     exit 0 ;;
   architecture/proposals/*) exit 0 ;;
   registry/io-graph.yml)    exit 0 ;;
 esac
+if [ "${ATLAS_ROLE:-component}" = "both" ]; then
+  case "$REL" in
+    architecture/*) exit 0 ;;
+  esac
+fi
 
 "$PY" -c '
 import json, sys

@@ -41,5 +41,11 @@ fi
 [ -n "$(git -C "$ATLAS_VAULT" status --porcelain)" ] || exit 0
 
 : > "$ATLAS_SENTINEL"
-echo "Atlas: $ATLAS_VAULT has uncommitted changes — the outbox half of the session protocol has not run. Run /atlas-publish: contracts to components/$SLUG/docs/provides/, asks to docs/needs/, an ADR for shared changes, stamp updated:, recompile as a check only, then commit authored files only on branch atlas/$SLUG/<topic> and open the PR." >&2
+if [ "${ATLAS_ROLE:-component}" = "both" ]; then
+  # a both-hats seat's declared model is direct commits to the vault work branch —
+  # prescribing a topic-branch PR here named a remediation that does not apply.
+  echo "Atlas: $ATLAS_VAULT has uncommitted changes — publish before finishing. You hold both hats: commit authored files (outbox + architecture) directly on the vault work branch, stamp updated:, recompile as a check only, and push." >&2
+else
+  echo "Atlas: $ATLAS_VAULT has uncommitted changes — the outbox half of the session protocol has not run. Run /atlas-publish: contracts to components/$SLUG/docs/provides/, asks to docs/needs/, an ADR for shared changes, stamp updated:, recompile as a check only, then commit authored files only on branch atlas/$SLUG/<topic> and open the PR." >&2
+fi
 exit 2

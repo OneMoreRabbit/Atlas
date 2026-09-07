@@ -257,6 +257,12 @@ updated: 2026-09-05
 #   exact versions, never a moving ref; upgrades are deliberate pin moves; semver with
 #   0.x pilot-only; sha-pins are stopgaps. The estate owns pins and rolls (1B); the
 #   method states the rule — the same tag-and-pin discipline it applies to itself.
+#   1.24.5: both-hats mode (orchestrator brief; a 1.23 regression for single-seat
+#   projects): ATLAS_ROLE="both" in .atlas.conf (atlas_init --role both) grants the
+#   UNION scope (own outbox + architecture/** + own edges; another's outbox still
+#   refused) and the publish nag names the direct-to-work flow. Declared never
+#   inferred; ordinary seats unchanged. Transitional: the both→arch+component
+#   migration is defined in §9 (six invariants; the estate runbook executes it).
 ---
 
 # Architecture-Above-Code (AAC)
@@ -854,6 +860,44 @@ Who holds which half: the method states the convention; **the estate owns the pi
 the rolls** (scope 1B — it declares each seat's pinned versions, levels seats onto a
 tag, and reports divergence between declared and running). Fast iteration on `work` is
 healthy and untouched; reaching a consumer's seat is what requires a tag and a pin.
+
+### Both hats — the single-seat project, and the way back out of it
+
+A project with one agent has that agent as **both** its vault's architecture and its
+component's author — the natural shape of a single-seat project, not an exotic case.
+The guards support it as a **declared mode**: `ATLAS_ROLE="both"` in the committed
+`.atlas.conf` (`atlas_init --role both`). Declared, never inferred — inference would
+let an ordinary component seat acquire architecture rights by accident; a declaration
+is reviewable in git.
+
+**Scope is the union, nothing more**: `components/<slug>/**` + `architecture/**` + its
+own io-graph edges. Another component's outbox stays refused — this is not an escape
+hatch, and a seat with a separate arch counterpart keeps failing exactly as before.
+The publish nag names the both-hats flow (commit authored files directly on the vault
+work branch) instead of prescribing a topic-branch PR that does not apply.
+
+**The mode is transitional by design, and its exit is defined here** so it is a
+procedure, not an improvisation. The moment the vault gains a second component, the
+split returns (both → arch + component):
+
+1. **Declaration flip.** The seat's `ATLAS_ROLE` goes `both` → the arch install
+   (`atlas_init --arch`); the new component seat is provisioned ordinarily with its own
+   `SLUG`. Both are config diffs, reviewable.
+2. **Authorship handover, not content movement.** `components/<slug>/docs/**` stays
+   exactly where it is; only who may write it changes. Nothing moves on disk, so no
+   reference breaks.
+3. **Edges pass** to the new component seat; the arch seat keeps the graph itself.
+4. **In-flight work is handed over by name** — any open topic branch or PR authored
+   under both-hats gets an owner after the split, stated on the bridge.
+5. **The arch seat loses outbox authorship loudly** — the guard refuses from the next
+   commit; that refusal is the point of the split, never a lapse.
+6. **Credentials follow role**: the new component seat gets its own write token; the
+   now-pure arch seat drops to the project's arch-read standard.
+
+The estate (scope 1B) owns the runbook that executes this — provisioning, tokens,
+levelling; the six invariants above are what any such runbook must hold. The reverse
+(a project shrinking back to one seat) is the same diff backwards: re-declare, hand
+authorship back, note it on the bridge.
 
 ### The bridge — where direction meets implementation
 
