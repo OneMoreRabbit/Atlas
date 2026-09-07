@@ -1,7 +1,7 @@
 ---
 title: Architecture-Above-Code (AAC) — The Method
 interface: aac-method
-version: "1.25"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.26"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
 updated: 2026-09-05
@@ -318,6 +318,13 @@ updated: 2026-09-05
 #   here); the tag names the SHIPPED commit, not the tip; declared version == tag at
 #   the tagged commit; bootstrap = release branch mechanically, first tag deliberately;
 #   the default branch is ergonomics only — consumption is always a pinned tag.
+# 1.26.0 (2026-09-08): ESTATE RELEASE — rolls up 1.25.1-1.25.7 + reconciliation:
+#   bounded hook-payload reads (open-stdin hang fixed); delivered externals routed by
+#   consumer (briefings -39%); silent broadcast warned, to: all declared; externals
+#   addressable by project name; the seat model (§10) with the orchestrator defined
+#   first-hand and isolation definitional; PINS EXACT AND LITERAL (floats retired);
+#   release discipline items 6-10 (annotated vX.Y.Z only, shipped commit, version==tag,
+#   bootstrap, default-branch rule). First release with no bare alias tag.
 ---
 
 # Architecture-Above-Code (AAC)
