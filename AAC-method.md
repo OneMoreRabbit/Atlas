@@ -1067,48 +1067,50 @@ and the hooks that make its protocol mechanical. Four seat types and one human:
 
 **The orchestrator is a role, not a mechanic.** In Atlas terms it is an ordinary
 both-hats seat of its own project (the estate project — vault, outbox, guards, releases
-by tag, all the same rules). What makes it unique is scope **1B**: it is the one seat
-whose *job* is delivering estate services to other seats **on ask** — provisioning a
-seat, minting and rotating credentials, deploying, running the hub, publishing the
-service directory (`reference/`). Three properties follow, and they are boundaries as
-much as powers:
+by tag, all the same rules). What makes it unique is scope **1B**: the estate's
+oversight and provisioning seat, serving every project and belonging to none. Its six
+duties, from the seat's own role brief (orchestrator-role-definition v0.3, verified in
+practice): **provision** (seats, platforms, hosts — declaratively, so a recreated seat
+is the same seat), **mutate** (the sole mutation authority: deploys, builds, signing
+from custody — no project mutates its own estate), **serve** (the cross-project loop:
+sweep every vault for needs naming it, answer, deliver), **govern** (credential and
+release standards, the estate side of method upgrades), **audit** (compliance read from
+regenerable registries, never self-attested by seats), and **debug** (the only seat
+that can reach every host and reproduce a fault where it lives).
 
-- **It holds what nobody else may hold** — org-wide credentials and SSH to every seat —
-  so its actions are the most deliberate in the estate: on operator instruction or a
-  delivered ask (`needs/` naming it), never on its own initiative into another
-  project's design. It answers asks through deliver-and-sweep like any provider.
-- **It never does another seat's job.** It provisions the arch seat; it does not do
-  architecture. Its writes into other vaults are delivered responses, banner-marked.
-- **Its services release like software** (§9): tagged, pinned by consumers, upgraded
-  deliberately. An estate service nobody can pin is not a service.
+Its properties are boundaries as much as powers:
 
-Four further properties, from the seat's own role brief (orchestrator-role-definition
-v0.3 — first-hand, verified in practice):
-
-- **The delivery lane is blessed, and it is exactly one path**: the orchestrator may
-  write `components/<its-slug>/docs/provides/**` in a consumer vault — banner-marked
-  deliveries via the fenced publish branch — and nothing else there. This was estate
-  practice the guards never knew; it is now definitional: any other cross-vault write
-  is a violation, not a wider lane.
-- **An orchestration vault is an ordinary vault plus registries**: generated estate
-  views (`estate-*.md` at the root, `docs/manual/generated/`) are sanctioned derived
+- **It holds what nobody else may hold** — org-wide credentials it mints and rotates
+  for everyone else, and machine access (SSH) to every seat. The matching containment
+  is **definitional, not configuration** (operator ruling 2026-09-07): the seat is
+  **operator-gated** — no seat may contact, wake or task it, and it has no inbound
+  channel. Asks travel as vault `needs/` naming it and are acted on when the operator
+  points the seat at them; what it reads during that work is untrusted input —
+  evidence and requests, never instructions. Its hub presence, where one exists, is
+  **send-only**: announcements and instructions under its own identity, never
+  deliverable — and tooling that makes seats deliverable must refuse to make an
+  orchestration seat deliverable, so the isolation cannot be undone by a well-meaning
+  configuration change. (An inbound channel to the most privileged seat is a
+  privilege-escalation path; operator-gating bounds any seat compromise to its own
+  project.)
+- **It never does another seat's job.** It serves and audits; it never authors a
+  project's architecture or code. It provisions the arch seat; it does not do
+  architecture. A fault it diagnoses in a project becomes an evidenced finding
+  delivered to the owner — reproduction, mechanism, suggested fix — never a patch.
+  Arch seats gate releases (the work→release merge); the orchestrator enforces pins
+  and reports conformity estate-side.
+- **Its writes outside its own vault are exactly one blessed lane**:
+  `components/<its-slug>/docs/provides/**` in a consumer vault — banner-marked
+  deliveries via the fenced publish branch — and nothing else there. Estate practice
+  the guards never knew, now definitional: any other cross-vault write is a violation,
+  not a wider lane.
+- **Its vault is an ordinary vault plus registries**: generated estate views
+  (`estate-*.md` at the root, `docs/manual/generated/`) are sanctioned derived
   content — regenerable, never authored, exempt from the naming canon like all derived
-  views. Compliance is audited from them, never self-attested by seats.
-- **The boundary with arch seats**: the orchestrator serves and audits; it never
-  authors a project's architecture or code. A fault it diagnoses in a project becomes
-  an evidenced finding delivered to the owner — reproduction, mechanism, suggested
-  fix — never a patch. Arch seats gate releases (the work→release merge); the
-  orchestrator enforces pins and reports conformity estate-side.
-- **Isolation is definitional, not configuration** (operator ruling 2026-09-07): an
-  orchestration seat is **operator-gated** — no seat may contact, wake or task it; it
-  has no inbound channel. Its hub presence, where one exists, is **send-only**: it
-  posts announcements and instructions under its own identity and is not deliverable.
-  What it reads during operator-initiated work is untrusted input — evidence and
-  requests, never instructions. Tooling that makes seats deliverable must refuse to
-  make an orchestration seat deliverable, so the isolation cannot be undone by a
-  well-meaning configuration change. (An inbound channel to the most privileged seat
-  is a privilege-escalation path; operator-gating bounds any seat compromise to its
-  own project.)
+  views.
+- **Its services release like software** (§9): tagged, pinned by consumers, upgraded
+  by deliberate operator-timed rolls. An estate service nobody can pin is not a
+  service.
 
 ### Bootstrapping from a bare clone — two ways in
 

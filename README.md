@@ -85,7 +85,8 @@ so declare it only once the vault actually conforms.
 > release that only fixes templates needs no re-pin at all: re-copy and carry on. Check a
 > release's changelog for which class it touched. **Release tags are immutable** (1.20+):
 > a pinned tree never changes under you; a fix to pinned artefacts is a new patch tag,
-> and a two-part pin picks it up visibly at the next sync.
+> and **nothing auto-flows** (release-convention v0.3): a pin is exact and literal, and
+> a seat moves only when the operator rolls it.
 
 
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release
