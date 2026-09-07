@@ -293,9 +293,9 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
                 h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}",
                                                     str(launch_dir))
     merge_settings(launch_dir, tpl, force, written, repo_root=vault)
-    if vault != launch_dir:
-        print(f"  note   set ATLAS_VAULT={vault} in the seat's environment (scripts "
-              "default to '.', which is only right when launching in the vault)")
+    conf = launch_dir / ".atlas-arch.conf"
+    conf.write_text(f'ATLAS_VAULT="{vault}"\n', encoding="utf-8", newline="\n")
+    print(f"  write  {conf} (vault={vault})")
     print("atlas_init --arch: done — reorientation (SessionStart) + alignment gate "
           "(Stop) installed; both fire on compact as well as startup")
     return 0

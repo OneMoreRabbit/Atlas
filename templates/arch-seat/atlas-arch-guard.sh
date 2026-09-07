@@ -7,6 +7,28 @@
 # Quiet when local is equal OR AHEAD (your own unpushed work is not staleness).
 # Fail-open everywhere; stop_hook_active prevents same-turn loops; 30s throttle.
 set -e
+# Which sibling is the vault? Resolved, not assumed (1.24.3): the operator's arch seat
+# launches in a dir holding BOTH Atlas-<P> and Nav-<P>. The fingerprint of a project
+# vault is registry/io-graph.yml — a Nav vault never has one. Order: explicit env >
+# .atlas-arch.conf (written at install) > the unique fingerprinted sibling > cwd.
+LD=$(cd "$(dirname -- "$0")" && pwd)
+if [ -z "${ATLAS_VAULT:-}" ] && [ -f "$LD/.atlas-arch.conf" ]; then
+  # shellcheck disable=SC1091
+  . "$LD/.atlas-arch.conf"
+fi
+if [ -z "${ATLAS_VAULT:-}" ]; then
+  if [ -f "$LD/registry/io-graph.yml" ]; then ATLAS_VAULT="$LD"; else
+    FOUND=""
+    for _d in "$LD"/*/; do
+      [ -f "${_d}registry/io-graph.yml" ] || continue
+      if [ -n "$FOUND" ]; then FOUND="MULTI"; break; fi
+      FOUND="${_d%/}"
+    done
+    if [ "$FOUND" = "MULTI" ]; then
+      echo "atlas-arch: several vaults beside $LD — set ATLAS_VAULT (or .atlas-arch.conf) to pick one" >&2
+    elif [ -n "$FOUND" ]; then ATLAS_VAULT="$FOUND"; fi
+  fi
+fi
 : "${ATLAS_VAULT:=.}"
 PAYLOAD=""
 [ -t 0 ] || PAYLOAD=$(cat 2>/dev/null || true)

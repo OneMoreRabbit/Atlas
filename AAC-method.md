@@ -249,6 +249,9 @@ updated: 2026-09-05
 #   reconcile. And the control is now explicit (orchestrator ask): atlas_init --arch
 #   installs the arch-seat hooks — role keys the installer: a component seat has a slug
 #   in a wired code repo; an arch seat works the vault checkout and has none.
+#   1.24.3: arch scripts resolve WHICH sibling is the vault (an arch seat's launch dir
+#   holds Atlas-<P> and Nav-<P>): env > .atlas-arch.conf (written by atlas_init --arch)
+#   > the unique registry/io-graph.yml fingerprint (a Nav vault never has one) > cwd.
 ---
 
 # Architecture-Above-Code (AAC)
