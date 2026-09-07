@@ -225,18 +225,44 @@ def addressee_warnings(graph) -> list[str]:
     addressee must be visible. Warn-only, like naming."""
     slugs = [c["slug"] for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
     # an external provider is a legitimate addressee: asks travel to it by the normal
-    # route, picked up when its arch seat reads this vault (§5, decisions/0006)
-    slugs += [str(e.get("provider")) for e in graph.get("external") or [] if e.get("provider")]
+    # route, picked up when its arch seat reads this vault (§5, decisions/0006).
+    # Each declared external answers to its provider slug AND its project name derived
+    # from the vault URL (Atlas-Orchestrator -> orchestrator): seats think in projects,
+    # and requiring the internal component slug of another vault was a quiz (1.25.3).
+    for e in graph.get("external") or []:
+        if e.get("provider"):
+            slugs.append(str(e["provider"]))
+        m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", str(e.get("vault", "")))
+        if m:
+            slugs.append(m.group(1).lower())
     warns = []
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
                     + list(ROOT.glob("needs/*.md"))):
         fm = parse_frontmatter(p)
         named = addressee(fm)
-        if named is None or is_retired(fm):
+        if is_retired(fm):
             continue
+        # No addressee at all is the *broad* failure, and it was the silent one: the
+        # warning fired when `to:` was wrong (narrow, one doc lost) and said nothing
+        # when `to:` was absent (fail-open, one doc delivered to everyone in reach) —
+        # a check declining to run under the condition it exists to catch. §5 permits
+        # omission for a genuine "all my providers" broadcast, so this stays warn-only:
+        # it asks you to say you meant it, and costs one line to silence.
+        if named is None:
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — no addressee; delivery "
+                         "fails open, so this rides into every seat whose edges scan "
+                         "this folder. Name the slug(s), or `to: all` if you mean it")
+            continue
+        if is_broadcast(named):
+            continue                    # the same delivery, declared instead of implied
         if not any(names_slug(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
-                         f"'{named}' matches no component; it will reach nobody")
+                         f"'{named}' matches no component and no declared external "
+                         "provider; it will reach nobody. If this is another vault's "
+                         "seat, have the architecture session declare it under "
+                         "`external:` (the estate's service directory in `reference/` "
+                         "lists what exists) — declared providers are addressable by "
+                         "slug or project name")
         elif not any(names_slug_exactly(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
                          "resolved by prose, not a slug; write the slug (or a list of "
@@ -806,12 +832,21 @@ def is_retired(fm: dict) -> bool:
 
 
 def addressed_to(fm: dict, slug: str) -> bool:
-    """A needs/ doc is in scope if it names the slug, or names nobody at all."""
+    """A needs/ doc is in scope if it names the slug, names `all`, or names nobody."""
     value = addressee(fm)
-    return True if value is None else names_slug(value, slug)
+    if value is None or is_broadcast(value):
+        return True
+    return names_slug(value, slug)
 
 
 ALL_TOKENS = ("all", "all components", "everyone", "*")
+
+
+def is_broadcast(value: str) -> bool:
+    """`to: all` — the fail-open delivery, chosen rather than left blank. It must route
+    exactly like an absent addressee, or declaring your intent would narrow your reach
+    to nothing (there is no component called `all`)."""
+    return addressee_head(value).strip().lower() in ALL_TOKENS
 
 
 def affects_slug(fm: dict, slug: str) -> bool:
@@ -1033,7 +1068,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
             for s in slugs:
                 if owner == s:
                     continue                       # its own outbox, not feedback to it
-                if named is None:
+                if named is None or is_broadcast(named):
                     if needs_dir.resolve() in edge_dirs[s]:
                         matches.append(s)
                 elif names_slug(named, s):

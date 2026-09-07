@@ -284,6 +284,12 @@ updated: 2026-09-05
 #   components/<slug>/. Named consumer gets full text; every other slug gets one index
 #   line (read on demand = retrieval, §6); a delivery naming nobody stays vault-wide in
 #   full (fail-open). Measured: rbac-compile 52.8KB -> 32.3KB; agent-comms unchanged.
+#   1.25.3 (AgentEco PR #8 + external addressing): (a) an ABSENT addressee now warns —
+#   it was the silent case with the widest reach (fails open into every seat in range);
+#   `to: all` declares the broadcast honestly (same delivery, no warning; ALL_TOKENS at
+#   all three delivery sites). (b) declared external providers are addressable by slug
+#   OR project name derived from the vault URL (Atlas-Orchestrator -> orchestrator);
+#   the unroutable warning now names the external: route and the reference/ directory.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -400,8 +406,15 @@ components/<slug>/
 > with no edge between you — which is exactly when a component most needs to hear from a
 > stranger. `addressed-to:` is accepted as an alias. A document naming nobody is
 > delivered to the components whose edges scan your folder, so name your addressee unless
-> you mean "all my providers". An addressee matching no component reaches nobody and the
-> validator says so (§8).
+> you mean "all my providers" — and when you do mean that, **write `to: all`**, which
+> delivers identically but says you chose it. An addressee matching no component reaches
+> nobody, and an absent one reaches everyone in range; the validator says so in both
+> cases (§8). A **declared external provider** (`external:` block) is addressable too —
+> by its provider slug or by its project name derived from the vault URL
+> (`Atlas-Orchestrator` → `orchestrator`); the ask travels by deliver-and-sweep. What
+> external services exist is the estate's to publish — a service directory delivered to
+> `reference/` — and which of them this project uses is the architecture session's to
+> declare; a component that needs an undeclared one asks its arch seat via a proposal.
 
 > **Vault-level `needs/`.** A project may need something that belongs to **no single
 > component of it** — most commonly a dependency on another vault ("this project needs a
