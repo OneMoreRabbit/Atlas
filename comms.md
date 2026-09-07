@@ -1,7 +1,7 @@
 ---
 title: Communication planes — where each kind of message belongs
 interface: comms
-version: 1.2
+version: 1.3
 status: active
 maturity: 0.1
 updated: 2026-09-05
@@ -102,7 +102,8 @@ vault needs and reach it when the operator points it at them.
 
 ## Topology
 
-`orchestrator ↔ arch seat`, and `arch seat ↔ components of its own project`. Component ↔
+`orchestrator → arch seat` (send-only — nothing contacts, wakes or tasks an
+orchestration seat; method §10), and `arch seat ↔ components of its own project`. Component ↔
 component and cross-project traffic do **not** go over the hub — they travel the atlas
 plane (contracts, deliver-and-sweep) or through arch seats. The hub adds no execution
 path; it adds an influence path, which rules 1 and 3 fence.
