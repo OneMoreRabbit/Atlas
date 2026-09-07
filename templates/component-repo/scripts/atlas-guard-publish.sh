@@ -13,8 +13,7 @@ cd "$ATLAS_REPO_ROOT"
 # cascades to every RUNNING seat at the end of its current turn, with git as the only
 # transport. Fail open on anything missing (offline work is never blocked); the
 # stop_hook_active flag prevents a same-turn loop; a 30s throttle keeps rapid turns cheap.
-PAYLOAD=""
-[ -t 0 ] || PAYLOAD=$(cat 2>/dev/null || true)
+PAYLOAD=$(atlas_hook_payload)
 case "$PAYLOAD" in *'"stop_hook_active":true'*|*'"stop_hook_active": true'*) exit 0 ;; esac
 REC=$(cat "$ATLAS_REPO_ROOT/.git/info/atlas-compiled-sha" 2>/dev/null | tr -d '[:space:]' || true)
 BWORK=$(atlas_work_branch 2>/dev/null || true)

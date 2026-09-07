@@ -247,6 +247,7 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
         import subprocess
         try:
             r = subprocess.run(["sh", str(ctx)], cwd=repo, capture_output=True, text=True,
+                               stdin=subprocess.DEVNULL,
                                timeout=300)
             good = r.returncode == 0 and "# ATLAS-CONTEXT" in r.stdout
             tail = (r.stderr.strip().splitlines() or [""])[-1][:140]

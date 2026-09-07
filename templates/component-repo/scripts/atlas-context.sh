@@ -12,10 +12,7 @@ cd "$ATLAS_REPO_ROOT"
 
 # The SessionStart payload arrives on stdin as JSON carrying "source". Read it only when
 # stdin is not a terminal, so a manual `sh scripts/atlas-context.sh` never blocks on cat.
-ATLAS_SRC=""
-if [ ! -t 0 ]; then
-  ATLAS_SRC=$(cat 2>/dev/null | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -1)
-fi
+ATLAS_SRC=$(atlas_hook_payload | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -1)
 
 # ---- the seat, discovered from the filesystem (method 1.21) ------------------------
 # One SEAT holding N wired repos gets ONE briefing: shared vault content once, then a

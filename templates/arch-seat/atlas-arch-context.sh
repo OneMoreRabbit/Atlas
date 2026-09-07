@@ -32,8 +32,14 @@ fi
 
 # SessionStart payload arrives on stdin as JSON with "source"; read only off a pipe so a
 # manual run never blocks on cat.
-SRC=""
-[ -t 0 ] || SRC=$(cat 2>/dev/null | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -1)
+# Bounded stdin read (1.25.1, blocks finding): non-terminal stdin is not proof of data —
+# an open-empty pipe made cat hang forever. Never a bare cat.
+hook_payload() {
+  [ -t 0 ] && return 0
+  if command -v timeout >/dev/null 2>&1; then timeout 2 cat 2>/dev/null || true
+  else _l=""; if read -t 2 -r _l 2>/dev/null; then printf '%s' "$_l"; fi; fi
+}
+SRC=$(hook_payload | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -1)
 
 PY=$(command -v python3 || command -v python)
 "$PY" -c "import yaml" 2>/dev/null || "$PY" -m pip install -q -r "$ATLAS_METHOD/tools/requirements.txt" 2>/dev/null || true

@@ -271,6 +271,12 @@ updated: 2026-09-05
 #   (component + arch, turn-end cascade), atlas_init --arch and vault fingerprint
 #   resolution, component release convention (tag + pin), both-hats mode with defined
 #   migration, arch-read-token standard.
+#   1.25.1: bounded hook-payload reads (blocks finding, atlas-sessionstart-open-stdin):
+#   [ -t 0 ] proves stdin is not a terminal, not that data exists — an open-empty pipe
+#   (seats launched in ~/work under wrappers) made cat block FOREVER in the context
+#   hooks, both Stop guards and --verify, with no visible error. All four scripts now
+#   read via a 2s-bounded helper (timeout, else a single read -t line; never bare cat);
+#   --verify runs the context script with stdin explicitly closed.
 ---
 
 # Architecture-Above-Code (AAC)
