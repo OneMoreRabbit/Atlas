@@ -304,6 +304,15 @@ updated: 2026-09-05
 #   accelerates setup, never joins the method's runtime. Plus the minimal substrate:
 #   a complete offline estate on one PC via bare file-path git remotes (§9 requires
 #   git, not GitHub); the forge adds the CI backstop when the estate outgrows the box.
+#   1.25.6 (two orchestrator reports): (a) PINS ARE EXACT AND LITERAL — release-
+#   convention v0.3 reverses the 1.20 float (a seat advanced v1.25.0->v1.25.4
+#   mid-session with nobody deciding): atlas-sync and both CI templates honour the pin
+#   literally, two-part pins warn and never resolve upward; upgrades are deliberate
+#   operator-timed rolls, canary-able. (b) §10 orchestrator role completed from the
+#   seat's first-hand brief: the delivery lane blessed as exactly one path; estate
+#   registries sanctioned as derived views (generated/ joins the naming-lint skip);
+#   the serve-audit/never-author boundary; isolation as a DEFINITIONAL role property
+#   (operator-gated, hub send-only, tooling must refuse to make it deliverable).
 ---
 
 # Architecture-Above-Code (AAC)
@@ -835,12 +844,18 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
   whatever the method repo's default branch happens to hold.
 - **Release tags are immutable.** From 1.20 every release is tagged `vMAJOR.MINOR.PATCH`
   and a tag never moves once published — content that must change after a release
-  takes the next number. A two-part pin (`'1.20'`) resolves to the **highest matching
-  patch**, visibly (`atlas-sync` and the dashboard print the resolved tag and commit); a
-  three-part pin (`'1.20.1'`) is exact. The pin's whole contract is that a version names
-  one tree; a tag that moved once left two vaults both honestly pinned `1.16` on different
-  methods while drift showed green because the *number* matched. (The bare `v1.20` alias
-  exists once, immutable at `.0`, only so pre-1.20 resolvers upgrade cleanly.)
+  takes the next number. The pin's whole contract is that a version names one tree; a
+  tag that moved once left two vaults both honestly pinned `1.16` on different methods
+  while drift showed green because the *number* matched.
+- **Pins are exact and literal** (release-convention v0.3, operator ruling 2026-09-07,
+  **reversing the 1.20 float**). A pin is three-part (`'1.25.0'`) and is checked out
+  exactly; nothing auto-flows — the float once advanced a seat's method checkout
+  `v1.25.0 → v1.25.4` mid-session with nobody deciding. A two-part pin warns and
+  resolves only to its bare tag, never upward. The method tags continuously and
+  freely; a seat moves only when the operator rolls it — one deliberate estate-wide
+  act, which also permits canarying one vault before the rest. The consequence is
+  accepted knowingly: critical fixes reach seats only via a roll. Same rule for
+  component pins (§9, the release convention).
 - **Adopting a release is a deliberate act, never a sweep act.** Re-pinning the method,
   refreshing templates, or taking on a new standard artefact changes the ground every
   seat in the project stands on. It happens at the **periodic review** or on the
@@ -1041,6 +1056,34 @@ much as powers:
   architecture. Its writes into other vaults are delivered responses, banner-marked.
 - **Its services release like software** (§9): tagged, pinned by consumers, upgraded
   deliberately. An estate service nobody can pin is not a service.
+
+Four further properties, from the seat's own role brief (orchestrator-role-definition
+v0.3 — first-hand, verified in practice):
+
+- **The delivery lane is blessed, and it is exactly one path**: the orchestrator may
+  write `components/<its-slug>/docs/provides/**` in a consumer vault — banner-marked
+  deliveries via the fenced publish branch — and nothing else there. This was estate
+  practice the guards never knew; it is now definitional: any other cross-vault write
+  is a violation, not a wider lane.
+- **An orchestration vault is an ordinary vault plus registries**: generated estate
+  views (`estate-*.md` at the root, `docs/manual/generated/`) are sanctioned derived
+  content — regenerable, never authored, exempt from the naming canon like all derived
+  views. Compliance is audited from them, never self-attested by seats.
+- **The boundary with arch seats**: the orchestrator serves and audits; it never
+  authors a project's architecture or code. A fault it diagnoses in a project becomes
+  an evidenced finding delivered to the owner — reproduction, mechanism, suggested
+  fix — never a patch. Arch seats gate releases (the work→release merge); the
+  orchestrator enforces pins and reports conformity estate-side.
+- **Isolation is definitional, not configuration** (operator ruling 2026-09-07): an
+  orchestration seat is **operator-gated** — no seat may contact, wake or task it; it
+  has no inbound channel. Its hub presence, where one exists, is **send-only**: it
+  posts announcements and instructions under its own identity and is not deliverable.
+  What it reads during operator-initiated work is untrusted input — evidence and
+  requests, never instructions. Tooling that makes seats deliverable must refuse to
+  make an orchestration seat deliverable, so the isolation cannot be undone by a
+  well-meaning configuration change. (An inbound channel to the most privileged seat
+  is a privilege-escalation path; operator-gating bounds any seat compromise to its
+  own project.)
 
 ### Bootstrapping from a bare clone — two ways in
 

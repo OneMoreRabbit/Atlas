@@ -49,7 +49,8 @@ implementation of that role, not a dependency.
    for editor cruft only (never `registry/.compiled/` — the compiled manifests are
    committed, published contracts).
    **A new project always pins the latest tagged release** — resolve it, never copy it:
-   `git ls-remote --tags <method-remote>` and take the highest `vMAJOR.MINOR`. The pin
+   `git ls-remote --tags <method-remote>` and take the newest release tag, pinned EXACTLY
+   (`'1.25.0'`, three parts — pins never float; release-convention v0.3). The pin
    exists to keep building stable *after* you start; it is never a reason to start on an
    old method. A pin copied as a literal from a runbook, an example, or another vault is
    stale the day after it is written — `atlas-sync` and the validator both surface method
@@ -88,7 +89,8 @@ so declare it only once the vault actually conforms.
 
 
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release
-   (`MAJOR.MINOR`). From here the vault is governed by that version of
+   (exact, `MAJOR.MINOR.PATCH` — a two-part pin is deprecated and never floats). From
+   here the vault is governed by that version of
    [`AAC-method.md`](AAC-method.md); read its frontmatter changelog for what the jump adds.
 2. **Vault hygiene.** Ensure `.gitattributes` (`* text=auto eol=lf`), a cruft-only
    `.gitignore`, and that `registry/.compiled/` is committed (1.1+: it is the published

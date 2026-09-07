@@ -41,11 +41,9 @@ jobs:
           case "$PIN" in
             "") echo "::error::no method pin in registry/io-graph.yml"; exit 1 ;;
           esac
-          # Resolve to an IMMUTABLE tag (method 1.20): a two-part pin takes the highest
-          # vX.Y.* patch, a three-part pin is exact. Tags never move after release.
-          ESC=$(printf '%s' "$PIN" | sed 's/\./\\./g')
-          REF=$(git ls-remote --tags https://github.com/OneMoreRabbit/Atlas.git "v$PIN" "v$PIN.*" |
-                sed 's|.*refs/tags/||; s|\^{}$||' | grep -E "^v${ESC}(\.[0-9]+)?$" | sort -V | tail -1)
+          # The pin is honoured LITERALLY (release-convention v0.3): an exact pin is its own
+          # tag; a two-part pin resolves to its bare tag only — never upward to a patch.
+          case "$PIN" in *.*.*) REF="v$PIN" ;; *) REF="v$PIN"; echo "::warning::two-part method pin '$PIN' — floating pins are retired; pin an exact version" ;; esac
           REF=${REF:-v$PIN}
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "vault pins method $PIN — resolved to $REF"

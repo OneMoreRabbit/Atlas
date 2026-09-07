@@ -1,7 +1,7 @@
 ---
 title: Communication planes — where each kind of message belongs
 interface: comms
-version: 1.1
+version: 1.2
 status: active
 maturity: 0.1
 updated: 2026-09-05
@@ -93,6 +93,12 @@ document itself. This is the positive half of the nav-routing rule (§ [[bridge-
 the bridge stays human-only not just by prohibition but because agent notices now have
 their own home. A project with no hub carries such notices on the delivered document and
 its `provides`/`needs` — never by writing into a bridge.
+
+**An orchestration seat is send-only on the hub, by definition** (§10 of the method):
+it posts announcements and instructions under its own identity and is **not
+deliverable** — no daemon, no wake, no roster entry; client tooling must refuse to make
+one deliverable. No seat contacts, wakes or tasks the orchestrator; asks travel as
+vault needs and reach it when the operator points it at them.
 
 ## Topology
 

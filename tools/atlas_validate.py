@@ -133,7 +133,7 @@ NAME_EXEMPT = {"README.md", "component.md", "AGENTS.md", "dashboard.md", "INDEX.
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*(-v\d+_\d+)?\.md$")
 # archives keep historical names; triage is quarantine; reference/ holds provider-homed
 # library docs delivered verbatim — the copy is not this vault's to rename (1.21).
-NAME_SKIP_DIRS = {"archive", "_triage", "reference"}
+NAME_SKIP_DIRS = {"archive", "_triage", "reference", "generated"}  # generated/ = derived views (§10)
 
 
 def naming_warnings() -> list[str]:

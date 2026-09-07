@@ -42,12 +42,19 @@ PIN=$(printf '%s\n' "$GRAPH" |
 # resolves to the highest v1.20.* patch, visibly; a three-part pin (1.20.1) is exact.
 # (A moved tag once left two vaults both honestly pinned 1.16 on different trees, with
 # drift showing green because the NUMBER matched — arc-platform finding, 2026-09-01.)
+# The pin is honoured LITERALLY (release-convention v0.3, operator ruling 2026-09-07,
+# reversing the 1.20 float): a two-part pin used to resolve to the highest patch, so a
+# seat's method checkout advanced v1.25.0 -> v1.25.4 mid-session with nobody deciding.
+# Now: an exact pin ('1.25.0') checks out exactly v1.25.0; a two-part pin warns and
+# resolves to its bare vX.Y tag only — never upward. Upgrades are deliberate rolls,
+# executed estate-wide on instruction (which also permits canarying one vault first).
 resolve_method_ref() {
   [ -n "$PIN" ] || return 0
-  _esc=$(printf '%s' "$PIN" | sed 's/\./\\./g')
-  _best=$(git ls-remote --tags "$ATLAS_METHOD_REMOTE" "v$PIN" "v$PIN.*" 2>/dev/null |
-          sed 's|.*refs/tags/||; s|\^{}$||' | grep -E "^v${_esc}(\.[0-9]+)?$" | sort -V | tail -1)
-  printf '%s' "${_best:-v$PIN}"
+  case "$PIN" in
+    *.*.*) printf 'v%s' "$PIN" ;;
+    *) echo "atlas-sync: WARN two-part method pin '$PIN' — floating pins are retired (release-convention v0.3); pin an exact version, e.g. '$PIN.0'" >&2
+       printf 'v%s' "$PIN" ;;
+  esac
 }
 REF=$(resolve_method_ref)
 
