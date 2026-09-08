@@ -1260,6 +1260,10 @@ def emit_arch_context(out: str | None) -> int:
     sections += ([f"- `{p.relative_to(ROOT).as_posix()}` — "
                   f"{parse_frontmatter(p).get('title', p.stem)}" for p in props]
                  if props else ["_none._"])
+    ns = ROOT / "next-steps.md"
+    if ns.exists():
+        sections += ["\n---\n\n# next-steps.md — as last stated (replace before "
+                     "ending if anything moved)\n", read_doc(ns)]
     sections.append("\n---\n\n# The bridge\n"
                     "Read `_bridge/tasks.md` and `_bridge/threads/` in the project's Nav "
                     "vault; answer `@atlas` items before ending. (You write only there.)")

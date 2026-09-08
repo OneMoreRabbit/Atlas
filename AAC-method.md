@@ -337,6 +337,11 @@ updated: 2026-09-05
 #   broadcast nothing to add. Broadcasts reliably went stale and then named an OLDER
 #   version; the drift check is derived and cannot. A dead-hook seat sees neither, so
 #   the broadcast covered nothing extra; hook health is --verify's job.
+#   1.26.4 (operator ask): next-steps.md — a vault-root file the arch seat replaces
+#   wholesale at end of session and at release cuts (Now / Blocked on @nav / Next
+#   release ships when; <=15 lines). The operator reads it instead of asking "what's
+#   next". Template in templates/vault-roadmap/; arch-seat checklist and the arch
+#   reorientation briefing both carry it.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -497,6 +502,16 @@ components/<slug>/
 > demand, §6). A consumer asks for a library doc in its `needs/`, or a provider serves
 > one while answering a related need — the same deliver-and-sweep as `provides/`, with
 > `reference/` as the sink. `INDEX.md` may list a library folder.
+
+> **`next-steps.md` — the standing answer to "what's next?"** (1.26.4, operator ask).
+> A single short file at the vault root, beside `dashboard.md` and `roadmap.md`,
+> **authored by the architecture session and replaced wholesale** — never appended,
+> ≤15 lines, three headings: *Now (in flight)*, *Blocked on @nav*, *Next release ships
+> when*. The operator reads it instead of asking; git holds the history. It is neither
+> derived (that is the dashboard) nor the plan (that is the roadmap) — it is the near
+> edge: what is moving today, what waits on the human, what remains before the next
+> release. Refreshed at the end of every arch working session and at every release cut.
+> Template: `templates/vault-roadmap/next-steps.md`.
 
 > **Quarantine and admin.** A `_triage/` folder (at the vault root or under a component's
 > `docs/`) holds inherited, not-yet-sorted material and nothing else. It is **outside the

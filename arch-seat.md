@@ -106,7 +106,12 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    version, contract versions flagged as drift. When re-pinning the method, take the
    templates and any new standard artefact in the same act, and say what you did on
    the bridge.
-4. Archive: answered proposals to `architecture/archive/proposals/` with a
+4. **Replace `next-steps.md`** (vault root; template in `templates/vault-roadmap/`)
+   before ending any session that moved anything: Now / Blocked on @nav / Next
+   release ships when — wholesale, ≤15 lines. Also at every release cut. The
+   operator reads this instead of asking; a stale one misdirects, so replacing it
+   is part of finishing, not optional tidying.
+5. Archive: answered proposals to `architecture/archive/proposals/` with a
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. **Keep the roadmap honest.** Fold what @nav agreed on the bridge into `roadmap.md`,
    tick what shipped, and regenerate the timeline (`python3 meta/roadmap_timeline.py`).
