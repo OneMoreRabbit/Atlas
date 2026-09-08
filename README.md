@@ -13,15 +13,15 @@ contract drift on each project's dashboard.
 ## Contents
 - [`AAC-method.md`](AAC-method.md) — the specification (two planes, outbox folders, versioning + naming canon, I/O graph, session protocol, ADR flow, git transport, write model).
 - [`component-init.md`](component-init.md) — onboarding brief for a new component in any project vault: registers it, and installs the code-repo hooks (`AGENTS.md`, `scripts/atlas-sync.sh`, `SessionStart` hook, `/atlas-publish`).
-- [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>` compiles a component's session reading list into one `ATLAS-CONTEXT.md`; `--check-wiring` verifies each component repo actually carries the committed Atlas half (warn-only, for CI). Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
-- [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/`: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`. `--launch-dir <path>` when the agent starts outside the repo (a seat in the clone parent) — otherwise the hooks never load; `--verify` self-tests an install end to end (decisions/0002).
+- [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>[,<slug>...]` compiles a seat's session reading list — one briefing covering all the seat's components, shared sections once — into one `ATLAS-CONTEXT.md`; `--check-wiring` verifies each component repo actually carries the committed Atlas half (warn-only, for CI). Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
+- [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/` (component or `--role both` both-hats seats) or, with `--arch`, the `templates/arch-seat/` hooks: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`. `--launch-dir <path>` when the agent starts outside the repo (a seat in the clone parent) — otherwise the hooks never load; `--verify` self-tests an install end to end (decisions/0002).
 - [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
-- [`templates/arch-seat/`](templates/arch-seat/) — the arch seat's reorientation hook: a `SessionStart` hook emitting `atlas_validate.py --emit-arch-context`, so an arch seat re-orients itself after a compaction (component seats get this from their own hook).
+- [`templates/arch-seat/`](templates/arch-seat/) — the arch seat's hooks: a `SessionStart` reorientation hook emitting `atlas_validate.py --emit-arch-context`, so an arch seat re-orients itself after a compaction (component seats get this from their own hook), and the seat's `Stop` alignment gate (`atlas-arch-guard.sh`); both installed by `atlas_init --arch`.
 - [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
 - [`bridge-init.md`](bridge-init.md) — the human/AI interface: `_bridge/` in each project's `Nav-<Project>` vault (owner-tagged tasks + threads), the one place AI writes in the human's idea space. Deliberately simple; iterated from practice.
 - [`manual/`](manual/) — the method's own operation plane (§3 applied to itself): [`atlas-operating-manual.md`](manual/atlas-operating-manual.md) — **how you operate Atlas**: daily and periodic routine, what to discuss with the arch seat, which PRs are yours.
   Estate operation is **not** method documentation and is not kept here (one home per document): GitHub tokens — issue, install, rotate — live in `Atlas-Orchestrator` → `components/ansible-platform/docs/manual/new-seat-3-github-tokens.md`, and vault ↔ GitHub sync on desktop and Android in `…/new-seat-4-obsidian-sync.md`. Both retired at method 1.16. What the method still states for itself is *why* vault CI wants a credential — §8 (`--check-wiring`) and the comment on the secret in `templates/vault-ci/atlas-regen.yml`.
-- [`templates/vault-roadmap/`](templates/vault-roadmap/) — the roadmap artefact: `roadmap.md` (what the project intends to ship, by release) and `roadmap_timeline.py`, which regenerates its Mermaid timeline from the bullets and the frontmatter's `releases:` config. Copy into a vault root and `meta/`. Standard, never required.
+- [`templates/vault-roadmap/`](templates/vault-roadmap/) — the roadmap artefact: `roadmap.md` (what the project intends to ship, by release), `roadmap_timeline.py`, which regenerates its Mermaid timeline from the bullets and the frontmatter's `releases:` config, and `next-steps.md` — the arch-authored vault-root status file, replaced wholesale (≤15 lines). Copy into a vault root and `meta/`. Standard, never required.
 - [`comms.md`](comms.md) — the three communication planes: nav (bridge, to the human), atlas (the vault, design & change management), and the optional chat hub (ephemeral "what's next"); the governance every hub-opted project inherits. Mechanics stay the estate's.
 - [`arch-seat.md`](arch-seat.md) — the architecture session's own protocol: what it owns, its every-session checklist (sweep component asks, answer the bridge, dashboard reds, review queue) and its periodic review.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
@@ -50,7 +50,7 @@ implementation of that role, not a dependency.
    committed, published contracts).
    **A new project always pins the latest tagged release** — resolve it, never copy it:
    `git ls-remote --tags <method-remote>` and take the newest release tag, pinned EXACTLY
-   (`'1.25.0'`, three parts — pins never float; release-convention v0.3). The pin
+   (`'X.Y.Z'`, three parts — pins never float; release-convention v0.3). The pin
    exists to keep building stable *after* you start; it is never a reason to start on an
    old method. A pin copied as a literal from a runbook, an example, or another vault is
    stale the day after it is written — `atlas-sync` and the validator both surface method
@@ -130,9 +130,9 @@ so declare it only once the vault actually conforms.
    arch seat creates `_bridge/` (tasks + threads) per [`bridge-init.md`](bridge-init.md)
    and adds the Nav vault to its reading list (write `_bridge/` only, read what tasks
    point at).
-10. **Re-install the seat hooks** (1.9+). Any seat whose agent launches outside the repo
+11. **Re-install the seat hooks** (1.9+). Any seat whose agent launches outside the repo
    re-runs `atlas_init` with `--launch-dir "$HOME/work"`, then `--verify` — until that
    passes, the local write guard is not running (decisions/0002).
-11. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
+12. **Regenerate from merged truth.** Let `atlas-regen.yml` run on the default branch (or
    run the validator there once and commit the derived views) so the compiled manifests
    reflect the upgraded state.

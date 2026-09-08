@@ -1,9 +1,9 @@
 ---
 title: <Project> product roadmap
 interface: <project>-roadmap
-version: '0.2'
+version: '0.1'
 status: draft
-updated: 2026-09-01
+updated: YYYY-MM-DD
 owner: nav (direction) / arch (record)
 
 # Timeline config — everything about HOW and WHEN it renders lives here.
@@ -28,13 +28,7 @@ timeline is generated from them plus the `releases:` config in the frontmatter,
 by `meta/roadmap_timeline.py` — never hand-edit the diagram.
 
 > **Direction is @nav's.** This file is the durable *record* of direction agreed
-> on the bridge, not the place it is decided. Everything below `MVP` is a draft
-> scaffold built from what the vault evidences; correct it and I will keep it.
-
-**Status of this draft:** shipped items are drawn from accepted ADRs, published
-contracts and component maturity in `registry/io-graph.yml`. Unshipped items are
-drawn from open proposals in `architecture/proposals/`. Release names, dates and
-anything not evidenced by the vault are **proposals awaiting @nav**.
+> on the bridge, not the place it is decided.
 
 <!-- roadmap:timeline:begin -->
 <!-- roadmap:timeline:end -->

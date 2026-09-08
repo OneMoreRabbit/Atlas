@@ -13,7 +13,7 @@ implemented: method 1.14 (2026-08-26)
 
 ## Status
 
-**Accepted** — 2026-08-26. Decisions 1 and 3 implemented; decision 2 was already
+**Accepted** — 2026-08-26. Decisions 1, 3 and 4 implemented; decision 2 was already
 delivered by [[0003-needs-routing-by-addressee]] in method 1.13, after the report was
 written.
 

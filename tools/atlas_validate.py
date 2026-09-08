@@ -292,8 +292,10 @@ def method_drift(graph) -> tuple[str, str]:
     """-> (emoji, message): the vault's method pin vs the method version this validator
     ships with. The method pin is an edge like any other — it gets the same drift
     treatment (minor = informational, major = breaking). Run from a method checkout at
-    the pinned tag, the two match and the row reads aligned; run from a newer checkout
-    (CI checks out the method default branch = latest release), drift surfaces here."""
+    the pinned tag, the two match and the row reads aligned; run from a checkout that
+    differs from the pin in either direction (a local dev checkout, older or newer),
+    drift surfaces here — vault CI checks out the method at the pinned tag, so it
+    reads aligned by design."""
     # Read as raw text, never through YAML: an unquoted 1.10 parses as the float 1.1
     # and silently collides with release 1.1 (found on the 1.10 release itself).
     vm = re.search(r'^version:\s*"?([0-9][0-9.]*)"?',

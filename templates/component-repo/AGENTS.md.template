@@ -6,7 +6,7 @@ The architecture lives in the project's Atlas vault — a git repo resolved by
 pinned in the vault's `registry/io-graph.yml`. Never reference the vault by a machine path.
 
 **Before working:** read `ATLAS-CONTEXT.md` — injected by the SessionStart hook on every
-session start (including resume, `/clear`, compaction and fork). Regenerate any time with
+session start (including resume, `/clear` and compaction). Regenerate any time with
 `sh scripts/atlas-context.sh`. **If it is absent, your hooks are not live** — the write
 guard is not running either. Fix the install (`atlas_init --launch-dir`, then `--verify`);
 until then honour the write scope by hand. It is your complete reading list: constitution, pinned

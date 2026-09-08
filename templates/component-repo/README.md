@@ -44,8 +44,9 @@ git clone --depth 1 https://github.com/OneMoreRabbit/Atlas.git .atlas-method   #
 python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>
 ```
 
-It copies the tree in, fills `.atlas.conf` and `AGENTS.md`, appends the gitignore
-fragment, and **merges** the hooks into any existing `.claude/settings.json` rather than
-overwriting it. Re-running is a no-op on existing files; `--force` re-copies (the fix
-when `atlas-sync.sh` reports script self-drift). Manual install remains: copy the tree,
-rename the two templated files, append the fragment.
+It copies the tree in, fills `.atlas.conf` and `AGENTS.md`, appends both fragments
+(gitignore + gitattributes, marker-guarded), and **merges** the hooks into any existing
+`.claude/settings.json` rather than overwriting it. Re-running is a no-op on existing
+files; `--force` re-copies (the fix when `atlas-sync.sh` reports script self-drift).
+Manual install remains: copy the tree, rename the two templated files, append the two
+fragments.

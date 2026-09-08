@@ -1,11 +1,11 @@
 ---
 title: Component Init Brief — onboarding a component into Atlas
 interface: component-init
-version: 2.10
+version: "2.10"       # quoted: unquoted 2.10 would be the YAML float 2.1
 status: active
 maturity: 1.0
-updated: 2026-09-02
-supersedes: 2.8
+updated: 2026-09-07
+supersedes: 2.9
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits
 #   ATLAS-CONTEXT.md; the agent reads the context artefact, not the vault. The 1.0
@@ -39,9 +39,16 @@ supersedes: 2.8
 #   fine-grained PATs), and the development ladder (seat / dev container / staging /
 #   production; ask when the environment changes, not when your code does). A structural
 #   change is a design act: re-read decisions/ before extending a mechanism.
-# 2.9 (unreleased): which channel — a briefing carries obligations, not history; decisions
+# 2.9 (2026-09-04): which channel — a briefing carries obligations, not history; decisions
 #   are proposals, not needs; raisers retire their own asks. Raw contract artifacts:
 #   declare with artifacts:, receive in ATLAS-CONTEXT.d/, generate from bytes.
+# 2.10 (2026-09-07): method 1.21 — routing tightened (nav is a person, not a message
+#   bus; a seat reaches another seat by addressing its slug, never via the bridge), the
+#   reference library (know-how authored once in docs/library/, delivered on demand to
+#   consumers' reference/) in the decision checklist, and the multi-repo seat briefing
+#   (one SessionStart hook per launch dir, one briefing covering every wired sibling).
+#   Method 1.24: the alignment gate — the Stop guard refuses to end the turn while the
+#   vault's work branch has moved unreconciled. Method 1.24.4: a release is a tag.
 ---
 
 # Component Init Brief
@@ -64,9 +71,12 @@ Your home is `components/<your-slug>/` in the project's `Atlas-<Project>` vault 
 Read [[AAC-method]] in full once; this brief is the operational checklist.
 
 > **The invariant:** a working session reads `ATLAS-CONTEXT.md` — a single generated
-> artefact containing everything the session protocol requires. It does **not** browse the
-> vault. If the context proves insufficient, that is a defect in `registry/io-graph.yml`:
-> fix the graph, don't browse.
+> artefact containing everything the session protocol requires. Reading a document the
+> briefing itself lists — the on-demand index of accepted decisions, `architecture/` and
+> `reference/` docs — is retrieval, not browsing; raw contract artifacts arrive beside
+> the briefing in `ATLAS-CONTEXT.d/`. What a session does **not** do is browse the vault
+> beyond the briefing's reach. If the context proves insufficient, that is a defect in
+> `registry/io-graph.yml`: fix the graph, don't browse.
 
 ---
 
@@ -86,7 +96,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    maturity: 0.1            # 0.x unstable; 1.0 when ratified
    source: <git URL of the code repo>
    role: <one line: what you do>
-   updated: 2026-08-19
+   updated: YYYY-MM-DD
    ---
    ```
 2. **Declare your edges.** For every component you depend on, add an edge
@@ -172,7 +182,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    - copy `AGENTS.md.template` → `AGENTS.md`, substituting `<slug>` and `<Project>`, and
      **commit it** — an uncommitted hook is invisible to any cloned session;
    - append `gitignore.fragment` to the repo's `.gitignore` (ignores `.atlas/`,
-     `.atlas-method/`, `ATLAS-CONTEXT.md`);
+     `.atlas-method/`, `ATLAS-CONTEXT.md`, `ATLAS-CONTEXT.d/`);
    - append `gitattributes.fragment` to the repo's `.gitattributes` — **not optional**:
      a Windows clone with `core.autocrlf=true` puts CRLF into `scripts/*.sh` (shebang
      breaks in a Linux container) and `.atlas.conf` (a `\r` in `ATLAS_VAULT` used to
@@ -211,7 +221,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
    | Piece | Role |
    |---|---|
-   | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); warn when the remote has a newer release than the pin; self-drift check on these scripts |
+   | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); note for periodic review when the remote has a newer minor/major release than the pin; self-drift check on these scripts |
    | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |
@@ -286,7 +296,7 @@ hand you something to guess from; that is the correct outcome.
 A briefing carries **current obligations and inputs, not history**. Writing a decision as
 a need is a category error: nothing ever answers it, so nothing ever retires it, and the
 addressee re-reads it every morning as dead weight. Raisers retire their own asks with
-`status: resolved` (or `closed` / `done`) once satisfied — that is what ends an
+`status: resolved` (or `closed` / `done` / `superseded`) once satisfied — that is what ends an
 obligation's life in every briefing it reaches.
 
 ## Your seat is not your runtime
@@ -366,7 +376,7 @@ rather than working around it.
 ## Decision checklist: where does this document go?
 
 - The architecture doc / development plan / status *about me* (design plane) → `docs/` root (NOTHING else lives in the root)
-- A user manual, operator manual, runbook, playbook, or setup guide (operation plane) → `docs/manual/`
+- A user manual, operator manual, runbook, or setup guide (operation plane) → `docs/manual/`
 - A contract/interface *I provide* to others → `docs/provides/`
 - A request/need/feedback *I have* of an upstream → `docs/needs/`, with `to:` naming the addressee's slug (delivery follows the addressee, not the edge)
 - A change to *shared/global* architecture → `architecture/proposals/` (ADR)

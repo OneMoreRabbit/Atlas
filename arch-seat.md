@@ -1,10 +1,10 @@
 ---
 title: Arch Seat Protocol — the architecture session's own duties
 interface: arch-seat
-version: 1.9
+version: "1.10"      # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 0.1        # first written form of a previously trust-based role
-updated: 2026-08-25
+updated: 2026-09-08
 supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
 # 1.2: platform asks route to the orchestrator; seats run AI, not products. Cross-vault
@@ -15,8 +15,17 @@ supersedes: 1.0
 #   mechanism; summarised context is never the design record.
 # 1.4: roadmap upkeep joins the periodic review — record direction, never invent it.
 # 1.5: adopting a method release is a periodic-review/operator act, never a sweep act.
-# 1.6 (unreleased): the channel table — decisions are proposals, not needs; a briefing
+# 1.6: the channel table — decisions are proposals, not needs; a briefing
 #   carries obligations, not history.
+# 1.7: routing tightened — the bridge is human↔AI, never a seat-to-seat relay; the
+#   reference library (method 1.21).
+# 1.8: reorientation after compaction is automatic — the SessionStart hook fires on
+#   compact too (method 1.23).
+# 1.9: the alignment gate and `atlas_init --arch` (method 1.24.2).
+# 1.10: the two-token credential standard (1.24.6) and the pin convention (1.24.4);
+#   a release is the annotated tag, not the merge (§9); no broadcast on adopting a
+#   release (1.26.3); next-steps.md replaced every session that moved anything, and
+#   carried in the reorientation briefing (1.26.4).
 ---
 
 # Arch Seat Protocol
@@ -41,7 +50,8 @@ Works against the vault's work branch directly (it is the reviewer, not a PR aut
 (`--launch-dir` if you start elsewhere) — it wires both arch hooks. Or by hand from
 `templates/arch-seat/` in your launch dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
-estate/drift, your review queue, and where the bridge is. Because it fires on **compact**
+estate/drift, your review queue, `next-steps.md` as last stated (replace before
+ending if anything moved), and where the bridge is. Because it fires on **compact**
 as well as startup, a compaction re-injects your bearings with a directive to resume;
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)
@@ -88,6 +98,11 @@ Your own unpushed work never triggers it.
    nobody took.
 5. **Clear the review queue.** Merge outbox-only PRs that CI passed; review PRs
    touching `architecture/proposals/**` or `registry/io-graph.yml`.
+6. **Replace `next-steps.md`** (vault root; template in `templates/vault-roadmap/`)
+   before ending any session that moved anything: Now / Blocked on @nav / Next
+   release ships when — wholesale, ≤15 lines. The operator reads this instead of
+   asking; a stale one misdirects, so replacing it is part of finishing, not
+   optional tidying.
 
 ## Periodic review
 
@@ -106,19 +121,18 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    version, contract versions flagged as drift. When re-pinning the method, take the
    templates and any new standard artefact in the same act, and say what you did on
    the bridge.
-4. **Replace `next-steps.md`** (vault root; template in `templates/vault-roadmap/`)
-   before ending any session that moved anything: Now / Blocked on @nav / Next
-   release ships when — wholesale, ≤15 lines. Also at every release cut. The
-   operator reads this instead of asking; a stale one misdirects, so replacing it
-   is part of finishing, not optional tidying.
-5. Archive: answered proposals to `architecture/archive/proposals/` with a
+4. Archive: answered proposals to `architecture/archive/proposals/` with a
    `resolution:` frontmatter line pointing at the answer. Empty `_triage/`.
 5. **Keep the roadmap honest.** Fold what @nav agreed on the bridge into `roadmap.md`,
    tick what shipped, and regenerate the timeline (`python3 meta/roadmap_timeline.py`).
    You **record** direction; you never invent a release. If the roadmap and the bridge
    disagree, the bridge is the newer truth — reconcile it there first.
 6. Clear the validator's naming and doc-plane warnings.
-7. Merge `dev → main` across the project's repos — the release/deploy signal.
+7. Merge work → release across the project's repos per the declared `branching:`
+   policy, then cut the release as its own deliberate act: tag the shipped commit
+   `vX.Y.Z` (annotated). The merge alone is not a release, and nothing deploys
+   until a consumer moves its pin; a trunk-only project just tags (§9). Replace
+   `next-steps.md` at every cut.
 
    **No broadcast to component seats on adopting a release** (1.26.3, from an AgentEco
    finding). Do not mint a per-release "re-copy your scripts" need: the self-drift
@@ -223,7 +237,7 @@ briefing next session. That makes it tempting to use for everything. Don't.
 A briefing carries **current obligations and inputs, not history**. Writing a decision as
 a need is a category error: nothing ever answers it, so nothing ever retires it, and the
 addressee re-reads it every morning as dead weight. Raisers retire their own asks with
-`status: resolved` (or `closed` / `done`) once satisfied — that is what ends an
+`status: resolved` (or `closed` / `done` / `superseded`) once satisfied — that is what ends an
 obligation's life in every briefing it reaches.
 
 ## Answering a component's ask

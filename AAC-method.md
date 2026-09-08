@@ -4,7 +4,7 @@ interface: aac-method
 version: "1.26"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 maturity: 1.0
-updated: 2026-09-05
+updated: 2026-09-08
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -404,7 +404,7 @@ components/<slug>/
   component.md            # identity + frontmatter the dashboard reads (REQUIRED)
   docs/                   # DESIGN plane: the architecture doc + development plan/status
     archive/              # retired design milestones (MAJOR/MINOR)
-    manual/               # OPERATION plane: user & operator manuals, runbooks, playbooks
+    manual/               # OPERATION plane: user & operator manuals, runbooks, setup guides
       archive/            # retired manual milestones
   docs/provides/          # OUTBOX: "what I provide" — contracts my consumers build against
     archive/              # retired versions of my provided contracts
@@ -436,7 +436,9 @@ components/<slug>/
 >
 > **`playbook` is not a vault document type.** The word is reserved for Ansible
 > playbooks (executable code), which infrastructure components discuss constantly;
-> using it for documentation too made three overlapping type words where two suffice. **Every document addressed to or negotiated with
+> using it for documentation too made three overlapping type words where two suffice.
+>
+> **Every document addressed to or negotiated with
 > another component** (proposal, reply, response, finding, question, handover, review,
 > schema) **lives in `provides/` or `needs/` — never in the root or `manual/`.** Rule of
 > thumb: *asking side* (proposal, request, finding, question, reply-in-your-own-thread) →
@@ -523,7 +525,7 @@ components/<slug>/
 > Naming note: the folders are named by **content** (`provides`/`needs`), not by direction
 > (`downstream`/`upstream`), because direction-names invite the inbox misreading —
 > "`upstream/` must be stuff *from* upstream." It isn't; nothing is ever delivered into
-> your folders. *Upstream*/*downstream* remain the terms for the **relationship** (§10).
+> your folders. *Upstream*/*downstream* remain the terms for the **relationship** (§11).
 
 For an edge where **A feeds B** (A is upstream/provider, B is downstream/consumer):
 
@@ -574,8 +576,8 @@ their historical names — renaming history breaks every wikilink that points in
 - **Living documents carry no version suffix.** A status, development plan, TODO list, or
   catalogue evolves in place — git is its history; the §4 version machinery is for
   contracts and milestone documents, where consumers pin.
-- **Exempt by convention:** `README.md`, `component.md`, `AGENTS.md`, `dashboard.md`, and
-  the `NNNN-` numeric prefix on ADR files.
+- **Exempt by convention:** `README.md`, `component.md`, `AGENTS.md`, `dashboard.md`,
+  `INDEX.md` (1.21, library indexes), and the `NNNN-` numeric prefix on ADR files.
 
 The validator (§8) warns on live-folder names outside the canon — warn-only; a name never
 blocks a publish.
@@ -617,7 +619,7 @@ edge list of a directed graph. Each edge pins the version the consumer builds ag
 ```yaml
 method:
   repo: https://github.com/OneMoreRabbit/Atlas.git
-  pinned: '<latest MAJOR.MINOR at seed time — resolve from the tags, never copy a literal (§9)>'
+  pinned: '<latest MAJOR.MINOR.PATCH at seed time — resolve from the tags, never copy a literal (§9)>'
                              # ALWAYS quoted: unquoted 1.10 is the YAML float 1.1
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
@@ -638,7 +640,7 @@ edges:
     to: agent-compile          # consumer (downstream)
     interface: snapshot-instance-fields
     mode: collaboration        # team-topologies mode: x-as-a-service | collaboration | facilitation
-    pinned: 0.2                 # version agent-compile currently builds against
+    pinned: '0.2'               # version agent-compile currently builds against
 ```
 
 ### Depending on something in another vault
@@ -663,6 +665,10 @@ consumer's vault, on branch `atlas/<provider-slug>/<topic>` — which the CI gua
 fences to exactly that folder, making this the one sanctioned write into another
 project's vault. The provider then appears in the consumer's vault as a component would,
 its contracts land in the plane every seat already reads, and the briefing carries them.
+Delivered externals route by consumer (1.25.2): the delivery's own signals — `to:`,
+`consumers:`, or a `responds_to:` naming `components/<slug>/` — pick the consumer, which
+gets the full text in its briefing; every other slug sees one index line; a delivery
+naming nobody stays vault-wide (fail-open).
 The copy is read-only where it lands; one home stays true because it is authored and
 versioned only at the source. The provider **sweeps** consuming vaults for `needs/`
 addressed to its slug — the consumer's only obligation is to write the ask in its own
@@ -721,10 +727,12 @@ Every agent session working on a component MUST, before doing work, have read:
 5. `architecture/proposals/` entries in flight that affect it.
 
 These five reads define **what the session's context contains** — but the session does not
-perform them by browsing. The validator's `--emit-context <slug>` mode (§8) compiles all
-five, in that order, into a single **`ATLAS-CONTEXT.md`**, each section headed with its
-source path and version, plus a drift summary. A `SessionStart` hook in the code repo
-syncs the vault and injects this artefact automatically — the protocol is mechanical, not
+perform them by browsing. The validator's `--emit-context <slug>[,<slug>...]` mode (§8)
+compiles all five, in that order, into a single **`ATLAS-CONTEXT.md`** — one seat, one
+briefing: a seat holding several slugs lists them all and shared sections are emitted
+once — each section headed with its source path and version, plus a drift summary. A
+`SessionStart` hook in the code repo syncs the vault and injects this artefact
+automatically — the protocol is mechanical, not
 trust-based; a session that starts has already "done the reads." The hook carries **no
 matcher, so it fires on compact, resume and clear as well as startup**: after a
 compaction the briefing is re-injected, headed by a reorientation directive, so a seat
@@ -740,7 +748,10 @@ nothing to restore them.
 > `scripts/atlas-context.sh`, reconcile your in-flight work against the fresh briefing,
 > then finish.* Cascade latency drops from "next compaction" to "end of current turn",
 > with git still the only transport — no hub, no push channel, no polling loop. Fails
-> open (offline work is never blocked); the once-per-turn flag prevents loops.
+> open (offline work is never blocked); the once-per-turn flag prevents loops. Arch
+> seats carry the same Stop gate against their own vault checkout (1.24.2): quiet when
+> local is equal or ahead (unpushed work is not staleness), blocking only when origin
+> holds commits the checkout lacks — pull, re-orient, reconcile, then finish.
 
 > **The briefing carries current obligations and inputs, not history.** Rules and
 > contracts are injected in full every session — that persistence is the point. A need
@@ -760,6 +771,9 @@ nothing to restore them.
 > Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are
 > reported separately from its size — receiving what a pin entitles you to is retrieval,
 > not browsing.
+> The briefing also carries two on-demand indexes (1.21): **architecture in force**
+> (accepted decisions plus standalone `architecture/*.md`) and the `reference/`
+> library (§3) — reading a doc listed there is retrieval, not browsing, either.
 > If the context is insufficient for the work, the io-graph is missing an edge — fix
 > `registry/io-graph.yml` and recompile. Free browsing of the vault is how "dump
 > everything into the window" returns; the single generated artefact is the boundary
@@ -782,7 +796,9 @@ before touching code.
 When work in a component implies a change to **shared** architecture:
 
 1. The component drops an ADR in `architecture/proposals/NNNN-title.md`, `status: proposed`,
-   listing `affects: [components]`.
+   listing `affects: [components]`. `affects:` routes delivery exactly as `to:` routes a
+   need (§3): the proposal is injected into each named slug's briefing while proposed,
+   `all` / `all components` tokens included.
 2. It is reviewed at the architecture level (the arch seat — [[arch-seat]]), which
    decides structural and mechanical proposals itself and escalates anything changing
    **direction, cost or scope** to the human on the bridge. One mechanical act is
@@ -811,9 +827,11 @@ ADRs use the Nygard format: Context → Decision → Status → Consequences.
 
 ## 8. Tooling — the validator
 
-AAC is achieved by **policy + documents**; an agent reading the files performs the whole
-protocol. The single permitted tool is the **validator** (the Atlas repo’s `tools/atlas_validate.py`, run from the project-vault root or given the vault path as first argument), and its
-scope is fixed: it makes the *derived views* genuinely derived. It parses `io-graph.yml` +
+AAC is achieved by **policy + documents**; the protocol itself is reading and writing
+files. The single tool permitted to **write** vault content is the **validator** (the Atlas repo’s `tools/atlas_validate.py`, run from the project-vault root or given the vault path as first argument), and its
+scope is fixed: it makes the *derived views* genuinely derived. The sync, context, init
+and guard scripts around it (§6, §9, §10) are transport and hook machinery — they carry
+state and enforce scope, never author vault content. It parses `io-graph.yml` +
 contract frontmatter and regenerates:
 
 - `registry/graph.md` — the rendered Mermaid graph + edge table;
@@ -825,7 +843,10 @@ contract frontmatter and regenerates:
 and prints a **drift report** (every edge where `pinned ≠ latest`; exit non-zero on breaking
 drift — run it as a CI gate on the vault repo, on push and nightly, so drift surfaces with
 no local machine switched on). It also lists live-folder documents whose names fall outside
-the **naming canon** (§4) — warn-only; `archive/` and `_triage/` are never checked.
+the **naming canon** (§4) — warn-only; `archive/`, `_triage/`, `reference/` and
+`generated/` are never checked. It likewise warns — warn-only — on a `to:` addressee
+matching no component or declared external (`nav` stays valid — the human) and on an
+absent addressee, which is a silent broadcast to everyone in range (§3).
 
 **`--check-wiring`** (opt-in; decisions/0001) extends the estate table with a **Wired**
 column: for each component it fetches `.atlas.conf` and `AGENTS.md` from the `source:`
@@ -838,12 +859,13 @@ network and the credentials); plain local runs stay offline apart from the cheap
 ref-level branch checks (§9). Wiring is the owning component's own act, in its own
 repo — never installed centrally on its behalf (golden rule 2 is about ownership).
 
-A second mode serves the session protocol (§6): **`--emit-context <slug>`** reads the
-component's committed `io-manifest.yml` and concatenates the five protocol reads into one
-`ATLAS-CONTEXT.md` (stdout, or `--out <path>`), each section headed with source path and
-version, ending in a drift summary. It prints a byte/token estimate to stderr — the cost
-of a session's context is a number you can watch. Its dependency is pinned in
-`tools/requirements.txt`; a fresh VM installs it in one line.
+A second mode serves the session protocol (§6): **`--emit-context <slug>[,<slug>...]`**
+reads each listed component's committed `io-manifest.yml` and concatenates the five
+protocol reads into ONE seat briefing, `ATLAS-CONTEXT.md` (stdout, or `--out <path>`) —
+shared sections once, per-component sections each — every section headed with source
+path and version, ending in a drift summary. It prints a byte/token estimate to
+stderr — the cost of a session's context is a number you can watch. Its dependency is
+pinned in `tools/requirements.txt`; a fresh VM installs it in one line.
 
 **Rule: edge facts are edited only in `io-graph.yml`; generated blocks are
 never edited by hand.** This exists because hand-maintained copies of the graph were found
@@ -861,7 +883,7 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
 
 | Repo | Contents | Access |
 |---|---|---|
-| Method (`Atlas`) | this spec, `component-init`, the validator | cloned per session (`$ATLAS_METHOD`, default `./.atlas-method`) |
+| Method (`Atlas`) | this spec, `component-init`, the validator and seat tooling (`tools/`) | cloned per session (`$ATLAS_METHOD`, default `./.atlas-method`) |
 | Project vault (`Atlas-<Project>`) | constitution, ADRs, io-graph, component docs, compiled manifests | cloned per session (`$ATLAS_VAULT`, default `./.atlas`) |
 | Code (one per component) | the code, plus the hooks: `AGENTS.md`, `scripts/atlas-sync.sh`, `.claude/` | where the session runs |
 
@@ -902,11 +924,13 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
   exists. That note is awareness (golden rule 3); the operator times releases. This is
   the one explicit exception to the arch seat's authority over mechanical changes (§7).
 - **The method pin is an edge, and it drifts like one** (golden rule 3 applies to the
-  method itself). `atlas-sync.sh` warns when the method remote has a newer release than
-  the pin, and the validator reports method-pin drift in the drift report and dashboard
-  panel — minor is informational, major is breaking. A **new** project pins the **latest
-  tagged release**, resolved from the remote at seed time — never a literal copied from a
-  runbook, an example, or another vault, which is stale the day after it is written.
+  method itself). `atlas-sync.sh` notes a newer MINOR/MAJOR release than the pin for
+  periodic review — patch drift is deliberately silent, since patches reach seats via
+  the operator's roll — and the validator reports method-pin drift in the drift report
+  and dashboard panel — minor is informational, major is breaking. A **new** project
+  pins the **latest tagged release**, resolved from the remote at seed time — never a
+  literal copied from a runbook, an example, or another vault, which is stale the day
+  after it is written.
 
 ### Branch policy — declared once, enforced mechanically
 
@@ -1186,10 +1210,11 @@ hold; add the forge when the estate outgrows the machine.
 `ansible-platform` (provisioning), `agent-skeleton` (seat image) and `agent-comms`
 (the optional hub) are ONE estate's implementations of the orchestrator's service
 contract — the estate this method was extracted from. Any stack that delivers the same
-contract fills the role; a fresh clone of Atlas can reach rung 4 with nothing but git,
-a config-management tool of its choice, and this section. The hub was optional by
-design (`comms.md`); provisioning is whatever executes the runbooks; the method's own
-machinery (vault, pins, guards, briefings, CI) never calls out to any of them.
+contract fills the role; a fresh clone of Atlas can stand up a full estate — promoted
+orchestrator included — with nothing but git, a config-management tool of its choice,
+and this section. The hub was optional by design (`comms.md`); provisioning is
+whatever executes the runbooks; the method's own machinery (vault, pins, guards,
+briefings, CI) never calls out to any of them.
 
 ## 11. Glossary
 

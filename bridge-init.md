@@ -4,7 +4,7 @@ interface: bridge-init
 version: 1.3
 status: active
 maturity: 0.1        # deliberately simple; iterate from practice, not design
-updated: 2026-08-24
+updated: 2026-09-05
 supersedes: 1.0
 # 1.1: component asks route via their own needs/ outbox (nav- prefix), mirrored to the
 #   bridge by the arch seat — no component seat needs Nav-vault credentials.
@@ -65,7 +65,8 @@ components/<slug>/docs/needs/nav-<slug>-<topic>-vX_Y.md
 ```
 ```yaml
 ---
-to: nav          # required and explicit — a needs doc with no `to:` goes to everyone
+to: nav          # required — no `to:` warns and falls open only to seats whose edges
+                 # scan this folder; it never reaches nav; `to: all` declares a broadcast
 version: 0.1
 status: open
 ---
@@ -89,16 +90,14 @@ project has one) or rides on the **delivered document** itself — never a bridg
 bridge is human communication; see [[comms]] for the three planes. (Direct seat messaging
 is the `agent-comms` component's job, not the vault's.)
 
-## Setup (arch seat, one time — as part of the 1.7 upgrade)
+## Setup (arch seat, one time)
 
-1. *(Owner)* Rename `Dev-<Project>` → `Nav-<Project>` — GitHub redirects old URLs, so
-   clones and GitSync keep working.
-2. Add the Nav vault to the arch seat's repo list: **read `_bridge/` (and pointed-to
+1. Add the Nav vault to the arch seat's repo list: **read `_bridge/` (and pointed-to
    docs); write `_bridge/` only.**
-3. Create `_bridge/tasks.md` (header + the two-owner rule in a comment), `threads/`,
+2. Create `_bridge/tasks.md` (header + the two-owner rule in a comment), `threads/`,
    `archive/`. Open a first thread announcing the bridge and inviting the owner's
    first items.
-4. Thread template:
+3. Thread template:
    ```markdown
    ---
    topic: <short-topic>
@@ -109,6 +108,10 @@ is the `agent-comms` component's job, not the vault's.)
    ## @atlas — 2026-08-24
    <turn>
    ```
+
+*Historical note — estates predating method 1.7 only:* the owner first renames
+`Dev-<Project>` → `Nav-<Project>` — GitHub redirects old URLs, so clones and GitSync
+keep working.
 
 ## Deliberately deferred
 

@@ -8,8 +8,9 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
    needs document — that is what clears it from UNANSWERED in the raiser's briefing.
 2. New asks/feedback for upstreams? Write to components/<slug>/docs/needs/ with `to:`
    frontmatter naming the addressee's SLUG (a list for several; `nav` for the human).
-   Delivery follows the addressee, not the io-graph edge — an addressee that is not a
-   component slug reaches nobody, and the validator warns.
+   Delivery follows the addressee, not the io-graph edge — an addressee matching no
+   component slug, no declared external provider (slug or project name), and none of
+   `nav`/`atlas`/`all` reaches nobody, and the validator warns.
 3. Changed shared architecture? Do NOT edit the constitution — raise an ADR in
    architecture/proposals/NNNN-title.md, `status: proposed`, `affects: […]`.
 4. Stamp `updated:` in components/<slug>/component.md.
@@ -24,5 +25,7 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
 6. Commit ONLY your authored files (components/<slug>/**, any ADR, any io-graph edge
    naming you) on branch atlas/<slug>/<topic>, push, and open a PR against the vault's
    work branch (the `branching:` policy in io-graph.yml; the default branch if no policy
-   is declared). The CI path guard enforces this scope; a write outside it is refused
-   locally by the PreToolUse guard before it ever reaches a commit.
+   is declared). With ATLAS_ROLE="both", commit authored files — outbox + architecture —
+   directly on the vault work branch and push; no topic-branch PR. The CI path guard
+   enforces this scope; a write outside it is refused locally by the PreToolUse guard
+   before it ever reaches a commit.

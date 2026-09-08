@@ -38,8 +38,8 @@ GRAPH=$(atlas_graph_text "$BWORK")
 PIN=$(printf '%s\n' "$GRAPH" |
       awk '/^method:/{m=1;next} m&&/^[^ ]/{m=0} m&&/pinned:/{gsub(/[^0-9.]/,"",$2); print $2; exit}')
 # Resolve the pin to an IMMUTABLE release tag (method 1.20). Tags never move after
-# release — content that must change takes the next number. A two-part pin (1.20)
-# resolves to the highest v1.20.* patch, visibly; a three-part pin (1.20.1) is exact.
+# release — content that must change takes the next number. A three-part pin (1.20.1)
+# is exact; a two-part pin (1.20) warns and resolves only to its bare vX.Y tag.
 # (A moved tag once left two vaults both honestly pinned 1.16 on different trees, with
 # drift showing green because the NUMBER matched — arc-platform finding, 2026-09-01.)
 # The pin is honoured LITERALLY (release-convention v0.3, operator ruling 2026-09-07,

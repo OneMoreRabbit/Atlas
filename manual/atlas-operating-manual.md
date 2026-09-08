@@ -13,15 +13,17 @@ supersedes: atlas-quickstart-manual 1.1
 
 What you do, and what is done for you.
 
-## Your three surfaces
+## Your four surfaces
 
 | Surface | Where | You |
 |---|---|---|
 | **The bridge** | `Nav-<Project>/_bridge/` | work here daily |
 | **The dashboard** | `Atlas-<Project>/dashboard.md` | read it; never edit it |
+| **Next steps** | `Atlas-<Project>/next-steps.md` | read it; never edit it |
 | **PRs** | GitHub | see §4 — most are not yours |
 
-Everything else — the Atlas vault, contracts, ADRs, drift — is maintained for you.
+Everything else — the rest of the Atlas vault, contracts, ADRs, drift — is maintained
+for you.
 
 ## 1. Daily (~10 minutes)
 
@@ -31,10 +33,13 @@ Everything else — the Atlas vault, contracts, ADRs, drift — is maintained fo
 
 If both are empty, you are done. Most days they will be.
 
+Wondering what's next? Read `Atlas-<Project>/next-steps.md` before asking the arch
+seat on the bridge.
+
 ## 2. Periodic (~30–60 minutes, roughly weekly)
 
-Run it when the dashboard shows it is due — open threads, unreleased `dev → main`
-changes, or red rows. Not on a calendar.
+Run it when the dashboard shows it is due — open threads, changes awaiting a release
+tag, or red rows. Not on a calendar.
 
 1. Open `Atlas-<Project>/dashboard.md`. Read **red rows only**: method pin, branch
    policy, wiring, breaking contract drift. Anything red that is not obvious, ask the
@@ -42,8 +47,9 @@ changes, or red rows. Not on a calendar.
 2. Walk open `_bridge/threads/`: resolve or decide each one.
 3. Decide the proposals the arch seat escalated to you (§3). Say yes or no on the
    bridge; the arch seat writes it up as an ADR.
-4. Merge `dev → main` across the project's repos. **This is the release/deploy
-   signal** — `main` is what is live.
+4. Green-light the release on the bridge. The arch session merges `dev → main`
+   across the project's repos; **the annotated `vX.Y.Z` tag on the shipped commit
+   is the release** — not the branch. Consumers go live only when their pin rolls.
 
 ## 3. What you discuss with the arch seat
 
@@ -70,7 +76,7 @@ to the bridge for you — in plain words, not as a diff.
 
 | Kind | Contains | Who handles it |
 |---|---|---|
-| **Vault PR**, touching only `components/<slug>/**` | documentation only — a component publishing a contract, an ask, its own io-graph line | **auto-merges.** You never see it |
+| **Vault PR**, touching only `components/<slug>/**` | documentation only — a component publishing a contract, an ask | **auto-merges.** You never see it |
 | **Vault PR**, touching `architecture/proposals/**` or `registry/io-graph.yml` | a proposal, or a change to the topology | arch seat reviews; escalates to you per §3 |
 | **Code PR** in a component repo | actual code | ordinary dev practice — skim the diff, merge |
 
