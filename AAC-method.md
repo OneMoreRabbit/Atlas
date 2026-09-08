@@ -331,7 +331,7 @@ updated: 2026-09-05
 #   checkout the installer ran from; --arch refuses to write hooks into the vault
 #   working tree (pass --launch-dir); the script fails loudly naming the conf key,
 #   after trying <vault>/.atlas-method and <launch-dir>/Atlas.
-#   1.26.2 (AgentEco ask): release adoption needs NO broadcast to component seats —
+#   1.26.2-1.26.3 (AgentEco ask): release adoption needs NO broadcast to component seats —
 #   arch-seat.md says so, and the atlas-sync self-drift warning now prints the exact
 #   filled-in refresh command (atlas_init --slug --force ...), leaving a hand-minted
 #   broadcast nothing to add. Broadcasts reliably went stale and then named an OLDER

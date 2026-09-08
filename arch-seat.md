@@ -115,6 +115,15 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
 6. Clear the validator's naming and doc-plane warnings.
 7. Merge `dev → main` across the project's repos — the release/deploy signal.
 
+   **No broadcast to component seats on adopting a release** (1.26.3, from an AgentEco
+   finding). Do not mint a per-release "re-copy your scripts" need: the self-drift
+   check in `atlas-sync` already tells exactly the seats that are behind, against the
+   pin the vault holds *now*, and prints the exact refresh command — a derived signal
+   that cannot go stale. A hand-minted broadcast reliably outlives its release and
+   then names an OLDER version to install; and a seat whose hooks are dead never sees
+   a briefing-borne broadcast either, so it covers nothing the drift check does not.
+   Hook health is what `--verify` is for.
+
 ## Before you extend a mechanism, read the decision
 
 > **A structural change is a design act.** Before you add a directory, a file kind, or
