@@ -125,10 +125,17 @@ fi
 # copies drift (AAC-method §8), so detect it rather than trusting it.
 TPL="$ATLAS_METHOD/templates/component-repo/scripts"
 if [ -d "$TPL" ]; then
+  _DRIFTED=0
   for f in atlas-common.sh atlas-sync.sh atlas-context.sh atlas-guard-write.sh atlas-guard-publish.sh; do
     [ -f "$TPL/$f" ] || continue
-    [ -f "scripts/$f" ] || { echo "atlas-sync: WARN scripts/$f missing — method ${REF:-default} ships it" >&2; continue; }
+    [ -f "scripts/$f" ] || { echo "atlas-sync: WARN scripts/$f missing — method ${REF:-default} ships it" >&2; _DRIFTED=1; continue; }
     cmp -s "$TPL/$f" "scripts/$f" ||
-      echo "atlas-sync: WARN scripts/$f differs from method ${REF:-default} template — re-copy, or raise a proposal if the change is deliberate" >&2
+      { echo "atlas-sync: WARN scripts/$f differs from method ${REF:-default} template — re-copy, or raise a proposal if the change is deliberate" >&2; _DRIFTED=1; }
   done
+  # The warning carries its own remedy (1.26.2, AgentEco ask): the exact refresh
+  # command, filled in — so no arch seat ever needs to mint a per-release broadcast
+  # (which reliably went stale and then named an OLDER version to install).
+  if [ "$_DRIFTED" = 1 ]; then
+    echo "atlas-sync: refresh with: python3 .atlas-method/tools/atlas_init.py --slug $SLUG --force${ATLAS_LAUNCH_DIR:+ --launch-dir \"$ATLAS_LAUNCH_DIR\"} --vault-remote $ATLAS_VAULT_REMOTE   (then re-run with --verify; commit scripts/)" >&2
+  fi
 fi
