@@ -325,6 +325,12 @@ updated: 2026-09-05
 #   first-hand and isolation definitional; PINS EXACT AND LITERAL (floats retired);
 #   release discipline items 6-10 (annotated vX.Y.Z only, shipped commit, version==tag,
 #   bootstrap, default-branch rule). First release with no bare alias tag.
+#   1.26.1 (canary catch, orchestrator): atlas_init --arch MERGES .atlas-arch.conf
+#   instead of clobbering it (the rewrite dropped ATLAS_METHOD and every arch seat's
+#   reorientation died on '//.atlas-method'); a fresh install records the method
+#   checkout the installer ran from; --arch refuses to write hooks into the vault
+#   working tree (pass --launch-dir); the script fails loudly naming the conf key,
+#   after trying <vault>/.atlas-method and <launch-dir>/Atlas.
 ---
 
 # Architecture-Above-Code (AAC)

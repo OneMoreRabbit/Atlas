@@ -294,9 +294,21 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
                 h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}",
                                                     str(launch_dir))
     merge_settings(launch_dir, tpl, force, written, repo_root=vault)
+    # MERGE the conf, never clobber it (1.26.1, canary catch: the rewrite dropped an
+    # existing ATLAS_METHOD and every arch seat's reorientation died on a garbage path).
+    # The installer also knows the method checkout it is running from — record it.
     conf = launch_dir / ".atlas-arch.conf"
-    conf.write_text(f'ATLAS_VAULT="{vault}"\n', encoding="utf-8", newline="\n")
-    print(f"  write  {conf} (vault={vault})")
+    kept = {}
+    if conf.exists():
+        for line in read(conf).splitlines():
+            m = re.match(r'^([A-Z_]+)="?([^"\r\n]*)"?\s*$', line)
+            if m:
+                kept[m.group(1)] = m.group(2)
+    kept["ATLAS_VAULT"] = str(vault)
+    kept.setdefault("ATLAS_METHOD", str(Path(__file__).resolve().parent.parent))
+    conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
+                    encoding="utf-8", newline="\n")
+    print(f"  write  {conf} (vault={kept['ATLAS_VAULT']}, method={kept['ATLAS_METHOD']})")
     print("atlas_init --arch: done — reorientation (SessionStart) + alignment gate "
           "(Stop) installed; both fire on compact as well as startup")
     return 0
@@ -348,9 +360,13 @@ def main() -> int:
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
     if args.arch:
-        return install_arch(repo,
-                            Path(args.launch_dir).resolve() if args.launch_dir else repo,
-                            args.force)
+        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
+        if ld == repo:
+            print("atlas_init --arch: refusing to install hooks into the vault working "
+                  "tree — an arch seat launches beside its vault, not inside it. Pass "
+                  "--launch-dir (e.g. --launch-dir \"$HOME/work\").", file=sys.stderr)
+            return 2
+        return install_arch(repo, ld, args.force)
     if not args.slug:
         ap.error("--slug is required (component mode; use --arch for an arch seat)")
     if args.verify:

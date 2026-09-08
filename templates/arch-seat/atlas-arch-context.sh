@@ -28,7 +28,15 @@ if [ -z "${ATLAS_VAULT:-}" ]; then
   fi
 fi
 : "${ATLAS_VAULT:=.}"
-: "${ATLAS_METHOD:=.atlas-method}"
+# ATLAS_METHOD must resolve to a real method checkout — never build a garbage path
+# from an empty base (1.26.1: '//.atlas-method' died on every arch seat when the
+# installer dropped the key). Conf > env > <vault>/.atlas-method > launch-dir sibling.
+[ -n "${ATLAS_METHOD:-}" ] || ATLAS_METHOD="$ATLAS_VAULT/.atlas-method"
+[ -f "$ATLAS_METHOD/tools/atlas_validate.py" ] || ATLAS_METHOD="$LD/Atlas"
+if [ ! -f "$ATLAS_METHOD/tools/atlas_validate.py" ]; then
+  echo "atlas-arch-context: ERROR — no method checkout found. Set ATLAS_METHOD=\"<path to Atlas clone>\" in $LD/.atlas-arch.conf" >&2
+  exit 2
+fi
 
 # SessionStart payload arrives on stdin as JSON with "source"; read only off a pipe so a
 # manual run never blocks on cat.
