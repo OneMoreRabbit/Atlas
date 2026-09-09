@@ -158,12 +158,16 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    once, a section per component. The set is read from the launch dir, so a repo wired
    later joins automatically.
 
-   **Releasing your software** (1.24.4, AAC-method §9): a release is a **tag** —
-   merge `work` → `release` per the vault's `branching:` policy, tag `vX.Y.Z`. An
-   untagged commit is not a release, and no consumer may be told to install from a
-   branch. `0.x` versions are pilot-only; `1.0.0` is the first generally consumable
-   release. Iterate on `work` as fast as you like — reaching someone's seat is what
-   requires the tag.
+   **Releasing your software** (AAC-method §9, "Which release is which"): your ONLY
+   release surface is your own code repo — method re-pins, vault merges and estate
+   rolls are never yours. On `work`, iterate the patch position freely (`1.3.1`,
+   `1.3.2` — development states, never tagged, never consumed). **A release zeroes the
+   patch and bumps the minor**: `1.2.2` releases as `1.3.0` — merge `work` →
+   `release`, lay the annotated tag `v1.3.0`. Breaking changes bump the major; `0.x`
+   is pilot-only; `1.0.0` is the first generally consumable release. An untagged
+   commit is not a release, and no consumer may be told to install from a branch.
+   (Your contract documents' `version:` frontmatter is a SEPARATE space — interface
+   versions move per document, independent of your code number.)
 
    **Alignment is mechanical** (1.24): if the vault's work branch moves while you are
    mid-session, the Stop guard will refuse to end your turn until you re-run

@@ -342,6 +342,17 @@ updated: 2026-09-08
 #   release ships when; <=15 lines). The operator reads it instead of asking "what's
 #   next". Template in templates/vault-roadmap/; arch-seat checklist and the arch
 #   reorientation briefing both carry it.
+#   1.26.5: converged consistency audit — 105 adversarially-verified findings, 82
+#   applied across 15 files (stale pin shapes, §10->§11 glossary refs, float language,
+#   drifted duplicates); article rewritten against 1.26 reality.
+#   1.26.6 (operator ruling 2026-09-09): the four version spaces disentangled in §9 —
+#   method (operator-rolled tags; component seats never act on it), architecture
+#   (vault: NO product tags; release = the work->release merge at periodic review),
+#   code (dev iterates the PATCH position on work as unreleased states; a RELEASE
+#   zeroes patch and bumps minor — 1.2.2 dev releases as v1.3.0 annotated; patch tags
+#   on a released line reserved for urgent arch-approved fixes), contracts
+#   (frontmatter versions, independent of code numbers). A component seat's only
+#   release surface is its own code repo.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -961,17 +972,37 @@ every point where a session meets a repo:
   periodic review), and the latest release tag. Misalignment is visible red, but
   branch status never fails the run — it is seat configuration, not contract truth.
 
-### Component releases — a release is a tag; consumers pin, never track
+### Which release is which — four version spaces, kept apart
 
-The method releases by immutable tag and is consumed by pin — and it is the one part of
-the estate that has never suffered a version surprise. The same convention binds **every
-component's software** (operator ruling 2026-09-07; orchestrator proposal 0001, after a
-client was installed from a moving default branch and the wanted version turned out to
-be a transient position of that branch — no tag, no artifact, nothing to pin to):
+Estate confusion between "releases" traced to four different things sharing the word
+(operator ruling 2026-09-09). They are separate spaces with separate owners; a seat
+only ever operates in its own:
 
-1. **A component release is a tag.** Merge `work` → `release` per the declared
-   `branching:` policy and tag `vX.Y.Z` (a trunk-only project tags on its `work`
-   branch). An untagged commit is not a release; `work` stays free to move fast.
+| Space | Artefact | Versioned how | Released by | Consumed by |
+|---|---|---|---|---|
+| **Method** | the Atlas repo | `vX.Y.Z` tags; patch = iteration between rolls, minor = an estate push | the method seat, on operator instruction | vaults pin an exact version; **component seats never act on this** |
+| **Architecture** | `Atlas-<Project>` vault | **no product tags** — the release act is the `work` → `release` merge at the arch seat's periodic review; the vault is continuous truth, not a shipped artefact | the arch seat | seats read compiled briefings |
+| **Nav** | `Nav-<Project>` | none — the human's space has no releases | — | the human |
+| **Code** | a component's own repo(s) | the scheme below | **the component seat** — its only release surface | others, pinning exact tags |
+| **Contracts** | `docs/provides/*.md` | frontmatter `version:` per document — **independent of the code release number** (a component at code `1.3.0` may publish an interface at `0.4`); drift = pinned vs latest (§4) | the publishing component | edges pin per interface |
+
+**A component seat does not deal in architecture releases.** Method re-pins, vault
+merges, estate rolls — arch/operator acts, never a component's. Its whole release
+surface is its own code repo, under this convention (operator rulings 2026-09-07 and
+2026-09-09; orchestrator proposal 0001, after a client was installed from a moving
+default branch and the wanted version turned out to be a transient position of that
+branch — no tag, no artifact, nothing to pin to):
+
+1. **Development iterates the patch position, on `work` — those are not releases.**
+   After shipping `1.3.0`, work-branch iteration moves the manifest through `1.3.1`,
+   `1.3.2`, … — development states the component manages itself, never tagged as
+   releases, never consumed. **A release zeroes the patch and bumps the minor**:
+   `1.2.2` in development releases as `1.3.0` — merge `work` → `release` per the
+   declared `branching:` policy and lay the annotated tag `v1.3.0` there (a trunk-only
+   project tags on `work`). Breaking changes bump the major. An untagged commit is not
+   a release; `work` stays free to move fast. (A patch-position tag on a *released*
+   line — a `v1.3.1` — is reserved for an urgent fix to that release, cut on the arch
+   seat's approval: the exception, never the cadence.)
 2. **A consumer pins an exact version and never installs a moving ref** — not a branch,
    not the default branch, not "latest". An install command with no ref is a defect.
 3. **Upgrading is a deliberate, reviewable act**: change the declared pin, then roll. A

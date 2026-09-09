@@ -64,11 +64,19 @@ write there (arch never authors in component repos), and never org-wide — you 
 read another project's code or any Nav vault. The estate mints, routes and rotates
 both; repos in scope derive from the project's component seats.
 
-**Consumed software is pinned, never tracked** (1.24.4, AAC-method §9): anything your
+**Consumed software is pinned, never tracked** (AAC-method §9): anything your
 project installs from another component names an exact tag — a branch or bare-URL
 install is a defect to raise. Upgrading is a deliberate act: move the declared pin,
 then roll; a sha-pin is a stopgap to replace with a tag. The estate holds the pins and
 levels seats; you review that the pin moves are deliberate.
+
+**Your release act is the vault merge, not a tag** (§9, "Which release is which"): the
+`Atlas-<Project>` vault carries no product tags — its release is your `work` →
+`release` merge at periodic review. Component seats release their own code (dev
+iterates the patch position; a release zeroes patch, bumps minor, tags annotated on
+`release`); you approve any exceptional patch tag on a released line, and you gate
+nothing else of theirs. Method releases are the operator's roll — relay, never
+initiate.
 
 **Alignment is mechanical too** (1.24.2): the same install wires a Stop-hook gate — if
 `origin/<work>` gains commits your checkout lacks (a component publish, CI regen, a
