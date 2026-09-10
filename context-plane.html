@@ -1,0 +1,412 @@
+<title>Context Plane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --paper:#e8ebef; --surface:#f6f7f9; --raised:#ffffff;
+    --ink:#161b21; --ink-soft:#566472; --ink-faint:#8793a1;
+    --line:#ccd3db; --line-soft:#dde2e8;
+    --accent:#275e8e; --accent-soft:#dbe6f1; --accent-line:#a9c3dc;
+    --allow:#2e7d57; --allow-soft:#dcefe4;
+    --hold:#9c7016; --hold-soft:#f2e8cf;
+    --deny:#9e3b3b; --deny-soft:#f2dcdc;
+    --shadow:0 1px 2px rgba(20,27,33,.05), 0 6px 20px rgba(20,27,33,.06);
+    --shadow-lift:0 2px 6px rgba(20,27,33,.08), 0 18px 42px rgba(20,27,33,.10);
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme:dark){
+      --paper:#0f1318; --surface:#161c23; --raised:#1c232b;
+      --ink:#e4e9ee; --ink-soft:#94a2b1; --ink-faint:#68757f;
+      --line:#2a323c; --line-soft:#222932;
+      --accent:#6ba4d8; --accent-soft:#182838; --accent-line:#2f4c68;
+      --allow:#54b184; --allow-soft:#14261d;
+      --hold:#d6a541; --hold-soft:#2a2413;
+      --deny:#d5716e; --deny-soft:#2c1717;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.32);
+      --shadow-lift:0 2px 6px rgba(0,0,0,.4), 0 18px 42px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1318; --surface:#161c23; --raised:#1c232b;
+    --ink:#e4e9ee; --ink-soft:#94a2b1; --ink-faint:#68757f;
+    --line:#2a323c; --line-soft:#222932;
+    --accent:#6ba4d8; --accent-soft:#182838; --accent-line:#2f4c68;
+    --allow:#54b184; --allow-soft:#14261d;
+    --hold:#d6a541; --hold-soft:#2a2413;
+    --deny:#d5716e; --deny-soft:#2c1717;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.32);
+    --shadow-lift:0 2px 6px rgba(0,0,0,.4), 0 18px 42px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    font-feature-settings:"ss01","cv05";
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 28px}
+  code,.mono{font-family:var(--mono)}
+
+  /* ---- masthead ---- */
+  header.top{padding:64px 0 30px; border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--accent); font-weight:500; margin:0 0 18px}
+  h1{font-size:clamp(2.3rem,5.4vw,3.6rem); line-height:1.02; margin:0;
+    font-weight:700; letter-spacing:-.02em; text-wrap:balance; max-width:16ch}
+  .thesis{margin:20px 0 0; font-size:1.12rem; color:var(--ink-soft);
+    max-width:58ch; text-wrap:pretty}
+  .thesis b{color:var(--ink); font-weight:600}
+
+  /* ---- lifecycle mini-map ---- */
+  .map{display:flex; align-items:stretch; gap:0; margin:34px 0 4px;
+    border:1px solid var(--line); border-radius:12px; overflow:hidden;
+    background:var(--surface); box-shadow:var(--shadow)}
+  .map-seg{flex:1; padding:14px 18px; min-width:0; position:relative}
+  .map-seg + .map-seg{border-left:1px solid var(--line)}
+  .map-k{font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px}
+  .map-v{font-size:.92rem; color:var(--ink); font-weight:500; margin:0}
+  .map-v .hk{font-family:var(--mono); font-size:.82rem; font-weight:500}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px;
+    vertical-align:.04em}
+  .dot.a{background:var(--accent)} .dot.h{background:var(--hold)} .dot.d{background:var(--deny)}
+
+  /* ---- section scaffold ---- */
+  section{padding:52px 0}
+  section + section{border-top:1px solid var(--line-soft)}
+  .sec-h{display:flex; align-items:baseline; gap:14px; margin:0 0 6px}
+  .sec-n{font-family:var(--mono); font-size:.82rem; color:var(--accent); font-weight:600}
+  h2{font-size:1.7rem; margin:0; font-weight:700; letter-spacing:-.015em}
+  .sec-lead{color:var(--ink-soft); margin:10px 0 30px; max-width:62ch; text-wrap:pretty}
+
+  /* ---- the spine ---- */
+  .spine{display:grid; grid-template-columns:44px 1fr; gap:0 22px}
+  .rail{position:relative}
+  .rail::before{content:""; position:absolute; left:21px; top:8px; bottom:-40px;
+    width:2px; background:linear-gradient(var(--accent-line),var(--line))}
+  .station:last-child .rail::before{display:none}
+  .node{position:relative; width:44px; height:44px; border-radius:50%;
+    display:grid; place-items:center; background:var(--raised);
+    border:2px solid var(--accent); color:var(--accent); z-index:1;
+    font-family:var(--mono); font-weight:600; font-size:1rem; box-shadow:var(--shadow)}
+  .station{display:contents}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:0; margin-bottom:26px; overflow:hidden; box-shadow:var(--shadow)}
+  .card-hd{padding:18px 22px 16px; border-bottom:1px solid var(--line-soft);
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px;
+    background:linear-gradient(180deg,var(--raised),var(--surface))}
+  .hook{font-family:var(--mono); font-size:1.18rem; font-weight:600; color:var(--ink)}
+  .fires{font-size:.86rem; color:var(--ink-soft)}
+  .fires b{color:var(--ink); font-weight:600}
+  .script{font-family:var(--mono); font-size:.8rem; color:var(--accent);
+    background:var(--accent-soft); border:1px solid var(--accent-line);
+    padding:2px 8px; border-radius:6px; margin-left:auto; white-space:nowrap}
+  .card-bd{padding:20px 22px 22px}
+  .lede{margin:0 0 16px; color:var(--ink); font-size:1.02rem}
+  .lede b{font-weight:600}
+
+  /* steps inside a card */
+  ol.steps{margin:0; padding:0; list-style:none; counter-reset:s;
+    display:flex; flex-direction:column; gap:11px}
+  ol.steps li{counter-increment:s; position:relative; padding-left:34px;
+    color:var(--ink-soft); font-size:.95rem}
+  ol.steps li::before{content:counter(s); position:absolute; left:0; top:-1px;
+    width:22px; height:22px; border-radius:6px; background:var(--accent-soft);
+    border:1px solid var(--accent-line); color:var(--accent);
+    font-family:var(--mono); font-size:.74rem; font-weight:600;
+    display:grid; place-items:center}
+  ol.steps b{color:var(--ink); font-weight:600}
+  ol.steps code{background:var(--raised); border:1px solid var(--line-soft);
+    padding:1px 5px; border-radius:4px; font-size:.82em; color:var(--ink)}
+
+  /* verdict rows for guards */
+  .verdicts{display:flex; flex-direction:column; gap:8px; margin:2px 0 0}
+  .vrow{display:grid; grid-template-columns:78px 1fr; gap:14px; align-items:start;
+    padding:11px 14px; border-radius:9px; border:1px solid var(--line-soft);
+    background:var(--raised)}
+  .vtag{font-family:var(--mono); font-size:.72rem; font-weight:600; letter-spacing:.04em;
+    text-transform:uppercase; padding:3px 0; text-align:center; border-radius:5px}
+  .vtag.allow{color:var(--allow); background:var(--allow-soft)}
+  .vtag.hold{color:var(--hold); background:var(--hold-soft)}
+  .vtag.deny{color:var(--deny); background:var(--deny-soft)}
+  .vbody{font-size:.92rem; color:var(--ink-soft)}
+  .vbody b{color:var(--ink); font-weight:600}
+  .vbody code{font-family:var(--mono); font-size:.84em; color:var(--ink)}
+
+  .foot-note{margin-top:15px; padding-top:14px; border-top:1px dashed var(--line);
+    font-size:.85rem; color:var(--ink-faint)}
+  .foot-note b{color:var(--ink-soft); font-weight:600}
+  .into{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono);
+    font-size:.74rem; font-weight:600; color:var(--accent); letter-spacing:.03em}
+
+  /* ---- briefing anatomy ---- */
+  .brief{background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    overflow:hidden; box-shadow:var(--shadow-lift)}
+  .brief-hd{display:flex; align-items:center; gap:10px; padding:14px 20px;
+    background:var(--raised); border-bottom:1px solid var(--line)}
+  .brief-hd .fname{font-family:var(--mono); font-weight:600; color:var(--ink)}
+  .brief-hd .tag{font-family:var(--mono); font-size:.72rem; color:var(--ink-faint);
+    margin-left:auto}
+  .brow{display:grid; grid-template-columns:26px 1fr auto; gap:0 14px; align-items:center;
+    padding:12px 20px; border-bottom:1px solid var(--line-soft)}
+  .brow:last-child{border-bottom:none}
+  .bi{font-family:var(--mono); font-size:.74rem; color:var(--ink-faint)}
+  .bn{font-weight:600; color:var(--ink); font-size:.96rem}
+  .bn span{display:block; font-weight:400; color:var(--ink-soft); font-size:.85rem;
+    margin-top:1px}
+  .bmode{font-family:var(--mono); font-size:.68rem; letter-spacing:.06em;
+    text-transform:uppercase; padding:3px 9px; border-radius:20px; white-space:nowrap;
+    border:1px solid var(--line)}
+  .bmode.full{color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line)}
+  .bmode.index{color:var(--ink-soft); background:var(--surface)}
+  .bmode.once{color:var(--allow); background:var(--allow-soft); border-color:transparent}
+
+  /* ---- source strip ---- */
+  .sources{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+  .src{border:1px solid var(--line); border-radius:11px; padding:16px 18px;
+    background:var(--surface)}
+  .src h4{margin:0 0 4px; font-family:var(--mono); font-size:.98rem; font-weight:600}
+  .src p{margin:0; font-size:.9rem; color:var(--ink-soft)}
+  .src.reorient{border-color:var(--accent-line); background:var(--accent-soft)}
+  .src.reorient h4{color:var(--accent)}
+  .reorient-banner{margin-top:26px; border:1px solid var(--accent-line); border-radius:12px;
+    background:var(--surface); overflow:hidden; box-shadow:var(--shadow)}
+  .reorient-banner .rb-hd{font-family:var(--mono); font-size:.74rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-faint); padding:10px 18px;
+    border-bottom:1px solid var(--line-soft); background:var(--raised)}
+  .reorient-banner .rb-bd{padding:16px 18px; font-family:var(--mono); font-size:.9rem;
+    color:var(--ink); line-height:1.5}
+  .reorient-banner .glyph{color:var(--accent); font-weight:600}
+
+  /* ---- kept out ---- */
+  .out-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+  .out{border:1px solid var(--line); border-left:3px solid var(--deny); border-radius:10px;
+    padding:15px 18px; background:var(--surface)}
+  .out h4{margin:0 0 5px; font-size:1rem; font-weight:600}
+  .out p{margin:0; font-size:.9rem; color:var(--ink-soft)}
+  .out code{font-family:var(--mono); font-size:.83em; color:var(--ink)}
+
+  /* ---- closing ---- */
+  .close{display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--line);
+    border-radius:14px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow)}
+  .close > div{padding:22px 24px}
+  .close > div + div{border-left:1px solid var(--line)}
+  .close h4{margin:0 0 8px; font-family:var(--mono); font-size:.82rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--accent)}
+  .close p{margin:0; font-size:.94rem; color:var(--ink-soft)}
+  .close b{color:var(--ink); font-weight:600}
+  .close code{font-family:var(--mono); font-size:.85em; color:var(--ink)}
+  footer{padding:36px 0 60px; color:var(--ink-faint); font-size:.82rem;
+    text-align:center; font-family:var(--mono); letter-spacing:.03em}
+
+  @media (max-width:720px){
+    .map{flex-direction:column} .map-seg + .map-seg{border-left:none; border-top:1px solid var(--line)}
+    .sources,.out-grid{grid-template-columns:1fr}
+    .close{grid-template-columns:1fr} .close > div + div{border-left:none; border-top:1px solid var(--line)}
+    .script{margin-left:0}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Atlas · the context plane</p>
+    <h1>What goes into context, and how</h1>
+    <p class="thesis">Atlas holds what is true; three hooks put the right slice of it in front of the agent at the moment it's needed — and keep the rest out. <b>The reads are compiled and injected, never trusted to happen.</b> This is the full lifecycle, for a component seat.</p>
+
+    <div class="map" role="list" aria-label="session lifecycle">
+      <div class="map-seg" role="listitem">
+        <p class="map-k">Session begins</p>
+        <p class="map-v"><span class="dot a"></span>Briefing compiled &amp; <b>injected</b> <span class="hk">SessionStart</span></p>
+      </div>
+      <div class="map-seg" role="listitem">
+        <p class="map-k">Each work turn</p>
+        <p class="map-v"><span class="dot h"></span>Writes screened before they land <span class="hk">PreToolUse</span></p>
+      </div>
+      <div class="map-seg" role="listitem">
+        <p class="map-k">Session ends</p>
+        <p class="map-v"><span class="dot d"></span>Alignment &amp; publish checked <span class="hk">Stop</span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h"><span class="sec-n">01</span><h2>Three hooks on the session lifecycle</h2></div>
+    <p class="sec-lead">Every seat's <code class="mono">.claude/settings.json</code> wires exactly these. A hook is a shell script Claude Code runs at a lifecycle moment; what it prints and the code it exits with are how Atlas reaches into the session.</p>
+
+    <div class="spine">
+      <!-- SessionStart -->
+      <div class="station">
+        <div class="rail"><div class="node" title="SessionStart">↧</div></div>
+        <div class="card">
+          <div class="card-hd">
+            <span class="hook">SessionStart</span>
+            <span class="fires">fires on <b>startup · resume · /clear · compaction</b> — no matcher, so all four</span>
+            <span class="script">atlas-context.sh</span>
+          </div>
+          <div class="card-bd">
+            <p class="lede">Compiles the session's whole reading list into one file and <b>prints it to stdout — which Claude Code adds verbatim to the context window.</b> This is the main injection.</p>
+            <ol class="steps">
+              <li>Read the hook payload from stdin (2 s-bounded) for its <code>source</code> — startup, resume, clear or compact.</li>
+              <li>Discover every wired sibling repo in the launch dir → <b>one briefing per seat</b>, not per repo.</li>
+              <li>Run <code>atlas-sync.sh</code>: resolve the method pin to its exact tag, apply branch policy, self-drift check.</li>
+              <li>Compile the briefing with <code>atlas_validate.py --emit-context</code> from a worktree of <code>origin/&lt;work&gt;</code> — always the work branch, never whatever's checked out.</li>
+              <li>Deliver raw contract artifacts (OpenAPI, schemas) to <code>ATLAS-CONTEXT.d/</code> as files — <b>referenced by path, not inlined.</b></li>
+              <li>Record the compiled vault SHA (the Stop gate reads it) and print the byte/token size to stderr.</li>
+            </ol>
+            <div class="foot-note"><span class="into">→ INTO CONTEXT</span> &nbsp;the full <b>ATLAS-CONTEXT.md</b> briefing (see §02), with a provenance line naming the branch and commit it was built from.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PreToolUse -->
+      <div class="station">
+        <div class="rail"><div class="node" title="PreToolUse">⊘</div></div>
+        <div class="card">
+          <div class="card-hd">
+            <span class="hook">PreToolUse</span>
+            <span class="fires">before every <b>Write · Edit · MultiEdit · NotebookEdit</b></span>
+            <span class="script">atlas-guard-write.sh</span>
+          </div>
+          <div class="card-bd">
+            <p class="lede">Doesn't inject — it <b>governs what the agent may write into the vault</b>, deciding per file before the edit lands. Golden rule 2, made mechanical.</p>
+            <div class="verdicts">
+              <div class="vrow"><span class="vtag allow">Allow</span><span class="vbody"><b>Own outbox</b> <code>components/&lt;slug&gt;/**</code>, an additive <code>architecture/proposals/*</code>, or edges naming you in <code>io-graph.yml</code>. A both-hats seat also gets <code>architecture/**</code>.</span></div>
+              <div class="vrow"><span class="vtag deny">Deny</span><span class="vbody">Anything else in the vault — returned with a reason that <b>names the remedy</b> (file it in <code>docs/needs/</code>, or open a proposal). Not an obstacle to route around.</span></div>
+              <div class="vrow"><span class="vtag hold">Closed</span><span class="vbody">A payload the guard <b>can't parse is denied</b>, never waved through. Guards fail closed.</span></div>
+            </div>
+            <div class="foot-note"><b>Mechanism:</b> emits a JSON <code>permissionDecision</code>; the write never reaches the tool unless allowed.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stop -->
+      <div class="station">
+        <div class="rail"><div class="node" title="Stop">⏸</div></div>
+        <div class="card">
+          <div class="card-hd">
+            <span class="hook">Stop</span>
+            <span class="fires">at the <b>end of every turn</b>, before the agent hands back</span>
+            <span class="script">atlas-guard-publish.sh</span>
+          </div>
+          <div class="card-bd">
+            <p class="lede">Two checks that can <b>refuse to let the turn end</b> — exit 2 blocks the stop and prints its message to stderr, which the agent sees and acts on.</p>
+            <div class="verdicts">
+              <div class="vrow"><span class="vtag hold">Gate</span><span class="vbody"><b>Alignment.</b> One <code>ls-remote</code> of the vault work branch (30 s throttle). Moved past the SHA your briefing was built from? Re-brief, reconcile, then finish — so an upstream change reaches a running seat by the end of its current turn.</span></div>
+              <div class="vrow"><span class="vtag hold">Nag</span><span class="vbody"><b>Publish.</b> Vault clone left dirty? You haven't run the outbox half of the protocol — <code>/atlas-publish</code>. Once per session.</span></div>
+              <div class="vrow"><span class="vtag allow">Open</span><span class="vbody"><b>Fails open.</b> Offline, no throttle window, nothing to publish → exit 0, the turn ends. Honest work is never trapped.</span></div>
+            </div>
+            <div class="foot-note"><b>Mechanism:</b> exit 0 lets the turn end; exit 2 blocks it and surfaces the reason. A once-per-turn flag prevents loops.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h"><span class="sec-n">02</span><h2>Anatomy of the injected briefing</h2></div>
+    <p class="sec-lead">What <code>SessionStart</code> actually puts in the window, in emit order. It opens with the development cycle and the retrieval invariant, then the sections below. The point of the design is thrift: the things that bind everyone appear <b>once</b>, and anything a task can fetch on demand is an <b>index line</b>, not a body.</p>
+
+    <div class="brief">
+      <div class="brief-hd">
+        <span class="fname">ATLAS-CONTEXT.md</span>
+        <span class="tag">compiled · one per seat · size reported every emit</span>
+      </div>
+      <div class="brow"><span class="bi">§</span><span class="bn">Header + the development cycle<span>reading-list rules · review architecture → examine edges → develop → test → publish</span></span><span class="bmode once">always</span></div>
+      <div class="brow"><span class="bi">1</span><span class="bn">Constitution<span>the project's inviolable principles</span></span><span class="bmode full">full text</span></div>
+      <div class="brow"><span class="bi">2</span><span class="bn">Architecture in force<span>accepted ADRs + standalone design docs</span></span><span class="bmode index">index · read on demand</span></div>
+      <div class="brow"><span class="bi">3</span><span class="bn">Reference library<span>provider-homed know-how delivered here</span></span><span class="bmode index">index · read on demand</span></div>
+      <div class="brow"><span class="bi">4</span><span class="bn">Inputs — contracts delivered from other vaults<span>cross-vault contracts, routed by consumer</span></span><span class="bmode full">full · yours only</span></div>
+      <div class="brow"><span class="bi">5</span><span class="bn">Needs addressed to several of my components<span>shown once for the whole seat</span></span><span class="bmode once">shared once</span></div>
+      <div class="brow"><span class="bi">6</span><span class="bn">Per component — inputs I build against<span>upstream contracts at their pinned version + artifact table</span></span><span class="bmode full">full text</span></div>
+      <div class="brow"><span class="bi">7</span><span class="bn">Per component — needs addressed to me<span>consumers' open asks; answered ones collapse to one line</span></span><span class="bmode full">open only</span></div>
+      <div class="brow"><span class="bi">8</span><span class="bn">In-flight proposals affecting me<span>design decisions still being argued</span></span><span class="bmode full">full text</span></div>
+      <div class="brow"><span class="bi">9</span><span class="bn">Drift summary<span>every edge: pinned vs latest</span></span><span class="bmode full">table</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h"><span class="sec-n">03</span><h2>The same hook, four entry points</h2></div>
+    <p class="sec-lead">"At what point" has four answers, because <code>SessionStart</code> carries a <code>source</code>. A fresh start reads its orientation anyway; the other three are moments where the agent's working memory was rebuilt or lost — so the briefing arrives with an imperative to act on it, not skim past it.</p>
+
+    <div class="sources">
+      <div class="src">
+        <h4>startup</h4>
+        <p>A brand-new session. The briefing is injected plainly; the agent reads its standing orders (AGENTS.md) alongside.</p>
+      </div>
+      <div class="src reorient">
+        <h4>compact</h4>
+        <p>Context was summarised to fit. The conversation that held "who I am, what I was doing" is gone — the durable orientation is the briefing, so it leads with a directive.</p>
+      </div>
+      <div class="src reorient">
+        <h4>resume</h4>
+        <p>A session picked back up. Same risk as compaction: reconcile against the freshly-compiled briefing before acting.</p>
+      </div>
+      <div class="src reorient">
+        <h4>/clear</h4>
+        <p>The window was deliberately wiped. The hook re-injects the whole reading list, so a cleared session is never a blank one.</p>
+      </div>
+    </div>
+
+    <div class="reorient-banner">
+      <div class="rb-hd">prepended on compact · resume · clear</div>
+      <div class="rb-bd"><span class="glyph">⟳ REORIENT — session was compacted.</span> Your working context was just rebuilt. Before your next action: read the briefing below in full, confirm which component you are and what you were doing, and resume from it. This is your complete orientation — do <b>not</b> ask the operator to re-orient you.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h"><span class="sec-n">04</span><h2>Kept out of context, on purpose</h2></div>
+    <p class="sec-lead">Managing a window is as much exclusion as injection. Atlas spends context only where it changes what the agent builds; everything else is reachable but not resident.</p>
+
+    <div class="out-grid">
+      <div class="out">
+        <h4>The wider vault</h4>
+        <p>The retrieval invariant: a session reads its briefing, never browses. If the briefing is insufficient, that's a defect in <code>io-graph.yml</code> — fix the graph, don't widen the read.</p>
+      </div>
+      <div class="out">
+        <h4>Raw contract artifacts</h4>
+        <p>OpenAPI specs and schemas land in <code>ATLAS-CONTEXT.d/</code> as byte-faithful files. The briefing points at them; a generator reads them by path. The window stays bounded.</p>
+      </div>
+      <div class="out">
+        <h4>Other components' deliveries</h4>
+        <p>A contract delivered to a sibling gets you <b>one index line</b>, not its body. Consumer-routed — the vault-wide default once cost a seat 71% of its briefing.</p>
+      </div>
+      <div class="out">
+        <h4>Discharged &amp; retired asks</h4>
+        <p>An answered need collapses to a single line; a retired one (<code>resolved</code>, <code>closed</code>, <code>done</code>) drops out entirely. A briefing carries current obligations, not history.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h"><span class="sec-n">05</span><h2>Component seat vs arch seat</h2></div>
+    <p class="sec-lead">The arch seat has no slug and works the vault directly, so its hooks differ — same lifecycle, different payload.</p>
+    <div class="close">
+      <div>
+        <h4>Component seat</h4>
+        <p><b>SessionStart</b> → <code>atlas-context.sh</code> (the briefing above). <b>PreToolUse</b> → the write guard. <b>Stop</b> → alignment + publish. Three hooks: it reads a compiled slice, and its writes are fenced to its outbox.</p>
+      </div>
+      <div>
+        <h4>Arch seat</h4>
+        <p><b>SessionStart</b> → <code>atlas-arch-context.sh</code> (<code>--emit-arch-context</code>: constitution, architecture in force, estate &amp; drift, review queue, next-steps, the bridge). <b>Stop</b> → the arch alignment gate. No write guard — it authors the vault as reviewer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Atlas method · git is the substrate · hooks make the protocol mechanical, not trust-based
+</footer>

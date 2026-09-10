@@ -1,12 +1,13 @@
 ---
 title: Next steps
 owner: architecture (@atlas method seat)
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Next steps
 
 ## Now (in flight)
+- Context-plane diagram committed to the repo (`context-plane.html`)
 - Substack article rewrite awaiting @nav's read (`article-architecture-above-code.md`, dev)
 - Repo hygiene done: stale PR + release branches deleted; audit shipped as v1.26.5
 
