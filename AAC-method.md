@@ -353,6 +353,12 @@ updated: 2026-09-08
 #   on a released line reserved for urgent arch-approved fixes), contracts
 #   (frontmatter versions, independent of code numbers). A component seat's only
 #   release surface is its own code repo.
+#   1.26.7-1.26.8 (operator, after a seat never read its edge provides): the
+#   development cycle stated everywhere a seat looks — review architecture -> examine
+#   edge provides/needs -> develop -> test -> update own provides/needs -> publish.
+#   In AGENTS.md.template (standing orders), the briefing header (every session and
+#   compaction), component-init and §6. Inputs are built AGAINST, not received;
+#   contradicting a pinned contract is a defect even when tests pass.
 ---
 
 # Architecture-Above-Code (AAC)
@@ -777,6 +783,14 @@ nothing to restore them.
 > optional **hub** for ephemeral chat between an arch seat and its own components ("what
 > is next", never the record). Atlas holds what is true; chat carries what is next. A
 > design decision never travels the hub or the human as a relay — it is a proposal (§7).
+
+> **The development cycle** (1.26.7): every piece of component work runs (1) review
+> architecture → (2) examine the edges' provides and needs → (3) develop → (4) test →
+> (5) update own `provides/`/`needs/` and publish. The method mechanises the ends —
+> the briefing delivers 1–2, the Stop guard checks 5 — but the loop is the seat's
+> discipline: the inputs are built AGAINST, not merely received, and code contradicting
+> a pinned contract is a defect even when every test passes. (Occasioned by a live seat
+> that carried its edge contracts in every briefing and never read them.)
 
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
 > Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are
