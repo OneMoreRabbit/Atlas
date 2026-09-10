@@ -73,6 +73,16 @@
   .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px;
     vertical-align:.04em}
   .dot.a{background:var(--accent)} .dot.h{background:var(--hold)} .dot.d{background:var(--deny)}
+  .reentry-note{margin:12px 2px 0; font-size:.9rem; color:var(--ink-soft);
+    display:flex; align-items:baseline; gap:9px; text-wrap:pretty}
+  .reentry-note b{color:var(--ink); font-weight:600}
+  .reentry-note code{font-family:var(--mono); font-size:.84em; color:var(--ink)}
+  .reentry-note .hk-i{font-family:var(--mono); font-weight:500; color:var(--accent)}
+  .loop{font-size:1.15rem; color:var(--accent); line-height:1; flex:none}
+  .refire{font-family:var(--mono); font-size:.68rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--accent); background:var(--accent-soft);
+    border:1px solid var(--accent-line); padding:2px 8px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap}
 
   /* ---- section scaffold ---- */
   section{padding:52px 0}
@@ -219,7 +229,7 @@
 
     <div class="map" role="list" aria-label="session lifecycle">
       <div class="map-seg" role="listitem">
-        <p class="map-k">Session begins</p>
+        <p class="map-k">Session begins — or is rebuilt</p>
         <p class="map-v"><span class="dot a"></span>Briefing compiled &amp; <b>injected</b> <span class="hk">SessionStart</span></p>
       </div>
       <div class="map-seg" role="listitem">
@@ -231,6 +241,7 @@
         <p class="map-v"><span class="dot d"></span>Alignment &amp; publish checked <span class="hk">Stop</span></p>
       </div>
     </div>
+    <p class="reentry-note"><span class="loop">↻</span> <b>Compaction, resume and <code>/clear</code> re-fire <span class="hk-i">SessionStart</span> mid-session</b> — there is no separate compaction hook. That re-fire, carrying <code>source: compact</code>, <b>is</b> the reorientation path (§03).</p>
   </div>
 </header>
 
@@ -247,10 +258,11 @@
           <div class="card-hd">
             <span class="hook">SessionStart</span>
             <span class="fires">fires on <b>startup · resume · /clear · compaction</b> — no matcher, so all four</span>
+            <span class="refire">↻ re-fires mid-session</span>
             <span class="script">atlas-context.sh</span>
           </div>
           <div class="card-bd">
-            <p class="lede">Compiles the session's whole reading list into one file and <b>prints it to stdout — which Claude Code adds verbatim to the context window.</b> This is the main injection.</p>
+            <p class="lede">Compiles the session's whole reading list into one file and <b>prints it to stdout — which Claude Code adds verbatim to the context window.</b> This is the main injection — and the <b>only</b> one: it also serves compaction and resume.</p>
             <ol class="steps">
               <li>Read the hook payload from stdin (2 s-bounded) for its <code>source</code> — startup, resume, clear or compact.</li>
               <li>Discover every wired sibling repo in the launch dir → <b>one briefing per seat</b>, not per repo.</li>
@@ -260,6 +272,7 @@
               <li>Record the compiled vault SHA (the Stop gate reads it) and print the byte/token size to stderr.</li>
             </ol>
             <div class="foot-note"><span class="into">→ INTO CONTEXT</span> &nbsp;the full <b>ATLAS-CONTEXT.md</b> briefing (see §02), with a provenance line naming the branch and commit it was built from.</div>
+            <div class="foot-note"><b>Compaction &amp; reorientation live here, not in a hook of their own.</b> When the window is summarised, this hook re-fires with <code>source: compact</code>, rebuilds the briefing from scratch, and prepends the REORIENT directive (§03). Atlas rebuilds rather than trying to survive the summary.</div>
           </div>
         </div>
       </div>
@@ -335,8 +348,8 @@
 
 <section>
   <div class="wrap">
-    <div class="sec-h"><span class="sec-n">03</span><h2>The same hook, four entry points</h2></div>
-    <p class="sec-lead">"At what point" has four answers, because <code>SessionStart</code> carries a <code>source</code>. A fresh start reads its orientation anyway; the other three are moments where the agent's working memory was rebuilt or lost — so the briefing arrives with an imperative to act on it, not skim past it.</p>
+    <div class="sec-h"><span class="sec-n">03</span><h2>Reorientation is a source, not a separate hook</h2></div>
+    <p class="sec-lead">"At what point" has four answers, because <code>SessionStart</code> carries a <code>source</code> — and the same hook serves all of them. A fresh start reads its orientation anyway; the other three are moments where the agent's working memory was rebuilt or lost, so the briefing arrives with an imperative to act on it, not skim past it. <b>Compaction is the reason the hook has no matcher.</b></p>
 
     <div class="sources">
       <div class="src">
