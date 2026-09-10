@@ -169,6 +169,12 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    (Your contract documents' `version:` frontmatter is a SEPARATE space — interface
    versions move per document, independent of your code number.)
 
+   **The development cycle** (1.26.7): (1) review architecture → (2) examine your
+   edges' provides and needs — you build AGAINST the input contracts; your consumers'
+   needs are what you owe → (3) develop → (4) test → (5) update your own `provides/`
+   and `needs/`, publish. Steps 1–2 are delivered by your briefing; step 5 is checked
+   by the Stop guard; the loop in between is yours to run every time.
+
    **Alignment is mechanical** (1.24): if the vault's work branch moves while you are
    mid-session, the Stop guard will refuse to end your turn until you re-run
    `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end

@@ -958,6 +958,10 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         "> This is the session's complete reading list. Consult the wider vault only if",
         "> this file is insufficient — and treat that as a defect in `registry/io-graph.yml`:",
         "> fix the graph, don't browse.",
+        "> The cycle: (1) architecture in force, (2) READ the input contracts below — you",
+        "> build AGAINST them, and your consumers' needs are what you owe — then",
+        "> (3) develop, (4) test, (5) update your own provides/ and needs/ and publish.",
+        "> Code contradicting a pinned contract is a defect even if every test passes.",
     ]
     if seat:
         sections.append("> One briefing for every component this seat holds: shared "

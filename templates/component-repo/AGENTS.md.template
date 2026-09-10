@@ -14,6 +14,16 @@ upstream contracts, consumers' needs, in-flight proposals, drift. Consult the wi
 only if the context is insufficient — and treat that as a defect in the vault's
 `registry/io-graph.yml`: fix the graph, don't browse.
 
+**The development cycle** — every piece of work runs this loop, in order:
+1. **Review architecture** — constitution and the architecture-in-force index in your briefing.
+2. **Examine your edges** — the contracts under *Inputs* are what you build AGAINST, and
+   your consumers' *needs* are what you owe. Read them, don't scroll past them. Code that
+   contradicts a pinned contract is a defect even if every test passes.
+3. **Develop.**
+4. **Test.**
+5. **Update your own `provides/` and `needs/`** — what changed for consumers, what you
+   now need from providers — and publish. The Stop guard checks this step.
+
 **While working:** you may write only to `components/<slug>/**`, an additive
 `architecture/proposals/NNNN-*.md`, and edges in `registry/io-graph.yml` that name you.
 A `PreToolUse` guard refuses anything else. That is not an obstacle to route around: if you
