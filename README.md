@@ -26,7 +26,7 @@ contract drift on each project's dashboard.
 - [`arch-seat.md`](arch-seat.md) — the architecture session's own protocol: what it owns, its every-session checklist (sweep component asks, answer the bridge, dashboard reds, review queue) and its periodic review.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
-- [`context-plane.html`](context-plane.html) — visual reference: how the method fills and guards an agent's context window — the three hooks (SessionStart / PreToolUse / Stop), what each injects, when, and what is kept out. Open in a browser.
+- [`context-plane.md`](context-plane.md) — visual reference (renders on GitHub): how the method fills and guards an agent's context window — the three hooks (SessionStart / PreToolUse / Stop), what each injects, when, and what is kept out. [`context-plane.html`](context-plane.html) is the richly-designed version of the same, for a browser.
 
 ## Starting from nothing (a bare clone of this repo)
 
