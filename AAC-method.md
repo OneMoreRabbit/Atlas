@@ -1,10 +1,9 @@
 ---
-title: Architecture-Above-Code (AAC) — The Method
+title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
 version: "1.26"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
-maturity: 1.0
-updated: 2026-09-08
+updated: 2026-09-11
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views

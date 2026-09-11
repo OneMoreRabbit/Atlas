@@ -1,10 +1,9 @@
 ---
-title: Bridge Init — the human/AI interface of a project
+title: "Bridge init — the human/AI interface of a project"
 interface: bridge-init
 version: 1.3
 status: active
-maturity: 0.1        # deliberately simple; iterate from practice, not design
-updated: 2026-09-05
+updated: 2026-09-08
 supersedes: 1.0
 # 1.1: component asks route via their own needs/ outbox (nav- prefix), mirrored to the
 #   bridge by the arch seat — no component seat needs Nav-vault credentials.
