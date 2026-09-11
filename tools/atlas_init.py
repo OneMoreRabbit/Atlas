@@ -405,6 +405,18 @@ def main() -> int:
                  f'# publishing/releasing; autonomous runs free. Default when unset: supervised.\n'
                  f'ATLAS_MODE="{args.mode}"\n')
     install(repo / ".atlas.conf", conf, args.force, written)
+    # Echo the posture, always — including when it is the default. The installer
+    # echoed ATLAS_LAUNCH_DIR and was silent about ATLAS_MODE, so the one field
+    # under discussion was the one it never mentioned: an arch seat told eight
+    # component seats "the conf records it", nothing contradicted them at install
+    # time, and four seats had to reason the gap out of atlas-common.sh afterwards
+    # (agent-eco, 2026-09-11, sync-compile). A default that is never printed is
+    # indistinguishable from a value that was written.
+    if args.mode:
+        print(f"  conf   ATLAS_MODE={args.mode}")
+    else:
+        print("  conf   ATLAS_MODE=supervised (DEFAULT — not written to .atlas.conf; "
+              "pass --mode supervised to record it)")
 
     # AGENTS.md — committed entry hook
     agents = (read(TEMPLATES / "AGENTS.md.template")
