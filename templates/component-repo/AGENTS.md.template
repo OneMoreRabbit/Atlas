@@ -24,6 +24,18 @@ only if the context is insufficient — and treat that as a defect in the vault'
 5. **Update your own `provides/` and `needs/`** — what changed for consumers, what you
    now need from providers — and publish. The Stop guard checks this step.
 
+Two rules bind every step: **confirm the issue before you build it** (never develop
+against an assumed problem), and **test against the real environment and its real
+upstream contracts — never an invented fixture.** A green test over a fiction is not
+evidence.
+
+**Your mode** is in `.atlas.conf` (`ATLAS_MODE`, default **supervised**). *Supervised*:
+state the issue and approach and get the operator's OK before developing; publishing or
+releasing (push, PR, tag) will pause for their approval — do not work around it.
+*Autonomous*: run the full cycle and publish through the write model; oversight is the
+cascade and the hub. **House style, always:** plain English, concise; use the method's
+existing terms, coin none; say less.
+
 **While working:** you may write only to `components/<slug>/**`, an additive
 `architecture/proposals/NNNN-*.md`, and edges in `registry/io-graph.yml` that name you.
 A `PreToolUse` guard refuses anything else. That is not an obstacle to route around: if you

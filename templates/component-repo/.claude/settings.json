@@ -1,14 +1,44 @@
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-context.sh\"" } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-context.sh\""
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "matcher": "Write|Edit|MultiEdit|NotebookEdit",
-        "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-write.sh\"" } ] }
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-write.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-supervise.sh\""
+          }
+        ]
+      }
     ],
     "Stop": [
-      { "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-publish.sh\"" } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/scripts/atlas-guard-publish.sh\""
+          }
+        ]
+      }
     ]
   }
 }

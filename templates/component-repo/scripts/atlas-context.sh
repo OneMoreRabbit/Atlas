@@ -130,6 +130,19 @@ case "$ATLAS_SRC" in
     OUT=$(printf '%s\n\n%s' "$REORIENT" "$OUT") ;;
 esac
 
+# Mode banner (method 1.26.10): the seat's development posture, prepended so it leads the
+# briefing every session. Supervised pauses at the publish/release boundary; autonomous
+# runs free. Both carry the house rules — the operator's standing directive.
+if [ "${ATLAS_MODE:-supervised}" = "autonomous" ]; then
+  MODE_BANNER="> **Mode: AUTONOMOUS.** Run the full cycle and publish through the write model (branch → PR → CI → arch review); oversight is the cascade and the hub, not a live operator. Still: confirm the issue before building it, and test against the real environment, never a fixture."
+else
+  MODE_BANNER="> **Mode: SUPERVISED.** Before you develop, state the issue and your intended approach and get the operator's confirmation — do not build against an assumed problem. Test against the REAL working environment and its real upstream contracts, never an invented fixture. Publishing or releasing (push, PR, tag) will pause for the operator's approval; do not work around it."
+fi
+MODE_BANNER="$MODE_BANNER
+>
+> **House style (always):** reply in plain English, concise. Use the method's existing terms; do not coin new ones. Say less — no preamble, no restatement, no summary of what you just did unless asked."
+OUT=$(printf '%s\n\n%s' "$MODE_BANNER" "$OUT")
+
 # Record which vault commit this briefing was compiled from, for every seat member —
 # the Stop guard compares it against the remote at each turn end (alignment gate, 1.24):
 # an arch push then reaches a running seat at the end of its CURRENT turn, not at its

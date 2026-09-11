@@ -70,6 +70,11 @@ install is a defect to raise. Upgrading is a deliberate act: move the declared p
 then roll; a sha-pin is a stopgap to replace with a tag. The estate holds the pins and
 levels seats; you review that the pin moves are deliberate.
 
+**Driving components — set their mode** (1.26.10): a component you supervise directly
+runs `ATLAS_MODE="supervised"` (it pauses for you at publish/release); a component you
+drive over the hub runs `ATLAS_MODE="autonomous"` (it publishes through the write model
+and you oversee via PR review and the hub). Declared in each component's `.atlas.conf`.
+
 **Your release act is the vault merge, not a tag** (§9, "Which release is which"): the
 `Atlas-<Project>` vault carries no product tags — its release is your `work` →
 `release` merge at periodic review. Component seats release their own code (dev

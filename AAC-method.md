@@ -337,6 +337,14 @@ updated: 2026-09-08
 #   broadcast nothing to add. Broadcasts reliably went stale and then named an OLDER
 #   version; the drift check is derived and cannot. A dead-hook seat sees neither, so
 #   the broadcast covered nothing extra; hook health is --verify's job.
+#   1.26.10 (operator, 2026-09-11): development modes + house style. ATLAS_MODE in
+#   .atlas.conf (default supervised): SUPERVISED pauses at the publish/release boundary
+#   for interactive operator approval (new PreToolUse Bash guard atlas-guard-supervise.sh
+#   emits permissionDecision "ask" on push/PR/tag); AUTONOMOUS runs free (oversight via
+#   the write model + hub). atlas_init --mode. Two universal cycle rules: confirm the
+#   issue before building; test against the REAL environment, never a fixture. Plus a
+#   standing house-style directive (plain English, concise, no coined terms) injected in
+#   every briefing. §6; component-init; arch-seat.
 #   1.26.9 (operator ruling 2026-09-11, reversing 1.26.6's "independent contracts"):
 #   a contract's version is its component's release line — provides/ carry the release
 #   MAJOR.MINOR one-to-one (release v1.3.0 -> contracts at 1.3), re-stamped at a release,
@@ -814,6 +822,27 @@ nothing to restore them.
 > discipline: the inputs are built AGAINST, not merely received, and code contradicting
 > a pinned contract is a defect even when every test passes. (Occasioned by a live seat
 > that carried its edge contracts in every briefing and never read them.)
+>
+> Two rules bind the cycle in every mode (1.26.10): **confirm the issue before you
+> build it** — do not develop against an assumed problem — and **test against the real
+> working environment and its real upstream contracts, never a fixture that encodes a
+> state you have not verified.** A green test over a fiction is not evidence.
+
+> **Development modes — supervised or autonomous** (1.26.10). A seat declares its
+> posture in `.atlas.conf` (`ATLAS_MODE`, default **supervised**), the same way it
+> declares its role. **Supervised**: the seat confirms the issue and approach with the
+> operator before developing, then develops and tests freely, and **the act of
+> publishing or releasing pauses for the operator** — a `PreToolUse` guard routes
+> publish/release commands (push, PR, tag) to an interactive approve/deny prompt. For a
+> seat working with a present human. **Autonomous**: the seat runs the full cycle and
+> publishes through the write model (branch → PR → CI → arch review); oversight is the
+> cascade and the hub, not a live operator. For components driven by an arch seat, often
+> over the hub. Declared, never inferred — reviewable in git, like every other posture.
+
+> **House style — plain, short, no coined terms** (1.26.10, operator directive). A seat
+> replies in plain English and keeps it concise; it uses the method's established
+> vocabulary and does not invent new terminology; it says less — no preamble, no
+> restating the request, no summarising work already shown. Carried in every briefing.
 
 > **The retrieval invariant: a session reads `ATLAS-CONTEXT.md`, never the vault.**
 > Exact contract artifacts (§4) arrive *with* the briefing, as files beside it, and are

@@ -177,6 +177,13 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    and `needs/`, publish. Steps 1–2 are delivered by your briefing; step 5 is checked
    by the Stop guard; the loop in between is yours to run every time.
 
+   **Your mode** (1.26.10): `ATLAS_MODE` in `.atlas.conf` (`atlas_init --mode`, default
+   **supervised**). Supervised pauses for the operator at the publish/release boundary
+   (push, PR, tag prompt for approval) and expects you to confirm the issue before
+   building; autonomous runs free, overseen by the write model and the hub. Always,
+   both modes: confirm the issue first, test against the real environment (not a
+   fixture), and reply plainly and briefly — no coined terms.
+
    **Alignment is mechanical** (1.24): if the vault's work branch moves while you are
    mid-session, the Stop guard will refuse to end your turn until you re-run
    `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end

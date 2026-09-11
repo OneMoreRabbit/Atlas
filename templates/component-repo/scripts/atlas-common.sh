@@ -15,6 +15,8 @@ ATLAS_VAULT=$(printf '%s' "${ATLAS_VAULT:-}" | tr -d '\r')
 ATLAS_METHOD=$(printf '%s' "${ATLAS_METHOD:-}" | tr -d '\r')
 ATLAS_VAULT_REMOTE=$(printf '%s' "${ATLAS_VAULT_REMOTE:-}" | tr -d '\r')
 ATLAS_METHOD_REMOTE=$(printf '%s' "${ATLAS_METHOD_REMOTE:-}" | tr -d '\r')
+ATLAS_MODE=$(printf '%s' "${ATLAS_MODE:-}" | tr -d '\r')
+ATLAS_ROLE=$(printf '%s' "${ATLAS_ROLE:-}" | tr -d '\r')
 if [ -z "${SLUG:-}" ] || [ "${SLUG:-}" = "<slug>" ]; then
   echo "atlas: SLUG is unset in .atlas.conf" >&2
   exit 2
@@ -22,6 +24,8 @@ fi
 : "${ATLAS_VAULT:=.atlas}"
 : "${ATLAS_METHOD:=.atlas-method}"
 : "${ATLAS_METHOD_REMOTE:=https://github.com/OneMoreRabbit/Atlas.git}"
+: "${ATLAS_MODE:=supervised}"   # supervised (default) pauses to confirm before publishing; autonomous runs free (method 1.26.10)
+: "${ATLAS_ROLE:=component}"
 # --- shared vault-graph resolution -------------------------------------------------
 # The io-graph must be read from the WORK branch, never from whatever the clone has
 # checked out: a publish branch's `method:` pin and policy are by definition equal or

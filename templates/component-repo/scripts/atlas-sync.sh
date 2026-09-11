@@ -126,7 +126,7 @@ fi
 TPL="$ATLAS_METHOD/templates/component-repo/scripts"
 if [ -d "$TPL" ]; then
   _DRIFTED=0
-  for f in atlas-common.sh atlas-sync.sh atlas-context.sh atlas-guard-write.sh atlas-guard-publish.sh; do
+  for f in atlas-common.sh atlas-sync.sh atlas-context.sh atlas-guard-write.sh atlas-guard-publish.sh atlas-guard-supervise.sh; do
     [ -f "$TPL/$f" ] || continue
     [ -f "scripts/$f" ] || { echo "atlas-sync: WARN scripts/$f missing — method ${REF:-default} ships it" >&2; _DRIFTED=1; continue; }
     cmp -s "$TPL/$f" "scripts/$f" ||

@@ -318,6 +318,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--slug", help="this component's Atlas slug (component mode)")
+    ap.add_argument("--mode", choices=["supervised", "autonomous"], default=None,
+                    help="development posture written to .atlas.conf (1.26.10): "
+                         "'supervised' (the default when unset) pauses for operator "
+                         "confirmation at the publish/release boundary; 'autonomous' "
+                         "runs free, oversight via the write model and the hub")
     ap.add_argument("--role", choices=["component", "both"], default="component",
                     help="'both' declares a both-hats seat (a single-seat project whose "
                          "one agent is the vault's architecture AND its component's "
@@ -395,6 +400,10 @@ def main() -> int:
         conf += ('\n# Both hats (AAC-method §9): this seat is the vault\'s architecture AND this\n'
                  '# component\'s author — a single-seat project. Transitional by design.\n'
                  'ATLAS_ROLE="both"\n')
+    if args.mode:
+        conf += (f'\n# Development mode (AAC-method §6): supervised pauses to confirm before\n'
+                 f'# publishing/releasing; autonomous runs free. Default when unset: supervised.\n'
+                 f'ATLAS_MODE="{args.mode}"\n')
     install(repo / ".atlas.conf", conf, args.force, written)
 
     # AGENTS.md — committed entry hook
