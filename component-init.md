@@ -1,10 +1,9 @@
 ---
-title: Component Init Brief — onboarding a component into Atlas
+title: "Component init brief — onboarding a component into Atlas"
 interface: component-init
 version: "2.10"       # quoted: unquoted 2.10 would be the YAML float 2.1
 status: active
-maturity: 1.0
-updated: 2026-09-07
+updated: 2026-09-11
 supersedes: 2.9
 # 2.0 (2026-08-19): transport rework. The vault is resolved via git ($ATLAS_VAULT clone),
 #   never via a filesystem path. Session protocol is mechanical: a SessionStart hook emits

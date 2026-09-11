@@ -1,10 +1,9 @@
 ---
-title: Architecture-Above-Code (AAC) — The Method
+title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.26"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
-maturity: 1.0
-updated: 2026-09-08
+updated: 2026-09-11
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -350,6 +349,13 @@ updated: 2026-09-08
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.27.0 (2026-09-11): ESTATE RELEASE — rolls up the 1.26.1-1.26.11 line: arch-installer
+#   conf-merge; no-broadcast release adoption; next-steps.md; the full consistency audit;
+#   the four version spaces; the development cycle stated everywhere; contracts track the
+#   release line; supervised/autonomous modes + plain-English house style; comms
+#   consolidated to one manual with optional context injection; pre-release doc-frontmatter
+#   tidy. New per-seat knobs since 1.26: ATLAS_MODE (supervised default), and comms guidance
+#   injected only when the project hub is on.
 #   1.26.9 (operator ruling 2026-09-11, reversing 1.26.6's "independent contracts"):
 #   a contract's version is its component's release line — provides/ carry the release
 #   MAJOR.MINOR one-to-one (release v1.3.0 -> contracts at 1.3), re-stamped at a release,

@@ -1,10 +1,9 @@
 ---
-title: Arch Seat Protocol — the architecture session's own duties
+title: "Arch seat protocol — the architecture session's own duties"
 interface: arch-seat
 version: "1.10"      # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
-maturity: 0.1        # first written form of a previously trust-based role
-updated: 2026-09-08
+updated: 2026-09-11
 supersedes: 1.0
 # 1.1: the escalation rule — which proposals the arch seat decides, and which go to @nav.
 # 1.2: platform asks route to the orchestrator; seats run AI, not products. Cross-vault

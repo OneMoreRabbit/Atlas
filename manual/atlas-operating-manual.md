@@ -3,7 +3,7 @@ title: Operating Atlas — the human's manual
 interface: atlas-operating-manual
 version: 1.1
 status: active
-updated: 2026-08-28
+updated: 2026-09-08
 supersedes: atlas-quickstart-manual 1.1
 # 1.1: Obsidian sync and GitHub tokens retired to the Orchestrator vault (estate
 #   operation, Scope 1B — not method); the lookup table references them there.

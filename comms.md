@@ -3,8 +3,7 @@ title: "Comms — the communication manual (planes, rules, hub operation)"
 interface: comms
 version: 1.4
 status: active
-maturity: 0.1
-updated: 2026-09-08
+updated: 2026-09-11
 # 1.1: hub rules aligned to the shipped agent-comms-client 0.5 §4 (six rules); the
 #   bridge-is-not-an-agent-channel ruling; the client named as operational carrier.
 # 1.2: the orchestration seat declared send-only on the hub, by definition (method
