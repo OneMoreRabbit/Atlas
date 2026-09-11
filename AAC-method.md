@@ -337,6 +337,14 @@ updated: 2026-09-08
 #   broadcast nothing to add. Broadcasts reliably went stale and then named an OLDER
 #   version; the drift check is derived and cannot. A dead-hook seat sees neither, so
 #   the broadcast covered nothing extra; hook health is --verify's job.
+#   1.26.9 (operator ruling 2026-09-11, reversing 1.26.6's "independent contracts"):
+#   a contract's version is its component's release line — provides/ carry the release
+#   MAJOR.MINOR one-to-one (release v1.3.0 -> contracts at 1.3), re-stamped at a release,
+#   never during patch/dev iteration (patches are bugfixes; the interface is a
+#   minor-level artefact). Breaking->major, compatible->minor, matching the drift
+#   consumers already read. §4 + the §9 "which release is which" contracts row. Stated
+#   as discipline; no validator change (a mixed-line check would fire estate-wide until
+#   contracts are re-stamped). Cost: a minor release re-stamps unchanged contracts too.
 #   1.26.4 (operator ask): next-steps.md — a vault-root file the arch seat replaces
 #   wholesale at end of session and at release cuts (Now / Blocked on @nav / Next
 #   release ships when; <=15 lines). The operator reads it instead of asking "what's
@@ -570,6 +578,21 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 - **`0.x`** = unstable / in development. Breaking changes allowed freely between minors.
 - **`1.0`+** = stable contract. MAJOR-is-breaking discipline applies. Crossing to `1.0` is
   the deliberate signal "this interface is now ratified."
+
+> **A contract's version is its component's release line** (operator ruling 2026-09-11,
+> reversing the "independent versions" call of 1.26.6). A published contract carries the
+> **`MAJOR.MINOR` of the release it ships in**, one-to-one: cut release `vX.Y.0` and every
+> contract in your `provides/` is stamped `X.Y`. So a contract's number names the release
+> it belongs to — the mismatch that made an estate's contracts unreadable against the
+> release being shipped is gone. Ongoing development does **not** churn contract versions:
+> patch iteration (`1.3.1`, `1.3.2` on `work`, §9) is bugfix work, and the interface is a
+> **minor-level artefact** — a breaking interface change lands in a major release (the
+> contract major bumps with it), a compatible addition in a minor (the contract minor
+> bumps). That is exactly the drift consumers already read: same `MAJOR.MINOR` **aligned**,
+> a minor ahead **re-pin when convenient**, a major ahead **breaking**. Cost, stated
+> plainly: a minor release re-stamps even a contract whose body did not change, so a
+> consumer may see one orange row on an interface that is byte-identical — git shows it is
+> unchanged and the re-pin is trivial; traceability is worth that.
 - The **live folder holds only current versions** (one file per interface). Retired
   MAJOR/MINOR milestones live in `archive/`, viewable in-vault. Git holds everything else.
 
@@ -998,7 +1021,7 @@ only ever operates in its own:
 | **Architecture** | `Atlas-<Project>` vault | **no product tags** — the release act is the `work` → `release` merge at the arch seat's periodic review; the vault is continuous truth, not a shipped artefact | the arch seat | seats read compiled briefings |
 | **Nav** | `Nav-<Project>` | none — the human's space has no releases | — | the human |
 | **Code** | a component's own repo(s) | the scheme below | **the component seat** — its only release surface | others, pinning exact tags |
-| **Contracts** | `docs/provides/*.md` | frontmatter `version:` per document — **independent of the code release number** (a component at code `1.3.0` may publish an interface at `0.4`); drift = pinned vs latest (§4) | the publishing component | edges pin per interface |
+| **Contracts** | `docs/provides/*.md` | frontmatter `version:` = the **release's `MAJOR.MINOR`**, one-to-one (release `v1.3.0` → contracts at `1.3`); re-stamped when you cut a release, not during patch/dev iteration; drift = pinned vs latest (§4) | the publishing component, in step with its code release | edges pin per interface |
 
 **A component seat does not deal in architecture releases.** Method re-pins, vault
 merges, estate rolls — arch/operator acts, never a component's. Its whole release

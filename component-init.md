@@ -166,8 +166,10 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    `release`, lay the annotated tag `v1.3.0`. Breaking changes bump the major; `0.x`
    is pilot-only; `1.0.0` is the first generally consumable release. An untagged
    commit is not a release, and no consumer may be told to install from a branch.
-   (Your contract documents' `version:` frontmatter is a SEPARATE space — interface
-   versions move per document, independent of your code number.)
+   (Your `provides/` contracts carry your release's `MAJOR.MINOR`, one-to-one (§4): cut
+   `v1.3.0` and stamp every published contract `1.3`. Don't churn them during patch/dev
+   iteration — a patch is a bugfix; a contract moves only when you cut a minor or major.
+   So a contract's number always names the release it ships in.)
 
    **The development cycle** (1.26.7): (1) review architecture → (2) examine your
    edges' provides and needs — you build AGAINST the input contracts; your consumers'

@@ -75,7 +75,10 @@ levels seats; you review that the pin moves are deliberate.
 `release` merge at periodic review. Component seats release their own code (dev
 iterates the patch position; a release zeroes patch, bumps minor, tags annotated on
 `release`); you approve any exceptional patch tag on a released line, and you gate
-nothing else of theirs. Method releases are the operator's roll — relay, never
+nothing else of theirs. **A component's `provides/` contracts carry its release's
+`MAJOR.MINOR`, one-to-one** (§4) — re-stamped when it cuts a release, so a contract's
+version always names the release it ships in; review that a component's live contracts
+share one release line. Method releases are the operator's roll — relay, never
 initiate.
 
 **Alignment is mechanical too** (1.24.2): the same install wires a Stop-hook gate — if
