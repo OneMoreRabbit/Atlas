@@ -337,6 +337,11 @@ updated: 2026-09-08
 #   broadcast nothing to add. Broadcasts reliably went stale and then named an OLDER
 #   version; the drift check is derived and cannot. A dead-hook seat sees neither, so
 #   the broadcast covered nothing extra; hook health is --verify's job.
+#   1.26.11 (operator, 2026-09-11): comms consolidated to one manual. comms.md is now
+#   the single point of truth — planes + rules PLUS the operational surface (comms
+#   inbox/reply/send, from the agent-comms client); Atlas links here rather than
+#   re-explaining; a short comms banner is injected into a briefing only when the
+#   project's hub is on (comms stays optional). README + §5/§6 point at the manual.
 #   1.26.10 (operator, 2026-09-11): development modes + house style. ATLAS_MODE in
 #   .atlas.conf (default supervised): SUPERVISED pauses at the publish/release boundary
 #   for interactive operator approval (new PreToolUse Bash guard atlas-guard-supervise.sh
@@ -673,7 +678,7 @@ branching:                     # this project's branch policy (§9) — declared
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
 comms:                         # OPTIONAL (1.22): this project's seats share a chat hub
-  hub: true                    # omit the block, or hub: false, for no hub — most projects
+  hub: true                    # omit the block, or hub: false, for no hub — most projects; manual: [[comms]]
   channel: "#<project>"        # ephemeral chat only; design stays in the vault ([[comms]])
 components:
   - slug: agent-image

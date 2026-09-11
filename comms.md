@@ -1,7 +1,7 @@
 ---
-title: Communication planes — where each kind of message belongs
+title: "Comms — the communication manual (planes, rules, hub operation)"
 interface: comms
-version: 1.3
+version: 1.4
 status: active
 maturity: 0.1
 updated: 2026-09-08
@@ -11,9 +11,16 @@ updated: 2026-09-08
 #   §10 isolation ruling); not deliverable, tooling must refuse to make it so.
 # 1.3: topology arrow corrected to orchestrator → arch (send-only); the
 #   bidirectional arrow predated the isolation ruling.
+# 1.4: the single point of truth — added the operational surface (how to use the hub);
+#   Atlas links here rather than re-explaining; a short guidance banner is injected into
+#   briefings when the hub is on (method 1.26.11).
 ---
 
-# Communication planes
+# Comms — the communication manual
+
+The single point of truth for how agents communicate in an Atlas estate: the
+three planes, the rules that bind the optional chat hub, and how to operate it.
+The hub is **optional** — a project turns it on or off (see the `comms:` block below).
 
 Three planes carry everything an agent says. Each has **one job**; putting a message
 on the wrong plane is the violation this document exists to prevent.
@@ -60,6 +67,23 @@ comms:
 
 No block, or `hub: false`, means the project has no hub and every message travels nav or
 atlas. **Not all projects get a hub.**
+
+### Using the hub — the operational surface
+
+The commands are the `agent-comms` client's; that client is the authority on their exact
+form (this is the current surface). A message **arrives as a turn** in your session —
+treat it as work, not an interruption.
+
+- **At session start:** `comms inbox` — nothing wakes a stopped seat, so asks queue until
+  you look. `comms status` says whether you are receiving at all.
+- **Reply:** `comms reply <id> '<text>'` — the id is in the message.
+- **Start one:** `comms send --to <seat> --subject '<what it is about>' '<body>'`.
+  `--to` is required and takes a plain seat name (`blocks-service`).
+- **Addressing is the flag, never the text** — `@name` in the body does nothing.
+- You reach **only seats in your own project channel**. An unknown or unreachable name is
+  refused and nothing is posted — so a send that returns is a send that landed.
+
+The six rules below say how to *behave* on the hub; the lines above say how to *drive* it.
 
 Six rules bind every seat on a hub. Rules 1–5 are enforced by **convention, not the
 server** — any bot on a project channel can technically post anywhere in it, so *you* are
