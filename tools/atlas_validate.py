@@ -924,6 +924,29 @@ def reference_library() -> list:
     return lines
 
 
+def external_index(graph) -> list:
+    """Declared external dependencies, listed as READ-IN-PLACE pointers (method 1.27.1).
+    Every seat holds the estate vault-read token, so a cross-vault contract is read where
+    it lives — not copied in. The briefing names each one and where to read it; reading a
+    listed contract in its home vault is retrieval, not browsing (§5)."""
+    ext = graph.get("external") or []
+    if not ext:
+        return []
+    lines = ["\n---\n\n# External dependencies — read in place (do not copy)\n",
+             "Contracts you depend on that live in another vault. You hold the estate "
+             "vault-read token: read each **where it lives** and pin it in `external:`; "
+             "never copy it here (AAC-method §5).\n"]
+    for e in ext:
+        prov = e.get("provider", "?")
+        iface = e.get("interface", "?")
+        vault = e.get("vault", "?")
+        pin = e.get("pinned")
+        lines.append(f"- `{iface}` from **{prov}**"
+                     + (f" (pinned {pin})" if pin else " (unpinned)")
+                     + f" — read at {vault} → `components/{prov}/docs/provides/`")
+    return lines
+
+
 def comms_banner(graph) -> list:
     """A short comms-guidance section, emitted into a briefing ONLY when the project has
     the hub on (the `comms:` block, §5). Comms is optional — off, this returns nothing.
@@ -1015,6 +1038,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                      "dependency, and never edited here (the one home is the provider's "
                      "`docs/library/`, named in each file's banner).\n", *ref_idx]
 
+    sections += external_index(graph)
     sections += comms_banner(graph)
 
     def emit_artifacts(contract_path: Path, iface: str, ver: str, delivered: bool):
@@ -1274,6 +1298,7 @@ def emit_arch_context(out: str | None) -> int:
     ref_idx = reference_library()
     if ref_idx:
         sections += ["\n---\n\n# Reference library delivered here\n", *ref_idx]
+    sections += external_index(graph)
     sections += comms_banner(graph)
     # the estate/drift picture the dashboard shows
     branch_md, _ = gen_branch_section(graph)

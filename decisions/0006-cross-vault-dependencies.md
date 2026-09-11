@@ -13,6 +13,11 @@ implemented: method 1.16 (2026-08-28)
 
 # ADR-0006 — Depending across vaults; the orchestration scope
 
+> **Update (method 1.27.1):** the cross-vault *delivery* mechanism this ADR describes
+> is retired — with an estate vault-read token on every seat, external contracts are
+> **read in place**, not copied (AAC-method §5). The dependency/scope model here still
+> holds; only "the provider delivers a copy" is superseded.
+
 ## Status
 
 **Accepted** — 2026-08-28. Enables the estate's first Scope-1B entity

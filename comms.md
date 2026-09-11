@@ -133,7 +133,7 @@ vault needs and reach it when the operator points it at them.
 `orchestrator → arch seat` (send-only — nothing contacts, wakes or tasks an
 orchestration seat; method §10), and `arch seat ↔ components of its own project`. Component ↔
 component and cross-project traffic do **not** go over the hub — they travel the atlas
-plane (contracts, deliver-and-sweep) or through arch seats. The hub adds no execution
+plane (contracts read in place across vaults, §5) or through arch seats. The hub adds no execution
 path; it adds an influence path, which rules 1 and 3 fence.
 
 ## What the method owns, and what it does not

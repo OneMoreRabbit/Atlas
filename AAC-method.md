@@ -349,6 +349,16 @@ updated: 2026-09-11
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.27.1 (2026-09-11, orchestrator external-dependency model): cross-vault contracts
+#   are READ IN PLACE, not delivered. Every seat holds an estate vault-read token
+#   (Atlas-* vaults, contents read; never code, never Nav — the 1.24.6 line applied to
+#   vaults). §5 rewritten: declaration (external:) and access (token) are separate
+#   concerns; the delivery workaround (provider pushes a copy into the consumer vault)
+#   is retired for contracts (43 copies across an estate before the token); reference-
+#   library remains the one sanctioned cross-vault copy. Briefings list declared
+#   external deps as read-in-place pointers (validator external_index). Two credential
+#   traps recorded: credential.useHttpPath=true; remove gh auth setup-git's per-host
+#   helper. arch-seat + component-init updated; decisions/0006 noted.
 # 1.27.0 (2026-09-11): ESTATE RELEASE — rolls up the 1.26.1-1.26.11 line: arch-installer
 #   conf-merge; no-broadcast release adoption; next-steps.md; the full consistency audit;
 #   the four version spaces; the development cycle stated everywhere; contracts track the
@@ -717,17 +727,31 @@ external:                      # dependencies whose provider is homed in another
     pinned: '0.3'              # quoted, like every version
 ```
 
-**Delivery, not fetching.** A consumer's seats hold no credential for the provider's
-vault, so the *provider* carries the content across: it answers in its own `provides/`
-and delivers a banner-marked copy to `components/<provider-slug>/docs/provides/` in the
-consumer's vault, on branch `atlas/<provider-slug>/<topic>` — which the CI guard already
-fences to exactly that folder, making this the one sanctioned write into another
-project's vault. The provider then appears in the consumer's vault as a component would,
-its contracts land in the plane every seat already reads, and the briefing carries them.
-Delivered externals route by consumer (1.25.2): the delivery's own signals — `to:`,
-`consumers:`, or a `responds_to:` naming `components/<slug>/` — pick the consumer, which
-gets the full text in its briefing; every other slug sees one index line; a delivery
-naming nobody stays vault-wide (fail-open).
+**Read in place, not delivery** (1.27.1, orchestrator external-dependency model). Every
+seat holds an estate **vault-read** token: read-only over `Atlas-*` vaults (contents),
+**never** component code repos and **never** `Nav-*` — the same line method 1.24.6 drew
+for the arch-read token, applied to vaults. So a consumer reads the provider's contract
+**where it lives**, in the provider's own `provides/`, and pins it in `external:`.
+Nothing is copied. The one rule is the same one that governs a vault internally: every
+document has one home, in its author's folder, and everyone else reads it there — a
+cross-vault dependency differs only in the `to:`.
+
+This **retires the old delivery workaround** (a provider pushing a banner-marked copy of
+its contract into the consumer's vault): it existed only because consumers could not read
+across vaults, and it cost one estate 43 copied documents before the token was issued.
+The single surviving cross-vault copy is a **reference-library** doc into `reference/`
+(§3) — a copy by design, marked as such, never a contract.
+
+**Declaration and access are separate concerns.** `external:` says what a project *may*
+depend on — architecture-owned, pinned, drift-checked. The token grants the *category*
+(vaults), never a named repo, so a new edge is reviewable before any credential is
+touched. The estate issues, routes and rotates the token (scope 1B). Two silent traps
+it must avoid — both cost real time and neither announces itself: git needs
+`credential.useHttpPath = true` (else a repo-aware router cannot tell one vault from
+another and every match falls through), and any per-host helper written by
+`gh auth setup-git` must be removed (git consults it first, so it answers with the
+seat's own token before the router is ever asked, and the seat 403s on every other
+vault while the router holds the right credential).
 The copy is read-only where it lands; one home stays true because it is authored and
 versioned only at the source. The provider **sweeps** consuming vaults for `needs/`
 addressed to its slug — the consumer's only obligation is to write the ask in its own

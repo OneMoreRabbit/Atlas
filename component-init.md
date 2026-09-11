@@ -265,6 +265,14 @@ project's capability. You need **no access to their vault, ever**:
    to latest. Delivery is what makes content readable; a pin is what makes a version
    deliberate.
 
+**Reading a cross-vault dependency** (1.27.1): a contract you depend on that lives in
+another vault is **read in place** — you hold the estate vault-read token (`Atlas-*`
+vaults, read-only; not code repos, not `Nav-*`). Declare it in your `external:` block
+(architecture-owned, pinned), and read the provider's `provides/` where it lives; your
+briefing lists each external dependency and where to read it. Never copy it into your
+vault. (Reference-library docs are the one exception — they arrive in `reference/` as
+deliberate copies, never contracts.)
+
 A delivered copy is **read-only in your vault**: its banner names the authored home, and
 newer versions arrive the same way. Never edit one, and never copy its content anywhere —
 if it looks wrong, raise a need addressed to the provider.

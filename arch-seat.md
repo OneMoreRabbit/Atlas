@@ -185,17 +185,14 @@ If this vault's component provides to consumers in **other** vaults, two duties 
 yours, because only you have the estate access:
 
 - **Sweep.** Each session, read the consuming vaults for open `needs/` addressed to your
-  slug. They cannot reach you any other way, and they have no access to this vault.
-- **Deliver.** Answer in your own `provides/` (the authored home), then push a
-  banner-marked copy to `components/<your-slug>/docs/provides/` in the consumer's vault,
-  on branch `atlas/<your-slug>/<topic>`. The CI guard already fences this to exactly
-  that folder — it is the one sanctioned write into another project's vault. Never write
-  anything else there, and never paste the content into a bridge: bridges carry
-  coordination, documents have homes.
-
-A consumer needs no `external:` pin to read what you delivered; the pin is optional
-bookkeeping that gives them a drift row. **Deliver on every version bump** — a stale
-delivered copy is silent, since an unpinned consumer has no drift signal.
+  slug — asks another project is making of you. You hold the estate vault-read token, so
+  you can read them; answer each in your own `provides/`, its authored home.
+- **Do not deliver copies** (1.27.1). Since every seat holds the vault-read token, the
+  consumer **reads your contract in place** and pins it in its `external:`. You no longer
+  push a banner-marked copy into the consumer's vault — that was a workaround for missing
+  access and is retired for contracts. Answer in your own `provides/` and stop; the
+  consumer reads it there. (The one surviving cross-vault copy is a reference-library
+  doc, below.)
 
 **Reference library.** Reusable know-how you author lives once in
 `components/<slug>/docs/library/` and is delivered on demand — when a consumer asks, or
