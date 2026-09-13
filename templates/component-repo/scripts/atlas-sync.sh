@@ -6,6 +6,7 @@ set -e
 # shellcheck source=atlas-common.sh disable=SC1091
 . "$(dirname -- "$0")/atlas-common.sh"
 cd "$ATLAS_REPO_ROOT"
+_STALE=0
 
 if [ -z "${ATLAS_VAULT_REMOTE:-}" ]; then
   echo "atlas-sync: ATLAS_VAULT_REMOTE is unset in .atlas.conf" >&2
@@ -18,8 +19,17 @@ fi
 # for a write-side reason. Fetch instead, and only ever warn.
 if [ -d "$ATLAS_VAULT/.git" ]; then
   if git -C "$ATLAS_VAULT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
-    git -C "$ATLAS_VAULT" pull --ff-only ||
+    git -C "$ATLAS_VAULT" pull --ff-only || {
       echo "atlas-sync: WARN vault pull failed — continuing on the current checkout" >&2
+      _STALE=1
+      # The common collision (sync-compile, 2026-09-13): a validator run dirties the
+      # DERIVED views — the exact five files every CI regen commit touches — so the
+      # ff-only pull always aborts. Name the cause and its safe remedy; do not apply
+      # it silently, since deciding what is discardable is not this script's call.
+      if ! git -C "$ATLAS_VAULT" diff --quiet 2>/dev/null; then
+        echo "atlas-sync: vault clone has local modifications — if these are only derived views (dashboard, registry/graph.md, registry/.compiled, component.md edge blocks) they are CI-owned: discard with  git -C \"$ATLAS_VAULT\" checkout -- .  and re-run" >&2
+      fi
+    }
   else
     git -C "$ATLAS_VAULT" fetch --prune origin >/dev/null 2>&1 ||
       echo "atlas-sync: WARN vault fetch failed — continuing offline" >&2
@@ -69,8 +79,10 @@ elif [ -n "$REF" ]; then
   git -C "$ATLAS_METHOD" checkout -q "$REF" 2>/dev/null ||
     echo "atlas-sync: WARN method tag $REF unavailable — using current checkout" >&2
 else
-  git -C "$ATLAS_METHOD" pull --ff-only ||
+  git -C "$ATLAS_METHOD" pull --ff-only || {
     echo "atlas-sync: WARN method pull failed — continuing on the current checkout" >&2
+    _STALE=1
+  }
 fi
 [ -n "$REF" ] && echo "atlas-sync: method pin $PIN -> $REF @ $(git -C "$ATLAS_METHOD" rev-parse --short HEAD 2>/dev/null || echo '?')" >&2
 
@@ -139,3 +151,13 @@ if [ -d "$TPL" ]; then
     echo "atlas-sync: refresh with: python3 .atlas-method/tools/atlas_init.py --slug $SLUG --force${ATLAS_LAUNCH_DIR:+ --launch-dir \"$ATLAS_LAUNCH_DIR\"} --vault-remote $ATLAS_VAULT_REMOTE   (then re-run with --verify; commit scripts/)" >&2
   fi
 fi
+
+# Declared degradation (constitution 1.3 shape, sync-compile finding 2026-09-13):
+# continuing on a stale checkout is the right behaviour — a refresh must never abort
+# the session — but EXITING 0 about it claimed success a caller could not distinguish
+# from a real sync. The WARN was stderr-only; nothing programmatic could tell
+# *synced* from *could not sync, your briefing is stale*. Exit 3 says exactly that,
+# after all the work above has still been done: degraded, and declared at the one
+# surface a caller reads. (3, not 1: the script completed; the checkout is stale.)
+[ "$_STALE" = 1 ] && exit 3
+exit 0
