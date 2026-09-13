@@ -355,6 +355,10 @@ updated: 2026-09-13
 #     literal assignment the one-to-one rule walks a contract backwards whenever a
 #     package version has fallen behind its own contracts, which relabels the document
 #     and silently clears outstanding re-pins. Below-current means the PACKAGE is wrong.
+#   - a re-stamp carries `created:` forward; only `updated:` moves. created: is the
+#     INTERFACE's age, not the document's - the alternative reading makes the field
+#     change meaning depending on whether a version altered any text, so it cannot be
+#     interpreted without diffing against the predecessor.
 #   - multi-repo components DECLARE which repo is the contract-stamping release line
 #     (io-graph `source:`); "its component's release" assumed one release line per
 #     component. Not to be resolved by inference from which docs happen to carry a
@@ -658,6 +662,17 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > above its component is a signal that a MINOR-level interface change shipped as a
 > PATCH at some point: a §4 violation already recorded in the contract and not yet
 > in the package.
+
+> **A re-stamp carries `created:` forward; only `updated:` moves.** `created:` is the
+> **interface's** age — when this contract was first published, carried across every
+> version of it — not the date this particular document was written. The alternative
+> reading (the document's own date, with the no-reset rule applying only to *pure*
+> re-stamps) makes the field change meaning depending on whether a version happened to
+> alter any text, so a reader cannot tell what a `created:` date denotes without
+> diffing the contract against its predecessor. A field you must diff to interpret is
+> not worth reading. The date a given version landed is what `updated:` and the
+> changelog are for. This is the fork a seat lands on when re-stamping a contract whose
+> body *did* change, so it is stated here rather than left to judgement.
 
 > **Multi-repo components: declare which repo is the release line.** "Its
 > component's release" assumes one release line per component. A component with two
