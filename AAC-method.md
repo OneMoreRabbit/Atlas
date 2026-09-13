@@ -713,6 +713,30 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > If the release lands on a *higher* number than the contract reached, re-stamp up to it at release —
 > that is an ordinary re-stamp and the never-lower rule applies.
 
+> **Immutable means byte-immutable — reference repairs included. Fix forward.** *(Asked by a component
+> seat the same day the rule landed: two of their published contracts carry `[[...]]` links whose targets
+> moved vaults. A link repair is plainly not a term change — and "plainly not" is the reasoning that
+> nearly had them edit terms in place two hours earlier.)*
+>
+> **Do not edit a published version at all.** A dangling link in a published version is **not a defect;
+> it is an accurate record.** That document *did* reference `[[agent-shares-architecture-v0_2]]` when it
+> was published, and repairing the link would make it claim a reference **it never made** — a small
+> falsification of exactly the kind immutability exists to prevent. The reader is not helped by a
+> corrected history; they are helped by a current version that points somewhere real.
+>
+> So: **the successor version carries the corrected reference**, using the convention that survives
+> re-stamps — *name the interface and its owner, not the versioned filename* (see below). And the
+> practical reason to hold the line rather than carve out "obviously safe" edits: **any carve-out needs
+> adjudicating per edit, and a rule that needs adjudicating decays.** The whole value of "a published
+> version is immutable" is that it requires no judgement.
+>
+> **Corollary — cross-references should not encode a version.** Under the re-stamp rule every contract
+> filename moves at every release, so a wikilink carrying `-vX_Y` is *a pointer with an expiry date*. Name
+> the parts that do not move: the interface and the component that owns it. A vault sweep found **45**
+> dangling versioned links, 14 of them in live documents, and **the validator checks `to:` and
+> `responds_to:` but never `[[...]]`** — so the densest cross-reference mechanism in a vault is the one
+> with no check behind it. Worth a warn-only check.
+
 > **A re-stamp carries `created:` forward; only `updated:` moves.** `created:` is the
 > **interface's** age — when this contract was first published, carried across every
 > version of it — not the date this particular document was written. The alternative
