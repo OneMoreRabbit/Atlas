@@ -359,6 +359,12 @@ updated: 2026-09-13
 #     INTERFACE's age, not the document's - the alternative reading makes the field
 #     change meaning depending on whether a version altered any text, so it cannot be
 #     interpreted without diffing against the predecessor.
+#   - a published version is IMMUTABLE: terms never change inside one. 1.26.9 governs re-stamps
+#     (version moves, terms identical) and was silent on the opposite case. When terms change,
+#     publish a new MAJOR.MINOR at the moment they change and archive the old file unchanged -
+#     editing in place makes a consumer's pin a lie with no diff on their side, and holding the
+#     correction leaves a known-wrong contract in the field while the code that made it wrong is
+#     already on the work branch. Immutability outranks the release mapping.
 #   - `arch` is now a well-known addressee: this vault's own architecture seat, the one
 #     seat a component most often has a question for and the only one with no way to be
 #     named. The estate that found it had been told to write the project name, which the
@@ -687,6 +693,25 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > above its component is a signal that a MINOR-level interface change shipped as a
 > PATCH at some point: a §4 violation already recorded in the contract and not yet
 > in the package.
+
+> **A published version is immutable. Terms never change inside one** (amendment 2026-09-13, on the
+> first live case: a contract whose terms became *materially wrong* mid-development, not at a release).
+> The rule above governs **re-stamps** — a version moving while the terms stay identical — and says
+> nothing about the opposite case, which is the dangerous one. When **terms** change, publish a **new
+> version at the moment the terms change**, and archive the old file unchanged. Do **not** edit the
+> text of a version a consumer is pinned to, and do **not** hold a correction until the next release:
+>
+> - Editing in place means a consumer pinned at `0.3` **reads different terms than they pinned**,
+>   which is the single thing pinning exists to prevent. Their pin becomes a lie with no diff visible
+>   on their side.
+> - Holding the correction leaves a **known-wrong contract in the field** for longer, and the code
+>   that made it wrong is usually already on the work branch — so the window is open either way.
+>
+> **Immutability of a pinned version outranks the one-to-one release mapping.** Publish the next
+> `MAJOR.MINOR` immediately (compatible addition → minor, breaking → major, §4 as normal); the
+> component's next release then carries that number and the mapping is satisfied without a re-stamp.
+> If the release lands on a *higher* number than the contract reached, re-stamp up to it at release —
+> that is an ordinary re-stamp and the never-lower rule applies.
 
 > **A re-stamp carries `created:` forward; only `updated:` moves.** `created:` is the
 > **interface's** age — when this contract was first published, carried across every
