@@ -3,7 +3,7 @@ title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
 version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
-updated: 2026-09-11
+updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -349,6 +349,21 @@ updated: 2026-09-11
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.27.2 (2026-09-13, AgentEco arch seat — three field cases against 1.26.9 in one
+#   week, from three different seats, all found while cutting first releases):
+#   - a re-stamp may RAISE or HOLD a contract's version, NEVER LOWER it. Taken as a
+#     literal assignment the one-to-one rule walks a contract backwards whenever a
+#     package version has fallen behind its own contracts, which relabels the document
+#     and silently clears outstanding re-pins. Below-current means the PACKAGE is wrong.
+#   - multi-repo components DECLARE which repo is the contract-stamping release line
+#     (io-graph `source:`); "its component's release" assumed one release line per
+#     component. Not to be resolved by inference from which docs happen to carry a
+#     `contract:` field.
+#   Field cases: sync-compile hit a contract numbered above its component and asked
+#   rather than lowering it; rbac-compile hit a package numbered below its contract and
+#   fixed the package (v0.4.1 -> v0.5.0 before tagging, avoiding dragging
+#   compiled-rbac-plan 0.5 -> 0.4 and silently clearing a re-pin outstanding since
+#   August); agent-image holds v0.3.0 and v0.8.0 in two repos. §4.
 # 1.27.1 (2026-09-11, orchestrator external-dependency model): cross-vault contracts
 #   are READ IN PLACE, not delivered. Every seat holds an estate vault-read token
 #   (Atlas-* vaults, contents read; never code, never Nav — the 1.24.6 line applied to
@@ -622,6 +637,39 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > plainly: a minor release re-stamps even a contract whose body did not change, so a
 > consumer may see one orange row on an interface that is byte-identical — git shows it is
 > unchanged and the re-pin is trivial; traceability is worth that.
+
+> **A re-stamp may raise or hold a contract's version, never lower it** (amendment
+> 2026-09-13, on three field cases in one week from the AgentEco estate). The
+> one-to-one rule reads as an assignment, and taken literally it walks a contract
+> *backwards* whenever a component's package version has fallen behind its own
+> contracts. Lowering is never right, for two reasons worse than the untidiness:
+>
+> 1. **It relabels the document.** A contract at `0.5` specifying a field that `0.4`
+>    explicitly did not document cannot be re-stamped `0.4` — the number would name
+>    a release whose contract said the opposite.
+> 2. **It silently clears outstanding re-pins.** Consumers still pinned at the lower
+>    number flip from *drift* to *aligned* with nobody reading anything. Drift that
+>    resolves itself is worse than no drift report at all, because the next real one
+>    is not believed.
+>
+> So: compute the release's `MAJOR.MINOR`; **above** the contract's current version,
+> re-stamp; **equal**, hold; **below**, the *package version is the thing that is
+> wrong* — stop, fix the package, release the corrected number. A contract numbered
+> above its component is a signal that a MINOR-level interface change shipped as a
+> PATCH at some point: a §4 violation already recorded in the contract and not yet
+> in the package.
+
+> **Multi-repo components: declare which repo is the release line.** "Its
+> component's release" assumes one release line per component. A component with two
+> repos has two, and the rule is ambiguous on its face — a seat holding `v0.3.0` in
+> one repo and `v0.8.0` in another cannot derive from the method which number stamps
+> its `provides/`. Resolve it by **declaring, not inferring** (§10): the component's
+> `source:` in `io-graph.yml` names the release line that stamps contracts, and a
+> second repo is declared alongside it as **not** a contract-stamping line. If a
+> second repo publishes contracts of its own, it is a second component, not a second
+> repo. Do **not** resolve it by observing that the other repo's docs happen to carry
+> no `contract:` field and no edge — that is true only until someone adds one, and it
+> is not readable from the vault.
 - The **live folder holds only current versions** (one file per interface). Retired
   MAJOR/MINOR milestones live in `archive/`, viewable in-vault. Git holds everything else.
 
