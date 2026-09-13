@@ -779,7 +779,8 @@ BRIDGE_ADDRESSEE = "nav"     # the human, via the Nav vault bridge (AAC-method Â
 METHOD_ADDRESSEE = "atlas"   # the method seat â€” every vault pins the method, so every
                              # vault may need to ask its owner (it is not an external:
                              # provider; the method is pinned by `method:`)
-WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE)
+ARCH_ADDRESSEE = "arch"      # this vault's own architecture seat (1.27.2)
+WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, ARCH_ADDRESSEE)
 
 
 def addressee(fm: dict) -> str | None:

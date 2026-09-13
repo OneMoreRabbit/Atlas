@@ -359,6 +359,16 @@ updated: 2026-09-13
 #     INTERFACE's age, not the document's - the alternative reading makes the field
 #     change meaning depending on whether a version altered any text, so it cannot be
 #     interpreted without diffing against the predecessor.
+#   - `arch` is now a well-known addressee: this vault's own architecture seat, the one
+#     seat a component most often has a question for and the only one with no way to be
+#     named. The estate that found it had been told to write the project name, which the
+#     validator rejects; invisible because the wrong addressee costs nothing observable
+#     (an arch seat sweeps components' needs/ regardless - `to:` stops the FAN-OUT, not
+#     the delivery). `nav` is not the substitute: it is the human via the bridge.
+#   - the "fix the package" clause is scoped to contracts that appear in io-graph.yml.
+#     A provides/ doc nothing pins - a governance agreement - has no consumer to be wrong
+#     for, and read literally the clause demanded a spurious release to satisfy a document
+#     no one tracks. Such a doc HOLDS its version; the lowering ban still applies to it.
 #   - multi-repo components DECLARE which repo is the contract-stamping release line
 #     (io-graph `source:`); "its component's release" assumed one release line per
 #     component. Not to be resolved by inference from which docs happen to carry a
@@ -542,6 +552,21 @@ components/<slug>/
 > external services exist is the estate's to publish — a service directory delivered to
 > `reference/` — and which of them this project uses is the architecture session's to
 > declare; a component that needs an undeclared one asks its arch seat via a proposal.
+>
+> **`arch` addresses your own vault's architecture seat** (added 1.27.2, on an AgentEco
+> finding). The routable set was component slugs + declared externals + `nav` + `method` —
+> with **no addressee for the one seat a component most often has a question for.** That
+> seat's arch had told its components to write `agent-eco`, the project name, which the
+> validator rejects; the error surfaced only because a single doc in the whole vault used
+> it. `nav` is **not** the substitute: it is the human via the bridge, and routing a
+> technical question there both misaddresses it and pushes vault traffic through a
+> channel reserved for human judgment.
+>
+> Note what the addressee is *for* here, since it is not delivery: an arch seat sweeps
+> `components/*/docs/needs/` every session regardless of `to:`, so an ask reaches it
+> either way. Naming `arch` stops the doc **fanning out to peers** — the fail-open
+> delivery — and records who was asked. That is also why this was invisible for so long:
+> the wrong addressee cost nothing observable.
 
 > **Vault-level `needs/`.** A project may need something that belongs to **no single
 > component of it** — most commonly a dependency on another vault ("this project needs a
@@ -673,6 +698,18 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > not worth reading. The date a given version landed is what `updated:` and the
 > changelog are for. This is the fork a seat lands on when re-stamping a contract whose
 > body *did* change, so it is stated here rather than left to judgement.
+
+> **The "fix the package" clause applies only to contracts in `io-graph.yml`** (scoping
+> amendment, raised by `sync-compile` on first use of the rule above). "Below the
+> contract's current version ⇒ the package is wrong" is right for a contract **with
+> consumers**. A `provides/` document that is *not* an io-graph edge interface — a
+> governance agreement, a schema accord, anything nothing pins — has no consumer to be
+> wrong for, and read literally the clause would demand a **spurious release** of the
+> component purely to satisfy a document no one tracks. Their case:
+> `sync-compile-registry-schema-agreement`, `status: agreement`, at `1.0`, pinned by
+> nobody, which would have forced a `1.0` release of `sync-compiler`. Such a document
+> **holds its version**; the lowering prohibition still applies to it, the release
+> obligation does not.
 
 > **Multi-repo components: declare which repo is the release line.** "Its
 > component's release" assumes one release line per component. A component with two
