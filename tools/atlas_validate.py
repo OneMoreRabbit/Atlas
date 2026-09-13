@@ -1445,7 +1445,11 @@ def main(wiring_flag: bool = False) -> int:
 
     dangling = responds_to_warnings(graph)
     if dangling:
-        print(f"\nRESPONSES — {len(dangling)} responds_to link(s) naming no document "
+        # The info footer about cross-vault path-shaped links is context, not a defect —
+        # counting it made the header claim a dangle that did not exist ("1 link naming
+        # no document" over a section containing only the footer). Count real warns only.
+        real = [w for w in dangling if not w.startswith("(info)")]
+        print(f"\nRESPONSES — {len(real)} responds_to link(s) naming no document "
               "in the vault (warn-only):")
         for w in dangling:
             print(f"  ⚠ {w}")
