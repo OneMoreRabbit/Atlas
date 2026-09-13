@@ -207,8 +207,28 @@ def responds_to_warnings(graph) -> list[str]:
             # this one. A path-shaped reference that does not resolve locally is that
             # case, not a typo; warning on each trained the estate's busiest provider
             # to ignore the section (21 false warnings on the Orchestrator, 2026-09-03).
+            #
+            # But the SHAPE must not decide the bucket (rbac-compile, 2026-09-13): a
+            # path-shaped ref whose STEM resolves in-vault is not a cross-vault answer —
+            # it is an in-vault pointer whose target moved (usually into archive/). The
+            # ref_stem() check above already caught those before this branch runs, so a
+            # path-shaped ref reaching here has an unresolvable stem too. What remains
+            # wrong is a path that LOOKS in-vault (components/ or needs/) yet resolves
+            # to nothing anywhere: name it, don't bin it as by-design.
             if "/" in str(ref):
-                cross_vault += 1
+                first = str(ref).lstrip("./").split("/")[0]
+                # Archived responses keep their historical text — a pointer that was
+                # true when written stays as written (immutability of the record), so
+                # only LIVE documents earn this warning.
+                in_archive = "archive" in p.relative_to(ROOT).parts
+                if first in ("components", "needs", "architecture", "manual") and not in_archive:
+                    warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
+                                 f"'{ref}' is an in-vault path that resolves to nothing: "
+                                 "target deleted, renamed — or its component moved vaults "
+                                 "(ADR-0008-style); if so, name the owning vault or use "
+                                 "the interface name instead of a dead local path")
+                else:
+                    cross_vault += 1
             else:
                 warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
                              f"'{ref}' names no document in the vault")
