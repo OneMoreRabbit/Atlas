@@ -672,6 +672,14 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > plainly: a minor release re-stamps even a contract whose body did not change, so a
 > consumer may see one orange row on an interface that is byte-identical — git shows it is
 > unchanged and the re-pin is trivial; traceability is worth that.
+>
+> **The number is coarse; the version note is the signal** (recorded on a dprox flag, 2026-09-13).
+> Because contract versions couple to the release line, a breaking change *anywhere* in a component —
+> a config key removed, say — re-stamps contracts it did not touch, and a consumer reading only the
+> number cannot tell an interface change from an elsewhere change: `0.1 → 0.2` looks the same either
+> way. That is accepted, not accidental — and it is why a re-stamped contract **carries a version note
+> saying which kind of bump it was** (*"terms unchanged, release-coupled"* versus a real change). The
+> note, not the number, is what a consumer's read decision runs on.
 
 > **A re-stamp may raise or hold a contract's version, never lower it** (amendment
 > 2026-09-13, on three field cases in one week from the AgentEco estate). The
