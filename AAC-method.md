@@ -745,6 +745,24 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > `responds_to:` but never `[[...]]`** — so the densest cross-reference mechanism in a vault is the one
 > with no check behind it. Worth a warn-only check.
 
+> **An archived version is byte-identical; supersession is recorded only in the successor.** *(Ruled
+> when one vault did both in one day — stamped `status: superseded` onto morning archives, archived
+> byte-identical in the evening.)* The test is the ratification precedent: did the document say
+> *superseded* when it was published? No — so stamping it backward makes the record claim a state it
+> never carried, exactly the falsification byte-immutability exists to prevent, however true the stamp
+> is *now*. The fact "X is superseded by Y" has **one home: Y's `supersedes:` frontmatter** (restate
+> nothing; point) — and location carries the rest: a file under `archive/` announces its own status.
+> Existing stamped archives stay as they are; editing archives to repair the convention would violate
+> the convention.
+>
+> **And the drift row must say which kind of orange it is.** The generated label is computed from
+> version distance alone, so *"re-pin when convenient"* renders identically for a re-stamp (read
+> nothing) and a terms correction (read first) — a signal that says the same thing about "nothing
+> changed" and "a claim you relied on was wrong" carries none of the information a consumer needs from
+> it. The emitting contract **declares the class** (`repin: restamp | terms-change`, frontmatter, §10 —
+> declared, not inferred from diffs), and the validator renders the words to match. Absent key renders
+> the old wording.
+
 > **A re-stamp carries `created:` forward; only `updated:` moves.** `created:` is the
 > **interface's** age — when this contract was first published, carried across every
 > version of it — not the date this particular document was written. The alternative

@@ -101,12 +101,20 @@ def latest_contract_versions() -> dict:
         if ver is None:
             continue
         if iface not in latest or version_tuple(ver) > version_tuple(latest[iface][0]):
-            latest[iface] = (str(ver), fm.get("status", "?"), path.relative_to(ROOT))
+            latest[iface] = (str(ver), fm.get("status", "?"), path.relative_to(ROOT),
+                             fm.get("repin"))
     return latest
 
 
-def drift_state(pinned: str, latest: str | None) -> tuple[str, str]:
-    """-> (emoji, label)."""
+def drift_state(pinned: str, latest: str | None, repin_class: str | None = None) -> tuple[str, str]:
+    """-> (emoji, label).
+
+    The MINOR-drift label used to be computed from version distance alone, so a
+    re-stamp (read nothing) and a terms correction (read first) rendered the same
+    words — a signal saying the same thing about "nothing changed" and "a claim
+    you relied on was wrong" (sync-compile, 2026-09-13). The emitting contract
+    declares the class in frontmatter (`repin: restamp | terms-change`, §10);
+    absent key keeps the old wording."""
     if latest is None:
         return "⚪", "no contract file yet"
     p, l = version_tuple(pinned), version_tuple(latest)
@@ -114,6 +122,10 @@ def drift_state(pinned: str, latest: str | None) -> tuple[str, str]:
         return "🟢", "aligned"
     if l[0] > p[0]:
         return "🔴", f"BREAKING — latest {latest}, review required"
+    if repin_class == "terms-change":
+        return "🟠", f"latest {latest} — TERMS CHANGED: read before re-pinning"
+    if repin_class == "restamp":
+        return "🟠", f"latest {latest} — release re-stamp, re-pin freely (nothing to read)"
     return "🟠", f"latest {latest} — re-pin when convenient"
 
 
@@ -302,8 +314,10 @@ def addressee_warnings(graph) -> list[str]:
 def edge_rows(graph, latest):
     rows = []
     for e in graph.get("edges", []):
-        lv = latest.get(e["interface"], (None,))[0]
-        emoji, label = drift_state(str(e["pinned"]), lv)
+        entry = latest.get(e["interface"], (None,))
+        lv = entry[0]
+        repin_class = entry[3] if len(entry) > 3 else None
+        emoji, label = drift_state(str(e["pinned"]), lv, repin_class)
         rows.append({**e, "latest": lv or "—", "emoji": emoji, "label": label})
     return rows
 
