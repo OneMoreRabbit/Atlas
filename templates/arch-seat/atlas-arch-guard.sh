@@ -39,6 +39,16 @@ hook_payload() {
 }
 PAYLOAD=$(hook_payload)
 case "$PAYLOAD" in *'"stop_hook_active":true'*|*'"stop_hook_active": true'*) exit 0 ;; esac
+# Cross-vault needs arrived? (1.27.2) The method ships atlas-needs.py in the component
+# template; an arch seat runs it from the pinned method checkout. Exit 2 + message only
+# when ~/.atlas/needs-open.md changed since last shown; never wakes a seat.
+NEEDS_TOOL="${ATLAS_METHOD:-$ATLAS_VAULT/.atlas-method}/templates/component-repo/scripts/atlas-needs.py"
+[ -f "$NEEDS_TOOL" ] || NEEDS_TOOL="$LD/Atlas/templates/component-repo/scripts/atlas-needs.py"
+if [ -f "$NEEDS_TOOL" ]; then
+  PY=$(command -v python3 || command -v python)
+  printf '%s' "$PAYLOAD" | "$PY" "$NEEDS_TOOL" --show || exit $?
+fi
+
 [ -d "$ATLAS_VAULT/.git" ] || exit 0
 BR=$(git -C "$ATLAS_VAULT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
 [ -n "$BR" ] && [ "$BR" != "HEAD" ] || exit 0

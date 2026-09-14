@@ -265,6 +265,12 @@ project's capability. You need **no access to their vault, ever**:
    to latest. Delivery is what makes content readable; a pin is what makes a version
    deliberate.
 
+**Needs from other vaults reach you** (1.27.2): your briefing includes
+`~/.atlas/needs-open.md` — needs addressed to you but filed in other vaults, read in
+place from the estate's needs register (`scripts/atlas-needs.py`, refreshed on the
+estate's timer). The Stop guard tells you once when it changes. Answer in your own
+`provides/` with `responds_to:` naming the need, and it drops off the list.
+
 **Reading a cross-vault dependency** (1.27.1): a contract you depend on that lives in
 another vault is **read in place** — you hold the estate vault-read token (`Atlas-*`
 vaults, read-only; not code repos, not `Nav-*`). Declare it in your `external:` block

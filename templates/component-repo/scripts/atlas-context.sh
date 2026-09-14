@@ -155,6 +155,15 @@ if [ -n "$FULLSHA" ]; then
   done
 fi
 
+# Cross-vault needs (method 1.27.2): needs addressed to this seat but filed in OTHER
+# vaults are invisible to the in-vault compile. atlas-needs.py --refresh (scheduled by
+# the estate) keeps ~/.atlas/needs-open.md current; carry it in the briefing so a fresh
+# or compacted session sees its whole queue, not just its own vault's slice.
+NEEDS_FILE="${HOME:-~}/.atlas/needs-open.md"
+if [ -s "$NEEDS_FILE" ]; then
+  OUT=$(printf '%s\n\n---\n\n# Needs addressed to me from other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
+fi
+
 # Report the size of what we inject. Growth here is a defect in the io-graph,
 # not a fact of life — the retrieval invariant is only worth anything if measured.
 printf '%s' "$OUT" | wc -c |

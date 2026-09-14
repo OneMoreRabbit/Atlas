@@ -63,5 +63,11 @@ case "$SRC" in
     OUT=$(printf '%s\n\n%s' "> ⟳ **REORIENT — session was ${SRC}ed.** Read this arch-seat briefing in full before your next action; confirm your project and in-flight review queue, and resume. Do not ask the operator to re-orient you." "$OUT") ;;
 esac
 
+# Cross-vault needs (1.27.2): needs addressed to this arch seat but filed in OTHER vaults
+# — the estate's --refresh keeps ~/.atlas/needs-open.md current; carry it in the briefing.
+NEEDS_FILE="${HOME:-~}/.atlas/needs-open.md"
+if [ -s "$NEEDS_FILE" ]; then
+  OUT=$(printf '%s\n\n---\n\n# Needs addressed to me from other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
+fi
 printf '%s' "$OUT" | wc -c | awk '{printf "atlas-arch-context: %d bytes (~%d tokens) injected\n", $1, $1/4}' >&2
 printf '%s\n' "$OUT"

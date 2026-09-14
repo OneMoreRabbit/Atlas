@@ -349,6 +349,16 @@ updated: 2026-09-11
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.27.2 (2026-09-14, orchestrator cross-vault-needs finding + atlas-needs handover):
+#   a seat now sees needs addressed to it from OTHER vaults. Adopted the orchestrator's
+#   tool into templates/component-repo/scripts/atlas-needs.py (--refresh reads the
+#   estate needs register in place; --show surfaces changes at turn end via exit 2 —
+#   their interim copy printed at exit 0, which a Stop hook never shows the model, so
+#   every seat was stamping needs as 'shown' that no agent saw). The briefing carries
+#   ~/.atlas/needs-open.md at start/compaction (component + arch); the Stop guards call
+#   --show; atlas_init --needs-register; inert with no register. Canonical to: stated
+#   (slug or YAML list; warn-only on `a; b` forms); responds_to aliases addresses/answers
+#   now count as answered. The method seat gains a provides/ outbox for its responses.
 # 1.27.1 (2026-09-11, orchestrator external-dependency model): cross-vault contracts
 #   are READ IN PLACE, not delivered. Every seat holds an estate vault-read token
 #   (Atlas-* vaults, contents read; never code, never Nav — the 1.24.6 line applied to
@@ -752,6 +762,22 @@ another and every match falls through), and any per-host helper written by
 `gh auth setup-git` must be removed (git consults it first, so it answers with the
 seat's own token before the router is ever asked, and the seat 403s on every other
 vault while the router holds the right credential).
+
+**Cross-vault needs reach their addressee** (1.27.2, orchestrator finding + tool). The
+briefing compiles needs addressed to a seat from *its own* vault; a need filed in another
+vault — correctly, in its author's outbox — was structurally invisible to the seat that
+owed it (58 of 78 open needs estate-wide, including every need addressed to the method
+seat). Now: the estate publishes a **needs register** (a derived registry, §10) and every
+seat reads it in place with the vault-read token via `scripts/atlas-needs.py` —
+`--refresh` (scheduled by the estate) writes `~/.atlas/needs-open.md`; the briefing
+carries that file at every start and compaction; the Stop guard's `--show` surfaces a
+*change* once at turn end (exit 2 — an exit-0 print never reaches the model). It never
+wakes a seat: the file is written on a timer, and the guard speaks only inside a turn
+already underway. A single-vault project sets no register and the tool stays inert.
+**Canonical addressing:** `to:` is a slug or a YAML list of slugs (`to: [a, b]`); the
+router tolerates `a; b` and trailing punctuation, but the validator warns so a naive
+sweep never mis-routes. A response may name the need it answers with `responds_to:`,
+`addresses:` or `answers:` — all three count as answered.
 The copy is read-only where it lands; one home stays true because it is authored and
 versioned only at the source. The provider **sweeps** consuming vaults for `needs/`
 addressed to its slug — the consumer's only obligation is to write the ask in its own

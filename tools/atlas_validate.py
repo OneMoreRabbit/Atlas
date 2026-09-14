@@ -173,7 +173,7 @@ def responds_to_index(slug: str) -> dict:
     index = {}
     for p in sorted(ROOT.glob(f"components/{slug}/docs/provides/**/*.md")):
         fm = parse_frontmatter(p)
-        val = fm.get("responds_to") or fm.get("responds-to")
+        val = fm.get("responds_to") or fm.get("responds-to") or fm.get("addresses") or fm.get("answers")
         if val is None:
             continue
         refs = val if isinstance(val, list) else [val]
@@ -195,7 +195,7 @@ def responds_to_warnings(graph) -> list[str]:
     warns, cross_vault = [], 0
     for p in sorted(ROOT.glob("components/*/docs/provides/**/*.md")):
         fm = parse_frontmatter(p)
-        val = fm.get("responds_to") or fm.get("responds-to")
+        val = fm.get("responds_to") or fm.get("responds-to") or fm.get("addresses") or fm.get("answers")
         if val is None:
             continue
         for ref in (val if isinstance(val, list) else [val]):
@@ -255,6 +255,13 @@ def addressee_warnings(graph) -> list[str]:
             continue
         if is_broadcast(named):
             continue                    # the same delivery, declared instead of implied
+        # canonical form is a slug or a YAML list of slugs; `a; b` and `agent-comms;` route
+        # here (token-aware) but a naive sweep elsewhere mis-reads them — warn so authors
+        # converge (orchestrator finding 2026-09-13; warn-only, never a failure)
+        raw = fm.get("to") if fm.get("to") is not None else fm.get("addressed-to")
+        if isinstance(raw, str) and re.search(r"[;,/]|\band\b|[;,.]\s*$", raw):
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: {raw}` is not canonical; "
+                         "write a slug or a YAML list of slugs (`to: [a, b]`)")
         if not any(names_slug(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
                          f"'{named}' matches no component and no declared external "
@@ -1070,7 +1077,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
             cons = [str(c) for c in (cons if isinstance(cons, list) else [cons])]
             # third signal: a response's own responds_to names whose need it answers —
             # `components/<slug>/docs/...` identifies the consumer mechanically
-            rto = xfm.get("responds_to") or xfm.get("responds-to")
+            rto = xfm.get("responds_to") or xfm.get("responds-to") or xfm.get("addresses") or xfm.get("answers")
             rto_slugs = {m.group(1) for ref in (rto if isinstance(rto, list) else [rto])
                          if ref
                          for m in [re.search(r"components/([\w.-]+)/docs/", str(ref))]

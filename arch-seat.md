@@ -187,6 +187,10 @@ yours, because only you have the estate access:
 - **Sweep.** Each session, read the consuming vaults for open `needs/` addressed to your
   slug — asks another project is making of you. You hold the estate vault-read token, so
   you can read them; answer each in your own `provides/`, its authored home.
+- **Your cross-vault queue is in your briefing** (1.27.2): `~/.atlas/needs-open.md`
+  lists needs addressed to you from every vault, from the estate's register. Sweeping
+  by hand is no longer how you find them — it is still how you find asks addressed to
+  a *component* of yours that its seat has not acted on.
 - **Do not deliver copies** (1.27.1). Since every seat holds the vault-read token, the
   consumer **reads your contract in place** and pins it in its `external:`. You no longer
   push a banner-marked copy into the consumer's vault — that was a workaround for missing

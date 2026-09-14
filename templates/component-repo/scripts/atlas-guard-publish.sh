@@ -35,6 +35,15 @@ if [ -n "$REC" ] && [ -n "$BWORK" ] && [ -n "$ATLAS_VAULT_REMOTE" ]; then
   fi
 fi
 
+# Cross-vault needs arrived? (1.27.2) atlas-needs.py --show exits 2 with a one-line
+# message only when ~/.atlas/needs-open.md changed since last shown — the same exit-2
+# pattern as the alignment gate, because an exit-0 print never reaches the model. Two
+# stats, no network; never wakes a seat (it speaks inside a turn already underway).
+if [ -f "$ATLAS_REPO_ROOT/scripts/atlas-needs.py" ]; then
+  PY=$(command -v python3 || command -v python)
+  printf '%s' "$PAYLOAD" | "$PY" "$ATLAS_REPO_ROOT/scripts/atlas-needs.py" --show || exit $?
+fi
+
 [ -d "$ATLAS_VAULT/.git" ] || exit 0
 [ -f "$ATLAS_SENTINEL" ] && exit 0
 [ -n "$(git -C "$ATLAS_VAULT" status --porcelain)" ] || exit 0

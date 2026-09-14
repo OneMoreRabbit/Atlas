@@ -318,6 +318,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--slug", help="this component's Atlas slug (component mode)")
+    ap.add_argument("--needs-register", metavar="URL", default=None,
+                    help="the estate's needs register (raw JSON URL) written to .atlas.conf "
+                         "as ATLAS_NEEDS_REGISTER so atlas-needs.py can show this seat the "
+                         "needs filed for it in OTHER vaults (1.27.2). Unset = inert")
     ap.add_argument("--mode", choices=["supervised", "autonomous"], default=None,
                     help="development posture written to .atlas.conf (1.26.10): "
                          "'supervised' (the default when unset) pauses for operator "
@@ -400,6 +404,9 @@ def main() -> int:
         conf += ('\n# Both hats (AAC-method §9): this seat is the vault\'s architecture AND this\n'
                  '# component\'s author — a single-seat project. Transitional by design.\n'
                  'ATLAS_ROLE="both"\n')
+    if args.needs_register:
+        conf += (f'\n# Cross-vault needs (1.27.2): the estate needs register, read in place.\n'
+                 f'ATLAS_NEEDS_REGISTER="{args.needs_register}"\n')
     if args.mode:
         conf += (f'\n# Development mode (AAC-method §6): supervised pauses to confirm before\n'
                  f'# publishing/releasing; autonomous runs free. Default when unset: supervised.\n'
