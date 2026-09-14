@@ -92,6 +92,13 @@ so declare it only once the vault actually conforms.
 > a seat moves only when the operator rolls it.
 
 
+> **Who rolls.** Each **arch seat re-pins its own vault** — the pin is architecture-owned
+> and its seat is the only one that can write that repo. The **orchestrator cannot pin
+> another vault** (the estate token is read-only on other vaults; a repo's `permissions.push`
+> field reports the account's role, not the token's scope — only an attempted write tells
+> the truth). The orchestrator announces the release and does the estate-owned parts
+> (credentials, images, retiring interim tooling); the pinning is each arch seat's act.
+
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release
    (exact, `MAJOR.MINOR.PATCH` — a two-part pin is deprecated and never floats). From
    here the vault is governed by that version of

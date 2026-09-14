@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.1 (2026-09-14, canary catches, orchestrator): atlas_init now copies AND
+#   --verify checks scripts/atlas-needs.py — the *.sh-only glob shipped it in 1.28.0 but
+#   never installed it, so component seats got no cross-vault needs signal while every
+#   surface reported success. The Stop guard warns once when ATLAS_NEEDS_REGISTER is set
+#   but the tool is absent. And README states WHO rolls: each arch seat pins its own
+#   vault; the orchestrator cannot pin another (read-only token; permissions.push lies).
 # 1.28.0 (2026-09-14): ESTATE RELEASE — rolls up the whole 1.27.x line. Cross-vault
 #   contracts read in place (vault-read token, delivery retired); cross-vault NEEDS
 #   visible to their addressee (atlas-needs.py — refresh reads the estate register, the

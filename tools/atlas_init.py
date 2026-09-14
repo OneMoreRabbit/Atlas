@@ -242,7 +242,7 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
         check("\r" not in text, ".atlas.conf has no CRLF", "add gitattributes.fragment")
     check((repo / "AGENTS.md").exists(), "AGENTS.md committed at the repo root")
     for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
-                 "atlas-guard-write.sh", "atlas-guard-publish.sh"):
+                 "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
         check((repo / "scripts" / name).exists(), f"scripts/{name}")
 
     settings = launch_dir / ".claude" / "settings.json"
@@ -419,8 +419,11 @@ def main() -> int:
     written: list = []
     print(f"atlas_init: installing '{args.slug}' (project {project}) into {repo}")
 
-    # scripts/ — byte-identical copies, checksum-verified by atlas-sync
-    for src in sorted((TEMPLATES / "scripts").glob("*.sh")):
+    # scripts/ — byte-identical copies, checksum-verified by atlas-sync. Glob covers .py
+    # too: atlas-needs.py shipped in 1.28.0 but a *.sh-only glob never copied it, so seats
+    # got no cross-vault needs signal while every surface reported success (1.28.1).
+    for src in sorted(list((TEMPLATES / "scripts").glob("*.sh"))
+                      + list((TEMPLATES / "scripts").glob("*.py"))):
         dst = repo / "scripts" / src.name
         install(dst, read(src), args.force, written)
         if dst.exists():
