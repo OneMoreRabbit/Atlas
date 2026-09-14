@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.27.5 (2026-09-14, operator rulings): (1) cross-vault arch addressing — `arch`
+#   inside a vault, `<project>-arch` from outside (matches the estate register); optional
+#   top-level `project:` in io-graph declares the name (default derived from the vault
+#   name); validator routes both, and a declared external's `<project>-arch`. Method seat's
+#   own outbox docs re-addressed. (2) decisions carry `responds_to:` — the answered-join
+#   now reads architecture/decisions/ too, so a need settled by an ADR (every nav/arch
+#   ask) shows answered and the raiser can retire it; dangling-link check covers decisions.
 #   1.27.4 (2026-09-14): answers the eight
 #   surfaced findings + two PRs. (D) seat briefing skips a manifest-less member with a
 #   warning instead of blinding the whole seat; single-slug stays fail-closed.
@@ -983,6 +990,14 @@ to. The mechanism is the same as for needs: the estate publishes an **edges regi
 slice to `~/.atlas/consumers.md`; the briefing carries it; the "I provide" line now says
 it lists in-vault consumers only. Inert without the register.
 
+**Addressing a vault's arch seat** (1.27.5). Inside a vault, `arch` names this vault's
+architecture seat. From *another* vault, address it as **`<project>-arch`** — the form the
+estate register already uses — where `<project>` is the vault's declared `project:` key in
+`registry/io-graph.yml` (top level, optional; default: derived from the vault name,
+`Atlas-AgentEco` → `agenteco`). Declare it when the estate names your project differently
+from the derivation (`project: agent-eco`), so the two never disagree. The validator
+routes both forms; a declared `external:` vault's arch is likewise `<its-project>-arch`.
+
 **Canonical addressing:** `to:` is a slug or a YAML list of slugs (`to: [a, b]`); the
 router tolerates `a; b` and trailing punctuation, but the validator warns so a naive
 sweep never mis-routes. A response may name the need it answers with `responds_to:`,
@@ -1186,6 +1201,15 @@ ADRs use the Nygard format: Context → Decision → Status → Consequences.
 > applied to artefacts rather than documents.
 
 ---
+
+> **A decision that settles a need names it** (1.27.5). An ask addressed to `nav` or
+> `arch` is answered by a *decision*, not a `provides/` document — so the ADR (or the
+> constitution amendment's ADR) carries `responds_to:` naming the need. The answered-join
+> reads `architecture/decisions/` as well as `provides/`; the need then shows as answered
+> (one line) in every briefing, and the raiser retires it (`status: resolved`) on that
+> signal. This closes the loop for `to: nav` asks: arch mirrors the ask to the bridge →
+> the operator decides → arch records the ADR with `responds_to:` → the raiser retires.
+> Without the `responds_to:`, a nav-need sat UNANSWERED in full, indefinitely.
 
 ## 8. Tooling — the validator
 

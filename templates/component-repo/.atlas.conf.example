@@ -23,3 +23,7 @@ ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"
 # Unset = atlas-needs.py writes no consumers.md.
 # ATLAS_EDGES_REGISTER="https://api.github.com/repos/<org>/Atlas-Orchestrator/contents/registries/edges.json?ref=dev"
 
+# Project name (1.27.5, optional): the vault's declared `project:` — used so a both-hats
+# seat also answers to `<project>-arch` in the estate needs register.
+# ATLAS_PROJECT="agent-eco"
+

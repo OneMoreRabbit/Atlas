@@ -287,6 +287,10 @@ lists which other vaults pin your contracts, from the estate's edges register â€
 "I provide" line in `component.md` covers this vault only. Both-hats seats also get the
 arch half of the briefing appended (review queue, estate, next-steps, bridge).
 
+**Addressing an arch seat** (1.27.5): your own vault's arch is `to: arch`; another
+vault's is `to: <project>-arch` (its declared `project:`, e.g. `agent-eco-arch`).
+Project names alone (`to: agent-eco`) name nobody.
+
 **Needs from other vaults reach you** (1.27.2): your briefing includes
 `~/.atlas/needs-open.md` â€” needs addressed to you but filed in other vaults, read in
 place from the estate's needs register (`scripts/atlas-needs.py`, refreshed on the

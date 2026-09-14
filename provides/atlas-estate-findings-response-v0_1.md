@@ -1,6 +1,6 @@
 ---
 title: "Response — eight estate findings answered in method 1.27.4"
-to: [agent-eco, agent-compile, platform, discocat, frogyeti]
+to: [agent-eco-arch, agent-compile, platform, discocat-arch, frogyeti-arch]
 responds_to:
   - needs/agenteco-needs-channel-misuse-answered-v0_1.md
   - needs/agenteco-needs-cross-vault-visibility-relay-v0_1.md

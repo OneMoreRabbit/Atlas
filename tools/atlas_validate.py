@@ -198,6 +198,27 @@ def responds_to_index(slug: str) -> dict:
     return index
 
 
+def decisions_responds_index() -> dict:
+    """need-document stem -> the ADR that settled it (1.27.5). A need addressed to nav or
+    arch is answered by a DECISION, not a provides/ doc — so the answered-join must read
+    architecture/decisions/ too, or such needs sit UNANSWERED in briefings forever (11
+    open nav-needs estate-wide, orchestrator register 2026-09-13)."""
+    index = {}
+    ddir = ROOT / "architecture" / "decisions"
+    if not ddir.is_dir():
+        return index
+    for p in sorted(ddir.glob("*.md")):
+        fm = parse_frontmatter(p)
+        val = fm.get("responds_to") or fm.get("responds-to") or fm.get("addresses") or fm.get("answers")
+        if val is None:
+            continue
+        for ref in (val if isinstance(val, list) else [val]):
+            stem = ref_stem(ref)
+            if stem:
+                index.setdefault(stem, p)
+    return index
+
+
 def responds_to_warnings(graph) -> list[str]:
     """`responds_to:` pointing at a document that does not exist in the vault.
 
@@ -205,7 +226,8 @@ def responds_to_warnings(graph) -> list[str]:
     check is existence — not category. Anything narrower cries wolf on correct links."""
     stems = {p.stem for p in ROOT.rglob("*.md")}
     warns, cross_vault = [], 0
-    for p in sorted(ROOT.glob("components/*/docs/provides/**/*.md")):
+    for p in sorted(list(ROOT.glob("components/*/docs/provides/**/*.md"))
+                    + list(ROOT.glob("architecture/decisions/*.md"))):
         fm = parse_frontmatter(p)
         val = fm.get("responds_to") or fm.get("responds-to") or fm.get("addresses") or fm.get("answers")
         if val is None:
@@ -256,6 +278,7 @@ def addressee_warnings(graph) -> list[str]:
     Routing by addressee turns a typo into silent non-delivery, so an unroutable
     addressee must be visible. Warn-only, like naming."""
     slugs = [c["slug"] for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
+    slugs += arch_addressees(graph)[1:]        # <project>-arch: this vault's arch, cross-vault form
     # an external provider is a legitimate addressee: asks travel to it by the normal
     # route, picked up when its arch seat reads this vault (§5, decisions/0006).
     # Each declared external answers to its provider slug AND its project name derived
@@ -267,6 +290,7 @@ def addressee_warnings(graph) -> list[str]:
         m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", str(e.get("vault", "")))
         if m:
             slugs.append(m.group(1).lower())
+            slugs.append(f"{m.group(1).lower()}-arch")   # that vault's arch seat, cross-vault (1.27.5)
     warns = []
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
                     + list(ROOT.glob("needs/*.md"))):
@@ -822,6 +846,26 @@ METHOD_ADDRESSEE = "atlas"   # the method seat — every vault pins the method, 
                              # vault may need to ask its owner (it is not an external:
                              # provider; the method is pinned by `method:`)
 ARCH_ADDRESSEE = "arch"      # this vault's own architecture seat (1.27.2)
+
+
+def project_name(graph) -> str:
+    """The project's name: declared `project:` in io-graph.yml, else derived from the
+    vault's origin URL (Atlas-AgentEco -> agenteco; the 1.25.3 rule). Used for the
+    cross-vault arch address `<project>-arch` (1.27.5) — declared, not guessed, when it
+    matters: set `project:` if the derivation does not match how the estate names you."""
+    declared = str(graph.get("project") or "").strip().lower()
+    if declared:
+        return declared
+    url = (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip()
+    m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", url)
+    return m.group(1).lower() if m else ""
+
+
+def arch_addressees(graph) -> list:
+    """Every spelling that names THIS vault's arch seat: `arch` inside the vault, and
+    `<project>-arch` from anywhere (the cross-vault form, matching the estate register)."""
+    pn = project_name(graph)
+    return [ARCH_ADDRESSEE] + ([f"{pn}-arch"] if pn else [])
 WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, ARCH_ADDRESSEE)
 
 
@@ -856,9 +900,16 @@ def addressee_tokens(value: str) -> list:
 
 def names_slug(value: str, slug: str) -> bool:
     """Does an addressee field name this slug? Exact token first; substring within the
-    head as the compatibility fallback for prose ("RBAC-compile workstream")."""
+    head as the compatibility fallback for prose ("RBAC-compile workstream") — EXCEPT
+    for the well-known short words and the `<project>-arch` forms, which match exactly
+    or not at all (1.27.5): `arch` is a substring of `nonsense-arch`, `nav` of
+    `navigation`, and a foreign `<other>-arch` must never resolve as this vault's arch."""
     slug = slug.lower()
-    return slug in addressee_tokens(value) or slug in addressee_head(value).lower()
+    if slug in addressee_tokens(value):
+        return True
+    if slug in WELL_KNOWN_ADDRESSEES or slug.endswith("-arch"):
+        return False
+    return slug in addressee_head(value).lower()
 
 
 def names_slug_exactly(value: str, slug: str) -> bool:
@@ -1169,6 +1220,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     edge_dirs = {s: {(ROOT / fb["path"]).resolve()
                      for fb in readings[s].get("consumer_feedback", [])} for s in slugs}
     answers = {s: responds_to_index(s) for s in slugs}
+    settled = decisions_responds_index()       # ADRs answer nav/arch asks (1.27.5)
     needs_dirs = sorted(ROOT.glob("components/*/docs/needs"))
     if (ROOT / "needs").is_dir():
         needs_dirs.append(ROOT / "needs")
@@ -1204,7 +1256,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         rel_p = p.relative_to(ROOT).as_posix()
         bits = [f"{k}: {fm[k]}" for k in ("need", "status", "version") if fm.get(k)]
         meta = "; ".join(bits) or "no metadata"
-        states = {s: answers[s].get(p.stem) for s in for_slugs}
+        states = {s: answers[s].get(p.stem) or settled.get(p.stem) for s in for_slugs}
         unanswered = [s for s, a in states.items() if a is None]
         if not unanswered:
             done_count += 1

@@ -1,10 +1,10 @@
 ---
 title: "Finding — AgentEco is using needs/ as a push channel; 10 of 24 open needs are not asks"
-to: agent-eco
+to: agent-eco-arch
 need: retire 3 stale needs, convert 10 that are rulings/notices/relays into their proper channel, route 1 method question to atlas
 status: open
 version: '0.1'
-updated: 2026-09-13
+updated: 2026-09-14
 from: atlas
 ---
 

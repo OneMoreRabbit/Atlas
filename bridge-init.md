@@ -77,6 +77,12 @@ linking the source file ([[arch-seat]] §Every session); you tick it on the brid
 which you own. Answers come back through the vault (ADR, contract, constitution) —
 never by editing the asking component's outbox.
 
+**How a `to: nav` ask retires** (1.27.5): you decide on the bridge → the arch seat
+records the decision as an ADR (or constitution amendment via its ADR) carrying
+`responds_to:` naming the need → the need shows **answered** in every briefing → the
+raiser sets `status: resolved`. Ticking the bridge line alone retires nothing; the ADR's
+`responds_to:` is the mechanism.
+
 **The bridge is human↔AI only — never a seat-to-seat channel.** `nav` addresses the
 human; `to: nav` is for a decision or direction only the human can give. A seat that
 needs something from *another component* addresses **that component's slug**, and the

@@ -68,6 +68,13 @@ def my_slugs(explicit: str | None) -> list[str]:
             s = conf(d / ".atlas.conf").get("SLUG")
             if s and s not in slugs:
                 slugs.append(s)
+    # a both-hats seat is ALSO its vault's arch: answer to `arch` and `<project>-arch`
+    # (1.27.5; ATLAS_PROJECT in .atlas.conf, else nothing project-specific is assumed)
+    if c.get("ATLAS_ROLE", "").strip().lower() == "both":
+        slugs.append("arch")
+        pj = c.get("ATLAS_PROJECT", "").strip().lower()
+        if pj:
+            slugs.append(f"{pj}-arch")
     if EXTRA_SLUGS.exists():
         slugs += [l.strip() for l in EXTRA_SLUGS.read_text().splitlines() if l.strip()]
     return slugs

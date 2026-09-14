@@ -98,6 +98,12 @@ Your own unpushed work never triggers it.
    `- [ ] @nav — <ask> (from <slug>, <date>) — components/<slug>/docs/needs/<file>`
    Do **not** edit the component's file to mark it mirrored — it is their outbox;
    dedupe by what the bridge already links.
+   **Mirror from the register, not from memory** (1.27.5): `~/.atlas/needs-open.md`
+   (and the estate register) lists every `to: nav` need in this vault; a `nav-*.md`
+   that never reached the bridge is your sweep failing, and it is visible there.
+   **When the operator decides, record the ADR with `responds_to:` naming the need** —
+   that is what marks it answered in every briefing so the raiser can retire it. A
+   decision without `responds_to:` leaves the ask open forever.
    **Mirror only asks that genuinely need the human.** A `to: nav` ask that is really
    for another component — one seat trying to reach another through you — does not go on
    the bridge. Note back to the asking seat (in your reply to its need) that it should
