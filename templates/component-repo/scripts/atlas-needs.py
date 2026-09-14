@@ -152,7 +152,47 @@ def refresh(explicit_slugs: str | None) -> int:
     OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"atlas-needs: {len(mine)} open need(s) addressed to {', '.join(slugs)} -> {OUT}",
           file=sys.stderr)
+    refresh_consumers(slugs)
     return 0
+
+
+CONS = STATE / "consumers.md"
+
+
+def edges_register_url() -> str:
+    return conf(REPO / ".atlas.conf").get("ATLAS_EDGES_REGISTER", "") \
+        or os.environ.get("ATLAS_EDGES_REGISTER", "")
+
+
+def refresh_consumers(slugs: list[str]) -> None:
+    """Cross-vault CONSUMERS (method 1.28, agent-compile finding): a provider cannot see,
+    from its own vault, which other vaults pin its contracts — an absent edge and no
+    consumer look identical. If the estate publishes an edges register (every vault's
+    external: entries: {vault, consumer, provider, interface, pinned}), list the entries
+    whose provider is one of this seat's slugs. Inert without the register."""
+    url = edges_register_url()
+    if not url:
+        return
+    try:
+        reg = fetch(url)
+    except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError) as e:
+        print(f"atlas-needs: consumers refresh failed ({e}); keeping the existing file",
+              file=sys.stderr)
+        return
+    mine = [e for e in reg.get("edges", [])
+            if str(e.get("provider", "")).lower() in [s.lower() for s in slugs]]
+    L = [f"# Contracts of this seat ({', '.join(slugs)}) pinned in other vaults", "",
+         f"_Estate edges register dated {str(reg.get('updated',''))[:10]}. "
+         f"**{len(mine)} cross-vault consumer edge(s).** Who breaks if you change an "
+         "interface: these, plus this vault's own edges._", ""]
+    if mine:
+        L += ["| interface | consumer | vault | pinned |", "|---|---|---|---|"]
+        L += [f"| `{e.get('interface','?')}` | {e.get('consumer','?')} | {e.get('vault','?')} | "
+              f"{e.get('pinned','unpinned')} |" for e in mine]
+    else:
+        L.append("_none — no other vault pins a contract of yours (as far as the register knows)._")
+    STATE.mkdir(parents=True, exist_ok=True)
+    CONS.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
 def show() -> int:

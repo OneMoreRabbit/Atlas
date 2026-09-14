@@ -43,19 +43,37 @@ P=$(printf '%s' "$P" | tr '\\' '/')
 V=$(printf '%s' "$ATLAS_VAULT" | tr '\\' '/')
 R=$(printf '%s' "$ATLAS_REPO_ROOT" | tr '\\' '/')
 
-# Only police writes belonging to THIS repo. A seat that launches in the clone
-# parent registers one guard per repo it holds (decisions/0002); without this,
-# sibling repo A's guard would deny a legitimate write in sibling repo B.
-case "$P" in
-  "$R"/*) ;;
-  /*) exit 0 ;;                                   # absolute, outside this repo
-esac
+# Which checkouts are "the vault"? Not only $ATLAS_VAULT (the .atlas clone inside the
+# code repo): a both-hats or arch seat edits the SIBLING checkout in its launch dir
+# (Atlas-<P> beside Nav-<P>, 1.24.3), and a guard that governed one while the seat wrote
+# the other was inert on exactly the writes it exists for — while --verify said PASS
+# (DiscoCat finding, 2026-09-08). Resolve every candidate the arch scripts already know:
+# $ATLAS_VAULT, .atlas-arch.conf, and any launch-dir sibling carrying registry/io-graph.yml.
+VAULTS="$V"
+LD=$(printf '%s' "${ATLAS_LAUNCH_DIR:-}" | sed "s|^\$HOME|$HOME|" | tr '\\' '/')
+if [ -n "$LD" ] && [ -d "$LD" ]; then
+  if [ -f "$LD/.atlas-arch.conf" ]; then
+    _av=$(sed -n 's/^ATLAS_VAULT="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$LD/.atlas-arch.conf" | tr -d '\r' | head -1)
+    [ -n "$_av" ] && VAULTS="$VAULTS
+$_av"
+  fi
+  for _d in "$LD"/*/; do
+    [ -f "${_d}registry/io-graph.yml" ] && VAULTS="$VAULTS
+${_d%/}"
+  done
+fi
 
-case "$P" in
-  *"/$V/"*) REL=${P#*"/$V/"} ;;
-  "$V"/*)   REL=${P#"$V"/}   ;;
-  *) exit 0 ;;                                    # not a vault write
-esac
+# Find the vault this write lands in (if any). Writes outside every vault — the seat's
+# own code, other repos — are not the guard's business.
+REL=""
+for _vr in $(printf '%s\n' "$VAULTS" | sort -u); do
+  [ -n "$_vr" ] || continue
+  case "$P" in
+    *"/$_vr/"*) REL=${P#*"/$_vr/"}; break ;;
+    "$_vr"/*)   REL=${P#"$_vr"/};   break ;;
+  esac
+done
+[ -n "$REL" ] || exit 0                          # not a vault write
 
 # Both-hats mode (1.24.5, orchestrator brief): a single-seat project's one agent is its
 # vault's architecture AND its component's author. DECLARED, never inferred —

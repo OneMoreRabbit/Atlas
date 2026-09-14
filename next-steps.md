@@ -1,19 +1,18 @@
 ---
 title: Next steps
 owner: architecture (@atlas method seat)
-updated: 2026-09-13
+updated: 2026-09-14
 ---
 
 # Next steps
 
 ## Now (in flight)
-- Nothing in flight on the method. Last release **v1.27.1** (cross-vault contracts read in place). `dev` == `main`.
-- The method seat now has an outbox (`needs/`); first finding issued to agent-eco.
+- Nothing in flight. **v1.28.0 released** (estate push): eight surfaced findings + PRs #9/#10. `dev` == `main`.
+- Outbox: one need to the orchestrator (publish `registries/edges.json`); one response to five seats.
 
 ## Blocked on @nav
-- Relay `needs/atlas-agenteco-needs-channel-misuse-finding-v0_1.md` to the AgentEco arch.
+- Roll the estate to **v1.28.0** (pin exactly `'1.28.0'`; canary AgentEco).
 - Review/edit the product-seat proposal (`Nav-Atlas/_bridge/threads/product-seat-proposal.md`).
-- Roll the estate to v1.27.1 when ready (estate is on 1.27.0).
 
 ## Next release ships when
-- @nav calls the next estate push; 1.27.x patches accumulate on `main` until then.
+- @nav calls the next estate push; 1.28.x patches accumulate on `main` until then.

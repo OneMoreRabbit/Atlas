@@ -195,6 +195,21 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    - copy `scripts/` wholesale. The scripts are **byte-identical in every component
      repo**; `atlas-sync.sh` checksums them against the method version the vault pins and
      warns on drift — a hand-edited copy is detected, not trusted (AAC-method §8);
+
+     **Verifying a refresh: hash against the tag, not against the working tree.**
+     After a method re-pin, do not confirm your scripts by diffing
+     `.atlas-method/templates/component-repo/scripts/` — that tree may not have moved
+     yet. Compare against the named ref instead:
+
+     ```sh
+     git -C .atlas-method cat-file blob "v<pin>^{commit}:templates/component-repo/scripts/<name>"
+     ```
+
+     *Why (agent-eco, sync-compile, 1.26 roll):* a seat diffed the working tree in the
+     same turn `atlas-sync` first reported the new pin, read it before the checkout had
+     updated, got **five false SAMEs**, and reported no action needed. **The pin line is
+     not evidence the tree has moved** — it says what the vault asks for, not what is on
+     disk. Hashing against the tag cannot go stale in that window;
    - copy `.atlas.conf.example` → `.atlas.conf` and set the only two per-repo values:
      `SLUG` and `ATLAS_VAULT_REMOTE`. Commit it — it is configuration, not a secret;
    - copy `AGENTS.md.template` → `AGENTS.md`, substituting `<slug>` and `<Project>`, and
@@ -222,7 +237,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    guard CI, so its PAT carries **Actions: Read** alongside its Contents and
    Pull-request permissions. Without it every publish ends "outcome unknown" — the
    protocol's last step becomes unverifiable, which is the same class of defect as a
-   guard that cannot run. Read results with `gh run list --commit <sha>` and
+   guard that cannot run. Read results with `gh run list --commit "$(git rev-parse HEAD)"` — the
+   FULL sha: given a short one it prints nothing and exits 0, a silent false "no run" (DiscoCat
+   finding) — and
    `gh run view`; **`gh pr checks` can never work** — the Checks permission is not
    grantable on fine-grained PATs, so the check-runs API always 403s (verified by the
    orchestrator, 2026-08-30). Issuing and rotating tokens is estate work (the
@@ -264,6 +281,11 @@ project's capability. You need **no access to their vault, ever**:
 4. `external:` pins are **optional bookkeeping** — they add a drift row comparing pinned
    to latest. Delivery is what makes content readable; a pin is what makes a version
    deliberate.
+
+**Your cross-vault consumers are in your briefing too** (1.28): `~/.atlas/consumers.md`
+lists which other vaults pin your contracts, from the estate's edges register — the
+"I provide" line in `component.md` covers this vault only. Both-hats seats also get the
+arch half of the briefing appended (review queue, estate, next-steps, bridge).
 
 **Needs from other vaults reach you** (1.27.2): your briefing includes
 `~/.atlas/needs-open.md` — needs addressed to you but filed in other vaults, read in

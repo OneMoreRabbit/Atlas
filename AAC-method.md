@@ -1,9 +1,9 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.28"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
-updated: 2026-09-11
+updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
 #   - outbox folders renamed downstream/->provides/, upstream/->needs/ (inbox-misreading hazard)
 #   - validator promoted from "optional, deferred" to the required generator of derived views
@@ -349,6 +349,53 @@ updated: 2026-09-11
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.28.0 (2026-09-14): ESTATE RELEASE — rolls up 1.27.1-1.27.3 and answers the eight
+#   surfaced findings + two PRs. (D) seat briefing skips a manifest-less member with a
+#   warning instead of blinding the whole seat; single-slug stays fail-closed.
+#   (E) atlas_init PRUNES stale pre-1.21 SessionStart context hooks (an upgraded seat
+#   emitted the seat briefing N times — 300KB); --verify fails on >1. (F) both-hats: the
+#   write guard now governs every vault checkout the seat can reach (it was inert on the
+#   sibling checkout an arch seat actually edits, --verify passing); and the union
+#   briefing exists (--emit-arch-context --arch-only appended). (C) a provider is
+#   entitled to see its cross-vault consumers: estate edges register -> consumers.md in
+#   the briefing; "I provide" no longer reads exhaustive. (G) gh run list takes the FULL
+#   sha. Merged PR #9 (installer echoes ATLAS_MODE; verify against the tag) and PR #10
+#   (see 1.27.3). Already-fixed findings retired: 1.25.1 covered the stdin hangs.
+# 1.27.3 (2026-09-14, merged PR #10 — AgentEco arch seat — three field cases against 1.26.9 in one
+#   week, from three different seats, all found while cutting first releases):
+#   - a re-stamp may RAISE or HOLD a contract's version, NEVER LOWER it. Taken as a
+#     literal assignment the one-to-one rule walks a contract backwards whenever a
+#     package version has fallen behind its own contracts, which relabels the document
+#     and silently clears outstanding re-pins. Below-current means the PACKAGE is wrong.
+#   - a re-stamp carries `created:` forward; only `updated:` moves. created: is the
+#     INTERFACE's age, not the document's - the alternative reading makes the field
+#     change meaning depending on whether a version altered any text, so it cannot be
+#     interpreted without diffing against the predecessor.
+#   - a published version is IMMUTABLE: terms never change inside one. 1.26.9 governs re-stamps
+#     (version moves, terms identical) and was silent on the opposite case. When terms change,
+#     publish a new MAJOR.MINOR at the moment they change and archive the old file unchanged -
+#     editing in place makes a consumer's pin a lie with no diff on their side, and holding the
+#     correction leaves a known-wrong contract in the field while the code that made it wrong is
+#     already on the work branch. Immutability outranks the release mapping.
+#   - `arch` is now a well-known addressee: this vault's own architecture seat, the one
+#     seat a component most often has a question for and the only one with no way to be
+#     named. The estate that found it had been told to write the project name, which the
+#     validator rejects; invisible because the wrong addressee costs nothing observable
+#     (an arch seat sweeps components' needs/ regardless - `to:` stops the FAN-OUT, not
+#     the delivery). `nav` is not the substitute: it is the human via the bridge.
+#   - the "fix the package" clause is scoped to contracts that appear in io-graph.yml.
+#     A provides/ doc nothing pins - a governance agreement - has no consumer to be wrong
+#     for, and read literally the clause demanded a spurious release to satisfy a document
+#     no one tracks. Such a doc HOLDS its version; the lowering ban still applies to it.
+#   - multi-repo components DECLARE which repo is the contract-stamping release line
+#     (io-graph `source:`); "its component's release" assumed one release line per
+#     component. Not to be resolved by inference from which docs happen to carry a
+#     `contract:` field.
+#   Field cases: sync-compile hit a contract numbered above its component and asked
+#   rather than lowering it; rbac-compile hit a package numbered below its contract and
+#   fixed the package (v0.4.1 -> v0.5.0 before tagging, avoiding dragging
+#   compiled-rbac-plan 0.5 -> 0.4 and silently clearing a re-pin outstanding since
+#   August); agent-image holds v0.3.0 and v0.8.0 in two repos. §4.
 # 1.27.2 (2026-09-14, orchestrator cross-vault-needs finding + atlas-needs handover):
 #   a seat now sees needs addressed to it from OTHER vaults. Adopted the orchestrator's
 #   tool into templates/component-repo/scripts/atlas-needs.py (--refresh reads the
@@ -533,6 +580,21 @@ components/<slug>/
 > external services exist is the estate's to publish — a service directory delivered to
 > `reference/` — and which of them this project uses is the architecture session's to
 > declare; a component that needs an undeclared one asks its arch seat via a proposal.
+>
+> **`arch` addresses your own vault's architecture seat** (added 1.27.2, on an AgentEco
+> finding). The routable set was component slugs + declared externals + `nav` + `method` —
+> with **no addressee for the one seat a component most often has a question for.** That
+> seat's arch had told its components to write `agent-eco`, the project name, which the
+> validator rejects; the error surfaced only because a single doc in the whole vault used
+> it. `nav` is **not** the substitute: it is the human via the bridge, and routing a
+> technical question there both misaddresses it and pushes vault traffic through a
+> channel reserved for human judgment.
+>
+> Note what the addressee is *for* here, since it is not delivery: an arch seat sweeps
+> `components/*/docs/needs/` every session regardless of `to:`, so an ask reaches it
+> either way. Naming `arch` stops the doc **fanning out to peers** — the fail-open
+> delivery — and records who was asked. That is also why this was invisible for so long:
+> the wrong addressee cost nothing observable.
 
 > **Vault-level `needs/`.** A project may need something that belongs to **no single
 > component of it** — most commonly a dependency on another vault ("this project needs a
@@ -632,6 +694,143 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > plainly: a minor release re-stamps even a contract whose body did not change, so a
 > consumer may see one orange row on an interface that is byte-identical — git shows it is
 > unchanged and the re-pin is trivial; traceability is worth that.
+>
+> **The number is coarse; the version note is the signal** (recorded on a dprox flag, 2026-09-13).
+> Because contract versions couple to the release line, a breaking change *anywhere* in a component —
+> a config key removed, say — re-stamps contracts it did not touch, and a consumer reading only the
+> number cannot tell an interface change from an elsewhere change: `0.1 → 0.2` looks the same either
+> way. That is accepted, not accidental — and it is why a re-stamped contract **carries a version note
+> saying which kind of bump it was** (*"terms unchanged, release-coupled"* versus a real change). The
+> note, not the number, is what a consumer's read decision runs on.
+
+> **A re-stamp may raise or hold a contract's version, never lower it** (amendment
+> 2026-09-13, on three field cases in one week from the AgentEco estate). The
+> one-to-one rule reads as an assignment, and taken literally it walks a contract
+> *backwards* whenever a component's package version has fallen behind its own
+> contracts. Lowering is never right, for two reasons worse than the untidiness:
+>
+> 1. **It relabels the document.** A contract at `0.5` specifying a field that `0.4`
+>    explicitly did not document cannot be re-stamped `0.4` — the number would name
+>    a release whose contract said the opposite.
+> 2. **It silently clears outstanding re-pins.** Consumers still pinned at the lower
+>    number flip from *drift* to *aligned* with nobody reading anything. Drift that
+>    resolves itself is worse than no drift report at all, because the next real one
+>    is not believed.
+>
+> So: compute the release's `MAJOR.MINOR`; **above** the contract's current version,
+> re-stamp; **equal**, hold; **below**, the *package version is the thing that is
+> wrong* — stop, fix the package, release the corrected number. A contract numbered
+> above its component is a signal that a MINOR-level interface change shipped as a
+> PATCH at some point: a §4 violation already recorded in the contract and not yet
+> in the package.
+
+> **A published version is immutable. Terms never change inside one** (amendment 2026-09-13, on the
+> first live case: a contract whose terms became *materially wrong* mid-development, not at a release).
+> The rule above governs **re-stamps** — a version moving while the terms stay identical — and says
+> nothing about the opposite case, which is the dangerous one. When **terms** change, publish a **new
+> version at the moment the terms change**, and archive the old file unchanged. Do **not** edit the
+> text of a version a consumer is pinned to, and do **not** hold a correction until the next release:
+>
+> - Editing in place means a consumer pinned at `0.3` **reads different terms than they pinned**,
+>   which is the single thing pinning exists to prevent. Their pin becomes a lie with no diff visible
+>   on their side.
+> - Holding the correction leaves a **known-wrong contract in the field** for longer, and the code
+>   that made it wrong is usually already on the work branch — so the window is open either way.
+>
+> **Immutability of a pinned version outranks the one-to-one release mapping.** Publish the next
+> `MAJOR.MINOR` immediately (compatible addition → minor, breaking → major, §4 as normal); the
+> component's next release then carries that number and the mapping is satisfied without a re-stamp.
+> If the release lands on a *higher* number than the contract reached, re-stamp up to it at release —
+> that is an ordinary re-stamp and the never-lower rule applies.
+
+> **Immutable means byte-immutable — reference repairs included. Fix forward.** *(Asked by a component
+> seat the same day the rule landed: two of their published contracts carry `[[...]]` links whose targets
+> moved vaults. A link repair is plainly not a term change — and "plainly not" is the reasoning that
+> nearly had them edit terms in place two hours earlier.)*
+>
+> **Do not edit a published version at all.** A dangling link in a published version is **not a defect;
+> it is an accurate record.** That document *did* reference `[[agent-shares-architecture-v0_2]]` when it
+> was published, and repairing the link would make it claim a reference **it never made** — a small
+> falsification of exactly the kind immutability exists to prevent. The reader is not helped by a
+> corrected history; they are helped by a current version that points somewhere real.
+>
+> So: **the successor version carries the corrected reference**, using the convention that survives
+> re-stamps — *name the interface and its owner, not the versioned filename* (see below). And the
+> practical reason to hold the line rather than carve out "obviously safe" edits: **any carve-out needs
+> adjudicating per edit, and a rule that needs adjudicating decays.** The whole value of "a published
+> version is immutable" is that it requires no judgement.
+>
+> **Corollary — cross-references should not encode a version.** Under the re-stamp rule every contract
+> filename moves at every release, so a wikilink carrying `-vX_Y` is *a pointer with an expiry date*. Name
+> the parts that do not move: the interface and the component that owns it. A vault sweep found **45**
+> dangling versioned links, 14 of them in live documents, and **the validator checks `to:` and
+> `responds_to:` but never `[[...]]`** — so the densest cross-reference mechanism in a vault is the one
+> with no check behind it. Worth a warn-only check.
+
+> **Between an io-graph merge and CI's regeneration, every briefing is confidently wrong — and the
+> window must declare itself.** *(agent-compile, from a clean clone inside the ~2-minute window after
+> an edge removal: their briefing served the deleted edge as an orange re-pin prompt — the exact action
+> the removal comment forbade — with a provenance line naming a fresh commit. "The staleness is
+> invisible precisely because the source it names is fresh.")* An edge change is authoritative in
+> `io-graph.yml` at merge but *reaches seats* only when `.compiled/` regenerates; nothing marks the
+> gap. Spec for the fix, not yet built: the compiled manifests carry the io-graph blob hash they were
+> generated from, and `--emit-context` compares it against the checkout's `io-graph.yml` — on mismatch
+> the briefing opens with a declared-degradation line ("registry views mid-regeneration; edge facts may
+> be stale — re-sync in a minute") instead of silence. Same shape as atlas-sync's exit 3: continue,
+> but never claim fresh.
+
+> **An archived version is byte-identical; supersession is recorded only in the successor.** *(Ruled
+> when one vault did both in one day — stamped `status: superseded` onto morning archives, archived
+> byte-identical in the evening.)* The test is the ratification precedent: did the document say
+> *superseded* when it was published? No — so stamping it backward makes the record claim a state it
+> never carried, exactly the falsification byte-immutability exists to prevent, however true the stamp
+> is *now*. The fact "X is superseded by Y" has **one home: Y's `supersedes:` frontmatter** (restate
+> nothing; point) — and location carries the rest: a file under `archive/` announces its own status.
+> Existing stamped archives stay as they are; editing archives to repair the convention would violate
+> the convention.
+>
+> **And the drift row must say which kind of orange it is.** The generated label is computed from
+> version distance alone, so *"re-pin when convenient"* renders identically for a re-stamp (read
+> nothing) and a terms correction (read first) — a signal that says the same thing about "nothing
+> changed" and "a claim you relied on was wrong" carries none of the information a consumer needs from
+> it. The emitting contract **declares the class** (`repin: restamp | terms-change`, frontmatter, §10 —
+> declared, not inferred from diffs), and the validator renders the words to match. Absent key renders
+> the old wording.
+
+> **A re-stamp carries `created:` forward; only `updated:` moves.** `created:` is the
+> **interface's** age — when this contract was first published, carried across every
+> version of it — not the date this particular document was written. The alternative
+> reading (the document's own date, with the no-reset rule applying only to *pure*
+> re-stamps) makes the field change meaning depending on whether a version happened to
+> alter any text, so a reader cannot tell what a `created:` date denotes without
+> diffing the contract against its predecessor. A field you must diff to interpret is
+> not worth reading. The date a given version landed is what `updated:` and the
+> changelog are for. This is the fork a seat lands on when re-stamping a contract whose
+> body *did* change, so it is stated here rather than left to judgement.
+
+> **The "fix the package" clause applies only to contracts in `io-graph.yml`** (scoping
+> amendment, raised by `sync-compile` on first use of the rule above). "Below the
+> contract's current version ⇒ the package is wrong" is right for a contract **with
+> consumers**. A `provides/` document that is *not* an io-graph edge interface — a
+> governance agreement, a schema accord, anything nothing pins — has no consumer to be
+> wrong for, and read literally the clause would demand a **spurious release** of the
+> component purely to satisfy a document no one tracks. Their case:
+> `sync-compile-registry-schema-agreement`, `status: agreement`, at `1.0`, pinned by
+> nobody, which would have forced a `1.0` release of `sync-compiler`. Such a document
+> **holds its version**; the lowering prohibition still applies to it, the release
+> obligation does not.
+
+> **Multi-repo components: declare which repo is the release line.** "Its
+> component's release" assumes one release line per component. A component with two
+> repos has two, and the rule is ambiguous on its face — a seat holding `v0.3.0` in
+> one repo and `v0.8.0` in another cannot derive from the method which number stamps
+> its `provides/`. Resolve it by **declaring, not inferring** (§10): the component's
+> `source:` in `io-graph.yml` names the release line that stamps contracts, and a
+> second repo is declared alongside it as **not** a contract-stamping line. If a
+> second repo publishes contracts of its own, it is a second component, not a second
+> repo. Do **not** resolve it by observing that the other repo's docs happen to carry
+> no `contract:` field and no edge — that is true only until someone adds one, and it
+> is not readable from the vault.
 - The **live folder holds only current versions** (one file per interface). Retired
   MAJOR/MINOR milestones live in `archive/`, viewable in-vault. Git holds everything else.
 
@@ -774,6 +973,16 @@ carries that file at every start and compaction; the Stop guard's `--show` surfa
 *change* once at turn end (exit 2 — an exit-0 print never reaches the model). It never
 wakes a seat: the file is written on a timer, and the guard speaks only inside a turn
 already underway. A single-vault project sets no register and the tool stays inert.
+**A provider is entitled to see its cross-vault consumers** (1.28, agent-compile
+finding). Under read-in-place the edge lives in the *consumer's* `external:` — correct,
+but from the provider's vault an absent edge and no consumer look identical, and
+`component.md`'s "I provide" line read as exhaustive when it was not. *Who breaks if I
+change this?* is the question versioning exists to answer, so the provider must be able
+to. The mechanism is the same as for needs: the estate publishes an **edges register**
+(every vault's `external:` entries); `atlas-needs.py --refresh` writes the provider's
+slice to `~/.atlas/consumers.md`; the briefing carries it; the "I provide" line now says
+it lists in-vault consumers only. Inert without the register.
+
 **Canonical addressing:** `to:` is a slug or a YAML list of slugs (`to: [a, b]`); the
 router tolerates `a; b` and trailing punctuation, but the validator warns so a naive
 sweep never mis-routes. A response may name the need it answers with `responds_to:`,
@@ -888,6 +1097,21 @@ nothing to restore them.
 > build it** — do not develop against an assumed problem — and **test against the real
 > working environment and its real upstream contracts, never a fixture that encodes a
 > state you have not verified.** A green test over a fiction is not evidence.
+
+> **A seat briefing is not all-or-nothing** (1.28, arc-platform finding): a member with
+> no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is
+> skipped with a warning naming it, and the other members are briefed. A component
+> asking for *its own* briefing and lacking a manifest still fails closed (retrieval
+> invariant). The distinction is "I cannot brief you" versus "I cannot brief one of your
+> siblings"; the second must never blind the first.
+
+> **A both-hats seat gets the union briefing** (1.28, DiscoCat finding): the component
+> briefing plus the arch half — review queue, estate and drift, `next-steps.md`, the
+> bridge — via `--emit-arch-context --arch-only`, deduplicated against what the component
+> briefing already carries. And the write guard now governs **every** vault checkout the
+> seat can reach (`$ATLAS_VAULT`, `.atlas-arch.conf`, launch-dir siblings by io-graph
+> fingerprint) — it had governed only the `.atlas` clone while a both-hats seat edited the
+> sibling checkout, inert on exactly the writes it exists for, with `--verify` passing.
 
 > **Development modes — supervised or autonomous** (1.26.10). A seat declares its
 > posture in `.atlas.conf` (`ATLAS_MODE`, default **supervised**), the same way it
