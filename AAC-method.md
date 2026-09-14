@@ -1,3 +1,12 @@
+> **A seat holding several publishing components shares one write guard** (1.28.3,
+> arc-platform). When a seat's repos are *different* components (a handover or split), each
+> repo's per-repo write guard allowed only its own slug, so two guards on one launch dir
+> denied each other's outbox and the seat could write to neither. Now the write guard
+> allows the **union** of the slugs wired at the launch dir, discovered from the sibling
+> `.atlas.conf`s as the briefing discovers seat members; `atlas_init` installs **one**
+> guard of each kind per launch dir (`--verify` fails on more than one). Scope stays as
+> narrow as before for anything outside the seat's own slugs.
+
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
@@ -349,6 +358,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.3 (2026-09-14, arc-platform): a seat holding two DIFFERENT publishing
+#   components could write to neither outbox (two per-repo write guards, each scoped to
+#   its own slug, denied the other's). The write guard now allows the UNION of the launch
+#   dir's wired slugs; atlas_init installs ONE hook of each kind per launch dir (prunes
+#   duplicates; --verify fails on >1 write guard). Scope unchanged outside own slugs.
 #   1.28.2 (2026-09-14, arc-platform + AgentEco field findings): (ARC) the arch alignment
 #   gate now fast-forwards silently past a pure derived-view regen echo (7 of 9 firings
 #   were noise); atlas_init --arch prefers the pinned .atlas-method for ATLAS_METHOD,
