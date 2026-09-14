@@ -165,7 +165,7 @@ def edges_register_url() -> str:
 
 
 def refresh_consumers(slugs: list[str]) -> None:
-    """Cross-vault CONSUMERS (method 1.28, agent-compile finding): a provider cannot see,
+    """Cross-vault CONSUMERS (method 1.27.4, agent-compile finding): a provider cannot see,
     from its own vault, which other vaults pin its contracts — an absent edge and no
     consumer look identical. If the estate publishes an edges register (every vault's
     external: entries: {vault, consumer, provider, interface, pinned}), list the entries

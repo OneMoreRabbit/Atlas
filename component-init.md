@@ -282,7 +282,7 @@ project's capability. You need **no access to their vault, ever**:
    to latest. Delivery is what makes content readable; a pin is what makes a version
    deliberate.
 
-**Your cross-vault consumers are in your briefing too** (1.28): `~/.atlas/consumers.md`
+**Your cross-vault consumers are in your briefing too** (1.27.4): `~/.atlas/consumers.md`
 lists which other vaults pin your contracts, from the estate's edges register — the
 "I provide" line in `component.md` covers this vault only. Both-hats seats also get the
 arch half of the briefing appended (review queue, estate, next-steps, bridge).

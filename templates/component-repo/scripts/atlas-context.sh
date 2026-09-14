@@ -164,7 +164,7 @@ if [ -s "$NEEDS_FILE" ]; then
   OUT=$(printf '%s\n\n---\n\n# Needs addressed to me from other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
 fi
 
-# Both hats (1.28, DiscoCat finding): a seat that is ALSO the vault's architecture was
+# Both hats (1.27.4, DiscoCat finding): a seat that is ALSO the vault's architecture was
 # briefed purely as a component and lost the arch half — review queue, estate picture,
 # next-steps, the bridge — and re-oriented after compaction as a component only. Append
 # the arch half (minus what this briefing already carries) so the union mode has a union
@@ -174,7 +174,7 @@ if [ "${ATLAS_ROLE:-component}" = "both" ] && printf '%s' "$HELP" | grep -q -- '
   case "$ARCH_HALF" in "# ATLAS-CONTEXT"*) OUT=$(printf '%s\n\n---\n\n%s' "$OUT" "$ARCH_HALF") ;; esac
 fi
 
-# Cross-vault consumers (1.28): contracts this seat publishes that OTHER vaults pin —
+# Cross-vault consumers (1.27.4): contracts this seat publishes that OTHER vaults pin —
 # invisible from here otherwise. atlas-needs.py --refresh writes ~/.atlas/consumers.md
 # from the estate edges register (when the estate publishes one); carry it.
 CONS_FILE="${HOME:-~}/.atlas/consumers.md"

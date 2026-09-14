@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.28"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,7 +349,7 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
-# 1.28.0 (2026-09-14): ESTATE RELEASE — rolls up 1.27.1-1.27.3 and answers the eight
+#   1.27.4 (2026-09-14): answers the eight
 #   surfaced findings + two PRs. (D) seat briefing skips a manifest-less member with a
 #   warning instead of blinding the whole seat; single-slug stays fail-closed.
 #   (E) atlas_init PRUNES stale pre-1.21 SessionStart context hooks (an upgraded seat
@@ -973,7 +973,7 @@ carries that file at every start and compaction; the Stop guard's `--show` surfa
 *change* once at turn end (exit 2 — an exit-0 print never reaches the model). It never
 wakes a seat: the file is written on a timer, and the guard speaks only inside a turn
 already underway. A single-vault project sets no register and the tool stays inert.
-**A provider is entitled to see its cross-vault consumers** (1.28, agent-compile
+**A provider is entitled to see its cross-vault consumers** (1.27.4, agent-compile
 finding). Under read-in-place the edge lives in the *consumer's* `external:` — correct,
 but from the provider's vault an absent edge and no consumer look identical, and
 `component.md`'s "I provide" line read as exhaustive when it was not. *Who breaks if I
@@ -1098,14 +1098,14 @@ nothing to restore them.
 > working environment and its real upstream contracts, never a fixture that encodes a
 > state you have not verified.** A green test over a fiction is not evidence.
 
-> **A seat briefing is not all-or-nothing** (1.28, arc-platform finding): a member with
+> **A seat briefing is not all-or-nothing** (1.27.4, arc-platform finding): a member with
 > no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is
 > skipped with a warning naming it, and the other members are briefed. A component
 > asking for *its own* briefing and lacking a manifest still fails closed (retrieval
 > invariant). The distinction is "I cannot brief you" versus "I cannot brief one of your
 > siblings"; the second must never blind the first.
 
-> **A both-hats seat gets the union briefing** (1.28, DiscoCat finding): the component
+> **A both-hats seat gets the union briefing** (1.27.4, DiscoCat finding): the component
 > briefing plus the arch half — review queue, estate and drift, `next-steps.md`, the
 > bridge — via `--emit-arch-context --arch-only`, deduplicated against what the component
 > briefing already carries. And the write guard now governs **every** vault checkout the

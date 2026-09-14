@@ -642,7 +642,7 @@ def gen_component_block(slug, graph, rows, names) -> str:
     lines.append("- **Upstream (I depend on):** " + ("; ".join(fmt(r, r["from"]) for r in up) or "_none_"))
     lines.append("- **Downstream (depend on me):** " + ("; ".join(fmt(r, r["to"]) for r in down) or "_none — terminal sink_"))
     lines.append("- **I provide** (`docs/provides/`, consumed in this vault): " + (", ".join(f"`{r['interface']}`" for r in down) or "_none consumed in this vault_")
-                 + " — consumers in OTHER vaults are not listed here; see the briefing's cross-vault consumers (1.28)")
+                 + " — consumers in OTHER vaults are not listed here; see the briefing's cross-vault consumers (1.27.4)")
     lines.append("- **I read:** providers' `docs/provides/` above; my consumers' `docs/needs/` for feedback.")
     return "\n".join(lines)
 
@@ -1039,7 +1039,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                       "manifests must be committed (AAC-method §5); regenerate with the "
                       "validator (no flags) on the vault's default branch.", file=sys.stderr)
                 return 2                       # a component asking for ITS OWN briefing: fail closed
-            # A seat briefing is not all-or-nothing (1.28, arc-platform finding): one member
+            # A seat briefing is not all-or-nothing (1.27.4, arc-platform finding): one member
             # not yet registered — or registered but its regen not yet run — must not blind
             # the seat's other components. Skip it, say so, brief the rest.
             print(f"ATLAS-CONTEXT: WARNING — no compiled manifest for seat member `{s}` "
@@ -1355,7 +1355,7 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
     if arch_only:
         # a both-hats seat's component briefing already carries the constitution, the
         # architecture index, reference, externals and comms — emit only the ARCH half
-        # (1.28, DiscoCat finding: the union mode had no union briefing)
+        # (1.27.4, DiscoCat finding: the union mode had no union briefing)
         sections = ["# ATLAS-CONTEXT — arch half (both-hats seat)", "",
                     "> You also hold this vault's architecture. Your review queue, the "
                     "estate picture, next-steps and the bridge are below; the constitution "
@@ -1544,7 +1544,7 @@ if __name__ == "__main__":
     ap.add_argument("--arch-only", action="store_true",
                     help="with --emit-arch-context: only the arch half (review queue, estate, "
                          "next-steps, bridge) — for a both-hats seat appending it to its "
-                         "component briefing (1.28)")
+                         "component briefing (1.27.4)")
     ap.add_argument("--emit-arch-context", action="store_true",
                     help="emit the ARCH SEAT's reorientation briefing (no slug); for the "
                          "arch seat's own SessionStart hook (method 1.23)")
