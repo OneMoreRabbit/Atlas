@@ -1,12 +1,3 @@
-> **A seat holding several publishing components shares one write guard** (1.28.3,
-> arc-platform). When a seat's repos are *different* components (a handover or split), each
-> repo's per-repo write guard allowed only its own slug, so two guards on one launch dir
-> denied each other's outbox and the seat could write to neither. Now the write guard
-> allows the **union** of the slugs wired at the launch dir, discovered from the sibling
-> `.atlas.conf`s as the briefing discovers seat members; `atlas_init` installs **one**
-> guard of each kind per launch dir (`--verify` fails on more than one). Scope stays as
-> narrow as before for anything outside the seat's own slugs.
-
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
@@ -1186,6 +1177,15 @@ nothing to restore them.
 > asking for *its own* briefing and lacking a manifest still fails closed (retrieval
 > invariant). The distinction is "I cannot brief you" versus "I cannot brief one of your
 > siblings"; the second must never blind the first.
+
+> **A seat holding several publishing components shares one write guard** (1.28.3,
+> arc-platform). When a seat's repos are *different* components (a handover or split), each
+> repo's per-repo write guard allowed only its own slug, so two guards on one launch dir
+> denied each other's outbox and the seat could write to neither. Now the write guard
+> allows the **union** of the slugs wired at the launch dir, discovered from the sibling
+> `.atlas.conf`s as the briefing discovers seat members; `atlas_init` installs **one**
+> guard of each kind per launch dir (`--verify` fails on more than one). Scope stays as
+> narrow as before for anything outside the seat's own slugs.
 
 > **A both-hats seat gets the union briefing** (1.27.4, DiscoCat finding): the component
 > briefing plus the arch half — review queue, estate and drift, `next-steps.md`, the
