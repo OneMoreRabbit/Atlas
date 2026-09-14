@@ -857,7 +857,11 @@ def names_slug_exactly(value: str, slug: str) -> bool:
     return slug.lower() in addressee_tokens(value)
 
 
-RETIRED_STATUSES = ("superseded", "resolved", "closed", "done")
+# "answered" joined 2026-09-14 (dprox's live specimen: a brief at `status: answered` in
+# archive/ served as OPEN by the estate register) — decisions/0005 is literally "needs
+# carry answered state", and the retired set never included the word. Safe both ways:
+# "unanswered" matches neither prefix nor token.
+RETIRED_STATUSES = ("superseded", "resolved", "closed", "done", "answered")
 
 
 def is_retired(fm: dict) -> bool:
