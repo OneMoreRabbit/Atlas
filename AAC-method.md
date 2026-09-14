@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.28"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,17 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.28.0 (2026-09-14): ESTATE RELEASE — rolls up the whole 1.27.x line. Cross-vault
+#   contracts read in place (vault-read token, delivery retired); cross-vault NEEDS
+#   visible to their addressee (atlas-needs.py — refresh reads the estate register, the
+#   Stop guard surfaces changes) and a provider sees its cross-vault CONSUMERS; the eight
+#   surfaced findings fixed (seat-briefing skip-a-member, hook pruning, both-hats write
+#   guard + union briefing, gh full-sha) and PRs #9/#10 merged; four version spaces;
+#   ONE arch address `<project>-arch` (bare arch warns); decisions answer nav/arch needs;
+#   `external` not `unseen`; the outbox-only source named; `to: nav` on a need deprecated
+#   (reach the human through your arch seat). New per-seat pieces since 1.27.0:
+#   scripts/atlas-needs.py + ATLAS_NEEDS_REGISTER/ATLAS_EDGES_REGISTER, and the guards
+#   already carry --show. Re-run atlas_init on components to prune stale hooks.
 #   1.27.8 (2026-09-14, orchestrator pre-release brief): (1) the OUTBOX-ONLY SOURCE named
 #   in §10 — a repo (the method seat) on the needs plane that is not a vault; tools read
 #   its needs/ AND provides/ on main. (2) responds_to may be inline OR a block list,
