@@ -2,8 +2,10 @@
 """atlas-needs — tell THIS seat what the estate has addressed to it (method 1.27.2).
 
 A seat's briefing renders needs addressed to it from inside its own vault. A need filed
-in ANOTHER vault is correctly placed (one home, the author's outbox) and structurally
-invisible to the seat that owes it — measured 2026-09-13: 58 of 78 open needs estate-wide
+in ANOTHER vault is correctly placed (one home, the author's outbox) and is EXTERNAL
+to the seat that owes it: the in-vault briefing cannot render it — a location fact, not a
+read receipt (the method has no notion of "seen"). Measured 2026-09-13: 58 of 78 open needs
+estate-wide
 (ansible-platform finding; tool designed and first deployed by the orchestrator, adopted
 here). This reads the estate's needs register, filters to this seat, and keeps a local
 file the briefing and the Stop guard read.
@@ -18,7 +20,7 @@ file at start/compaction, and --show surfaces CHANGES at turn end.
 
 NEVER WAKES A SEAT. --refresh writes a file. --show speaks only inside a turn the seat is
 already taking, as a Stop block (exit 2) — the only way a Stop hook reaches the model;
-an exit-0 print is invisible to it. Told once per change, not every turn.
+an exit-0 print never reaches it. Told once per change, not every turn.
 
 INERT WITHOUT A REGISTER. ATLAS_NEEDS_REGISTER unset (a single-vault project) → does
 nothing. Cross-vault needs only exist at estate scale, where the orchestrator publishes
@@ -138,9 +140,12 @@ def refresh(explicit_slugs: str | None) -> int:
     mine = [n for n in reg.get("needs", [])
             if str(n.get("status", "open")).lower() == "open"
             and addressed_to_me(n.get("addressee", ""), slugs)]
+    ext = sum(1 for n in mine if n.get("vault"))
     L = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
-         f"_Estate register dated {reg_date}. **{len(mine)} open.** Read each where it lives "
-         "(you hold the vault-read token); answer in your own provides/ with `responds_to:`._", ""]
+         f"_Estate register dated {reg_date}. **{len(mine)} open**, all EXTERNAL — filed in "
+         "other vaults, so this vault's briefing cannot render them (a location fact, not a "
+         "read state). Read each where it lives (you hold the vault-read token); answer in "
+         "your own provides/ with `responds_to:`._", ""]
     try:
         age = (date.today() - datetime.strptime(reg_date, "%Y-%m-%d").date()).days
         if age > 3:
@@ -214,9 +219,9 @@ def show() -> int:
         return 0
     STAMP.write_text(cur, encoding="utf-8")
     n = cur.count("\n| ") - (1 if "| need |" in cur else 0)
-    print(f"Atlas: the estate has {max(n, 0)} open need(s) addressed to you that your own "
-          f"vault cannot show — read {OUT} (it is also in your briefing), then finish.",
-          file=sys.stderr)
+    print(f"Atlas: {max(n, 0)} EXTERNAL need(s) addressed to you — filed in other vaults, so "
+          f"your in-vault briefing cannot render them (a location fact, not unread). Read "
+          f"{OUT} (also in your briefing), then finish.", file=sys.stderr)
     return 2
 
 

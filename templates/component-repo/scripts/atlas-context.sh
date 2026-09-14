@@ -156,12 +156,12 @@ if [ -n "$FULLSHA" ]; then
 fi
 
 # Cross-vault needs (method 1.27.2): needs addressed to this seat but filed in OTHER
-# vaults are invisible to the in-vault compile. atlas-needs.py --refresh (scheduled by
+# vaults are EXTERNAL — the in-vault compile cannot render them. atlas-needs.py --refresh (scheduled by
 # the estate) keeps ~/.atlas/needs-open.md current; carry it in the briefing so a fresh
 # or compacted session sees its whole queue, not just its own vault's slice.
 NEEDS_FILE="${HOME:-~}/.atlas/needs-open.md"
 if [ -s "$NEEDS_FILE" ]; then
-  OUT=$(printf '%s\n\n---\n\n# Needs addressed to me from other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
+  OUT=$(printf '%s\n\n---\n\n# External needs — addressed to me, filed in other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
 fi
 
 # Both hats (1.27.4, DiscoCat finding): a seat that is ALSO the vault's architecture was

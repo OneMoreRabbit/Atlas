@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.27.7 (2026-09-14, orchestrator rename): a need filed in another vault is EXTERNAL,
+#   not "unseen"/"invisible" — a location fact (the in-vault briefing cannot render it),
+#   never a read receipt; the method has no notion of "seen". Wording aligned across
+#   §5, atlas-needs.py and atlas-context.sh to match the estate register.
 #   1.27.6 (2026-09-14, operator): ONE rule for the arch address — `<project>-arch`
 #   inside and across vaults; bare `arch` routes but warns (context-dependent); every
 #   briefing states its project name and arch address so seats can follow the rule.
@@ -974,8 +978,9 @@ vault while the router holds the right credential).
 
 **Cross-vault needs reach their addressee** (1.27.2, orchestrator finding + tool). The
 briefing compiles needs addressed to a seat from *its own* vault; a need filed in another
-vault — correctly, in its author's outbox — was structurally invisible to the seat that
-owed it (58 of 78 open needs estate-wide, including every need addressed to the method
+vault — correctly, in its author's outbox — is **external** to the seat that owes it: the
+in-vault briefing cannot render it (a location fact, never a read receipt — the method has
+no notion of "seen"). It was unreachable to that seat (58 of 78 open needs estate-wide, including every need addressed to the method
 seat). Now: the estate publishes a **needs register** (a derived registry, §10) and every
 seat reads it in place with the vault-read token via `scripts/atlas-needs.py` —
 `--refresh` (scheduled by the estate) writes `~/.atlas/needs-open.md`; the briefing
