@@ -349,6 +349,14 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.27.8 (2026-09-14, orchestrator pre-release brief): (1) the OUTBOX-ONLY SOURCE named
+#   in §10 — a repo (the method seat) on the needs plane that is not a vault; tools read
+#   its needs/ AND provides/ on main. (2) responds_to may be inline OR a block list,
+#   stated (the validator already reads both). (3a) arch seats addressable as
+#   <project>-arch recorded in ADR-0003. (3b) `to: nav` on a need DEPRECATED (operator
+#   ruling) — a component reaches the human through its arch seat; validator warns,
+#   ADR-0003 §4 superseded, bridge-init updated. (4) atlas-needs.py: live = not retired,
+#   not status=="open" (dropped `active`).
 #   1.27.7 (2026-09-14, orchestrator rename): a need filed in another vault is EXTERNAL,
 #   not "unseen"/"invisible" — a location fact (the in-vault briefing cannot render it),
 #   never a read receipt; the method has no notion of "seen". Wording aligned across
@@ -1585,6 +1593,31 @@ Its properties are boundaries as much as powers:
 - **Its services release like software** (§9): tagged, pinned by consumers, upgraded
   by deliberate operator-timed rolls. An estate service nobody can pin is not a
   service.
+
+### The outbox-only source — a repo on the needs plane that is not a vault
+
+The **method seat's own repo** (this one, `Atlas`) files `needs/` and publishes
+`provides/` at its root, yet has no `registry/io-graph.yml`, `components/` or
+`architecture/`. It is an **outbox-only source**: it participates fully in the needs
+plane — raising asks, answering them with `responds_to:` — without being a vault.
+
+A tool walking the needs plane must therefore treat such a repo specially, because "not
+a vault" and "unreadable vault" look identical from the outside and a vault-iterator
+skips it in silence (this cost the estate register a day of showing answered needs as
+open). The rule: **read both `needs/` and `provides/` from an outbox-only source, on its
+default branch (`main`)** — its outbox traffic commits straight to `main`, untagged (§9),
+so `dev` is the wrong place to look. The method seat is the only such source today; name
+the shape rather than hard-code the exception.
+
+A `responds_to:` value (which marks a need answered) is **either an inline reference or a
+YAML block list**; a closure check reads both:
+
+```yaml
+responds_to: needs/x-v0_1.md      # inline
+responds_to:                      # block list — the method seat's own responses use this
+  - needs/x-v0_1.md
+  - components/y/docs/needs/z-v0_1.md
+```
 
 ### Bootstrapping from a bare clone — two ways in
 

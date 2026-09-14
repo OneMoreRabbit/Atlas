@@ -54,10 +54,18 @@ Nav-<Project>/_bridge/
    anything addressed `@atlas` gets a turn or a tick. It reads the wider Nav vault only
    where a task or thread points it (the human's idea space stays private by default).
 
-## Component asks — routed, not direct
+## Component asks — through the arch seat (1.27.8)
 
-Component seats never write to a Nav vault. A component asking the human files it in
-**its own outbox**, where the CI guard already permits it and the PR auto-merges:
+Component seats never write to a Nav vault. A component with a question for the human
+addresses **its arch seat** (`to: <project>-arch`) — now that arch seats are addressable
+(1.27.6) — and the arch seat carries the human-needing ones to the bridge. `to: nav` on
+a component need is **deprecated** (operator ruling): a need is a durable ask between
+agents; human direction lives on the bridge, reached through arch. The validator warns
+on `to: nav`.
+
+> The earlier mechanism (below) had the component file `nav-<slug>-…` in its own outbox
+> with `to: nav` and the arch seat mirror it, because arch seats were not addressable.
+> They are now, so the component addresses arch directly. Kept as the record of why:
 
 ```
 components/<slug>/docs/needs/nav-<slug>-<topic>-vX_Y.md

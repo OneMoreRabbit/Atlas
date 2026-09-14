@@ -288,7 +288,8 @@ lists which other vaults pin your contracts, from the estate's edges register â€
 arch half of the briefing appended (review queue, estate, next-steps, bridge).
 
 **Addressing an arch seat â€” one rule** (1.27.6): always `to: <project>-arch`, your own
-vault's or another's (e.g. `agent-eco-arch`). Your briefing header names your project
+vault's or another's (e.g. `agent-eco-arch`). A **question for the human** goes to your
+own arch seat this way (not `to: nav`, deprecated 1.27.8); arch carries it to the bridge. Your briefing header names your project
 and its arch address. Bare `arch` warns; a bare project name (`to: agent-eco`) names
 nobody.
 

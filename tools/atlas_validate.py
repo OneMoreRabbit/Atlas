@@ -311,6 +311,15 @@ def addressee_warnings(graph) -> list[str]:
             continue
         if is_broadcast(named):
             continue                    # the same delivery, declared instead of implied
+        # `to: nav` on a need is deprecated (1.27.8, operator ruling): human work lives on
+        # the bridge, and a component reaches the human THROUGH its arch seat now that arch
+        # seats are addressable (<project>-arch, 1.27.6). Warn-only; still routes so nothing
+        # breaks mid-migration. Supersedes ADR-0003 §4's "nav is a valid addressee".
+        if BRIDGE_ADDRESSEE in addressee_tokens(named):
+            pn = project_name(graph)
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: nav` is deprecated; a human "
+                         f"question is addressed to your arch seat (`to: {pn + '-arch' if pn else '<project>-arch'}`), "
+                         "which carries it to the bridge. Human work does not live in a need.")
         # ONE rule for the arch address (1.27.6): `<project>-arch` everywhere. A bare `arch`
         # only means something to a reader who already knows the vault — the register,
         # cross-vault sweeps and the method seat do not. Routes (compat), but warns.

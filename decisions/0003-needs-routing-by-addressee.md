@@ -52,8 +52,17 @@ what. It does not, and should not, describe who may write to whom.
    normalise at leisure, not as a migration.
 4. **Warn on an unroutable addressee.** Routing by addressee turns a typo into silent
    non-delivery, so the validator reports any needs document whose addressee matches no
-   component (warn-only). `nav` — the human, via the bridge (AAC-method §9) — is a
-   valid addressee.
+   component (warn-only).
+
+> **Amended 1.27.8.** Two changes to point 4:
+> - **Arch seats are addressable** as `<project>-arch` (1.27.6), the one form inside and
+>   across vaults — an arch seat is not a component, so it is special-cased like `nav`.
+> - **`to: nav` on a need is deprecated** (operator ruling). Human work lives on the
+>   bridge, and a component now reaches the human *through its arch seat*
+>   (`to: <project>-arch`), which carries the question to the bridge — the path
+>   arch-seat addressability made possible. The validator warns on `to: nav` in a need;
+>   it still routes during migration. This reverses the original "`nav` is a valid
+>   addressee": a need is a durable ask between agents, and human direction is not that.
 
 Alternatives rejected at origin and confirmed here: fixing the four documents and
 changing no code (leaves unrecognised-key-means-broadcast in place, so the next document

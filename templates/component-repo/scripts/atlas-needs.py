@@ -138,7 +138,7 @@ def refresh(explicit_slugs: str | None) -> int:
         return 0
     reg_date = str(reg.get("updated", ""))[:10]
     mine = [n for n in reg.get("needs", [])
-            if str(n.get("status", "open")).lower() == "open"
+            if not str(n.get("status", "open")).lower().startswith(RETIRED)
             and addressed_to_me(n.get("addressee", ""), slugs)]
     ext = sum(1 for n in mine if n.get("vault"))
     L = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
@@ -168,6 +168,7 @@ def refresh(explicit_slugs: str | None) -> int:
     return 0
 
 
+RETIRED = ("resolved", "closed", "done", "superseded")   # a need is live unless retired (method RETIRED_STATUSES); 1.27.8
 CONS = STATE / "consumers.md"
 
 
