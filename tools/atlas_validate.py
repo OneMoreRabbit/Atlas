@@ -865,7 +865,17 @@ def is_retired(fm: dict) -> bool:
     words; the emitter just ignored all but `superseded`, so a resolved ask kept landing
     in its addressee's briefing every session, in full, forever (1.21)."""
     s = str(fm.get("status", "")).lower()
-    return any(s.startswith(w) for w in RETIRED_STATUSES)
+    # TOKEN match, not prefix and not containment (dprox, 2026-09-14): prefix missed
+    # `status: finding — resolved (dprox v0.1.1)` — the retired word was not first, so
+    # the doc kept resurfacing. Containment would have fixed that and broken the other
+    # direction: "resolved" in "unresolved" is True, silently retiring a need its
+    # raiser explicitly marked NOT done. Tokens catch both: the word must appear as a
+    # word. Punctuation is stripped so `resolved,` and `(resolved)` still count.
+    # Widen, don't replace: every previously-retired status stays retired (prefix —
+    # covers `closed-in-error`, which SHOULD stay closed and would flip live under
+    # pure tokens), plus the token match for retired words that are not first.
+    tokens = {w.strip("()[]{},.;:!—-") for w in s.split()}
+    return any(s.startswith(w) or w in tokens for w in RETIRED_STATUSES)
 
 
 def addressed_to(fm: dict, slug: str) -> bool:
