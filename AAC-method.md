@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.27"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.28"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.28.0 (2026-09-14): ESTATE RELEASE — rolls up 1.27.1-1.27.3 and answers the eight
+#   surfaced findings + two PRs. (D) seat briefing skips a manifest-less member with a
+#   warning instead of blinding the whole seat; single-slug stays fail-closed.
+#   (E) atlas_init PRUNES stale pre-1.21 SessionStart context hooks (an upgraded seat
+#   emitted the seat briefing N times — 300KB); --verify fails on >1. (F) both-hats: the
+#   write guard now governs every vault checkout the seat can reach (it was inert on the
+#   sibling checkout an arch seat actually edits, --verify passing); and the union
+#   briefing exists (--emit-arch-context --arch-only appended). (C) a provider is
+#   entitled to see its cross-vault consumers: estate edges register -> consumers.md in
+#   the briefing; "I provide" no longer reads exhaustive. (G) gh run list takes the FULL
+#   sha. Merged PR #9 (installer echoes ATLAS_MODE; verify against the tag) and PR #10
+#   (see 1.27.3). Already-fixed findings retired: 1.25.1 covered the stdin hangs.
 # 1.27.3 (2026-09-14, merged PR #10 — AgentEco arch seat — three field cases against 1.26.9 in one
 #   week, from three different seats, all found while cutting first releases):
 #   - a re-stamp may RAISE or HOLD a contract's version, NEVER LOWER it. Taken as a
@@ -961,6 +973,16 @@ carries that file at every start and compaction; the Stop guard's `--show` surfa
 *change* once at turn end (exit 2 — an exit-0 print never reaches the model). It never
 wakes a seat: the file is written on a timer, and the guard speaks only inside a turn
 already underway. A single-vault project sets no register and the tool stays inert.
+**A provider is entitled to see its cross-vault consumers** (1.28, agent-compile
+finding). Under read-in-place the edge lives in the *consumer's* `external:` — correct,
+but from the provider's vault an absent edge and no consumer look identical, and
+`component.md`'s "I provide" line read as exhaustive when it was not. *Who breaks if I
+change this?* is the question versioning exists to answer, so the provider must be able
+to. The mechanism is the same as for needs: the estate publishes an **edges register**
+(every vault's `external:` entries); `atlas-needs.py --refresh` writes the provider's
+slice to `~/.atlas/consumers.md`; the briefing carries it; the "I provide" line now says
+it lists in-vault consumers only. Inert without the register.
+
 **Canonical addressing:** `to:` is a slug or a YAML list of slugs (`to: [a, b]`); the
 router tolerates `a; b` and trailing punctuation, but the validator warns so a naive
 sweep never mis-routes. A response may name the need it answers with `responds_to:`,
@@ -1075,6 +1097,21 @@ nothing to restore them.
 > build it** — do not develop against an assumed problem — and **test against the real
 > working environment and its real upstream contracts, never a fixture that encodes a
 > state you have not verified.** A green test over a fiction is not evidence.
+
+> **A seat briefing is not all-or-nothing** (1.28, arc-platform finding): a member with
+> no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is
+> skipped with a warning naming it, and the other members are briefed. A component
+> asking for *its own* briefing and lacking a manifest still fails closed (retrieval
+> invariant). The distinction is "I cannot brief you" versus "I cannot brief one of your
+> siblings"; the second must never blind the first.
+
+> **A both-hats seat gets the union briefing** (1.28, DiscoCat finding): the component
+> briefing plus the arch half — review queue, estate and drift, `next-steps.md`, the
+> bridge — via `--emit-arch-context --arch-only`, deduplicated against what the component
+> briefing already carries. And the write guard now governs **every** vault checkout the
+> seat can reach (`$ATLAS_VAULT`, `.atlas-arch.conf`, launch-dir siblings by io-graph
+> fingerprint) — it had governed only the `.atlas` clone while a both-hats seat edited the
+> sibling checkout, inert on exactly the writes it exists for, with `--verify` passing.
 
 > **Development modes — supervised or autonomous** (1.26.10). A seat declares its
 > posture in `.atlas.conf` (`ATLAS_MODE`, default **supervised**), the same way it

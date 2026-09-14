@@ -237,7 +237,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    guard CI, so its PAT carries **Actions: Read** alongside its Contents and
    Pull-request permissions. Without it every publish ends "outcome unknown" — the
    protocol's last step becomes unverifiable, which is the same class of defect as a
-   guard that cannot run. Read results with `gh run list --commit <sha>` and
+   guard that cannot run. Read results with `gh run list --commit "$(git rev-parse HEAD)"` — the
+   FULL sha: given a short one it prints nothing and exits 0, a silent false "no run" (DiscoCat
+   finding) — and
    `gh run view`; **`gh pr checks` can never work** — the Checks permission is not
    grantable on fine-grained PATs, so the check-runs API always 403s (verified by the
    orchestrator, 2026-08-30). Issuing and rotating tokens is estate work (the
@@ -279,6 +281,11 @@ project's capability. You need **no access to their vault, ever**:
 4. `external:` pins are **optional bookkeeping** — they add a drift row comparing pinned
    to latest. Delivery is what makes content readable; a pin is what makes a version
    deliberate.
+
+**Your cross-vault consumers are in your briefing too** (1.28): `~/.atlas/consumers.md`
+lists which other vaults pin your contracts, from the estate's edges register — the
+"I provide" line in `component.md` covers this vault only. Both-hats seats also get the
+arch half of the briefing appended (review queue, estate, next-steps, bridge).
 
 **Needs from other vaults reach you** (1.27.2): your briefing includes
 `~/.atlas/needs-open.md` — needs addressed to you but filed in other vaults, read in
