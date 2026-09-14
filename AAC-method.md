@@ -349,6 +349,9 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.27.6 (2026-09-14, operator): ONE rule for the arch address — `<project>-arch`
+#   inside and across vaults; bare `arch` routes but warns (context-dependent); every
+#   briefing states its project name and arch address so seats can follow the rule.
 #   1.27.5 (2026-09-14, operator rulings): (1) cross-vault arch addressing — `arch`
 #   inside a vault, `<project>-arch` from outside (matches the estate register); optional
 #   top-level `project:` in io-graph declares the name (default derived from the vault
@@ -990,13 +993,15 @@ to. The mechanism is the same as for needs: the estate publishes an **edges regi
 slice to `~/.atlas/consumers.md`; the briefing carries it; the "I provide" line now says
 it lists in-vault consumers only. Inert without the register.
 
-**Addressing a vault's arch seat** (1.27.5). Inside a vault, `arch` names this vault's
-architecture seat. From *another* vault, address it as **`<project>-arch`** — the form the
-estate register already uses — where `<project>` is the vault's declared `project:` key in
-`registry/io-graph.yml` (top level, optional; default: derived from the vault name,
-`Atlas-AgentEco` → `agenteco`). Declare it when the estate names your project differently
-from the derivation (`project: agent-eco`), so the two never disagree. The validator
-routes both forms; a declared `external:` vault's arch is likewise `<its-project>-arch`.
+**Addressing a vault's arch seat — one rule** (1.27.6). Always **`<project>-arch`**,
+inside the vault and across vaults alike, where `<project>` is the vault's declared
+`project:` key in `registry/io-graph.yml` (top level; default: derived from the vault
+name, `Atlas-AgentEco` → `agenteco` — declare it when the estate spells you differently,
+`project: agent-eco`). A need is a document read from anywhere — the register, another
+vault's sweep, the method seat — and a bare `arch` means something only to a reader who
+already knows the vault. Every briefing states the project name and this address. Bare
+`arch` still routes (compatibility) but the validator warns. A declared `external:`
+vault's arch is `<its-project>-arch`.
 
 **Canonical addressing:** `to:` is a slug or a YAML list of slugs (`to: [a, b]`); the
 router tolerates `a; b` and trailing punctuation, but the validator warns so a naive

@@ -311,6 +311,14 @@ def addressee_warnings(graph) -> list[str]:
             continue
         if is_broadcast(named):
             continue                    # the same delivery, declared instead of implied
+        # ONE rule for the arch address (1.27.6): `<project>-arch` everywhere. A bare `arch`
+        # only means something to a reader who already knows the vault — the register,
+        # cross-vault sweeps and the method seat do not. Routes (compat), but warns.
+        if addressee_head(named).strip().lower() == ARCH_ADDRESSEE:
+            pn = project_name(graph)
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: arch` is context-dependent; "
+                         f"write `to: {pn + '-arch' if pn else '<project>-arch'}` (one rule, in and "
+                         "across vaults)")
         # canonical form is a slug or a YAML list of slugs; `a; b` and `agent-comms;` route
         # here (token-aware) but a naive sweep elsewhere mis-reads them — warn so authors
         # converge (orchestrator finding 2026-09-13; warn-only, never a failure)
@@ -1120,6 +1128,10 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         "> (3) develop, (4) test, (5) update your own provides/ and needs/ and publish.",
         "> Code contradicting a pinned contract is a defect even if every test passes.",
     ]
+    pn = project_name(graph)
+    if pn:
+        sections.append(f"> **Project:** `{pn}` — address this vault's architecture seat as "
+                        f"`to: {pn}-arch` (the one form, inside or across vaults).")
     if seat:
         sections.append("> One briefing for every component this seat holds: shared "
                         "sections appear once; per-component sections follow (1.21).")
