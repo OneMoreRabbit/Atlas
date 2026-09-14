@@ -118,9 +118,11 @@ def conf_launch_dir(repo: Path) -> Path | None:
     return Path(raw).expanduser().resolve()
 
 
-def prune_context_hooks(launch_dir: Path, keep_root: Path) -> int:
-    """Remove every SessionStart atlas-context hook at the launch dir except the one for
-    keep_root. Returns how many were removed. Idempotent; leaves other hooks alone."""
+def prune_dup_hooks(launch_dir: Path, keep_root: Path, event: str, script: str) -> int:
+    """One <script> hook per launch dir for <event>: keep keep_root's entry, drop other
+    repos'. Seat scripts (context, write guard) cover their siblings, so one entry serves
+    the whole seat; duplicates double-inject the briefing (1.21/1.27.4) or, for the write
+    guard, deny each other's outbox (1.28.3, arc-platform). Idempotent."""
     dst = launch_dir / ".claude" / "settings.json"
     if not dst.exists():
         return 0
@@ -128,21 +130,23 @@ def prune_context_hooks(launch_dir: Path, keep_root: Path) -> int:
         data = json.loads(read(dst))
     except json.JSONDecodeError:
         return 0
-    entries = data.get("hooks", {}).get("SessionStart", [])
+    entries = data.get("hooks", {}).get(event, [])
     kept, removed = [], 0
+    pat = re.compile(r'"([^"]+)/scripts/' + re.escape(script) + r'"')
     for entry in entries:
-        hooks = entry.get("hooks", [])
-        m = [re.search(r'"([^"]+)/scripts/atlas-context\.sh"', h.get("command", "")) for h in hooks]
-        is_ctx = any(x for x in m)
-        mine = any(x and Path(x.group(1)) == keep_root for x in m)
-        if is_ctx and not mine:
+        m = [pat.search(h.get("command", "")) for h in entry.get("hooks", [])]
+        if any(x for x in m) and not any(x and Path(x.group(1)) == keep_root for x in m):
             removed += 1
             continue
         kept.append(entry)
     if removed:
-        data.setdefault("hooks", {})["SessionStart"] = kept
+        data.setdefault("hooks", {})[event] = kept
         dst.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return removed
+
+
+def prune_context_hooks(launch_dir: Path, keep_root: Path) -> int:
+    return prune_dup_hooks(launch_dir, keep_root, "SessionStart", "atlas-context.sh")
 
 
 def any_context_hook(launch_dir: Path, exclude_root: Path):
@@ -257,6 +261,10 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
                         if "atlas-context.sh" in h.get("command", ""))
         check(ctx_hooks <= 1, "exactly one SessionStart atlas-context hook at the launch dir",
               f"{ctx_hooks} found — each emits the whole seat briefing; re-run atlas_init to prune" if ctx_hooks > 1 else "")
+        wg_hooks = sum(1 for e in hooks.get("PreToolUse", []) for h in e.get("hooks", [])
+                       if "atlas-guard-write.sh" in h.get("command", ""))
+        check(wg_hooks <= 1, "exactly one write-guard hook at the launch dir",
+              f"{wg_hooks} found; two per-repo guards deny each other's outbox (1.28.3) -- re-run atlas_init" if wg_hooks > 1 else "")
         for event in ("SessionStart", "PreToolUse", "Stop"):
             cmds = [h["command"] for e in hooks.get(event, []) for h in e.get("hooks", [])
                     if "atlas-" in h.get("command", "")]
@@ -520,18 +528,25 @@ def main() -> int:
         # 1.27.4 (arc-platform finding): a pre-1.21 seat kept N per-repo SessionStart hooks,
         # and each now emits the whole SEAT briefing — 4 x 75KB, 3.6x worse than the bug
         # 1.21 fixed, silently. Skipping the add was never enough: prune the others.
-        pruned = prune_context_hooks(launch_dir, keep_root=other or repo)
-        if pruned:
-            print(f"  prune  {pruned} stale SessionStart atlas-context hook(s) at {launch_dir} "
-                  "— one seat briefing, emitted once")
+        keep = other or repo
+        for _ev, _sc, _msg in (("SessionStart", "atlas-context.sh", "one seat briefing, emitted once"),
+                               ("PreToolUse", "atlas-guard-write.sh", "one write guard (union of the seat's slugs)"),
+                               ("Stop", "atlas-guard-publish.sh", "one publish guard"),
+                               ("PreToolUse", "atlas-guard-supervise.sh", "one supervise guard")):
+            _pr = prune_dup_hooks(launch_dir, keep, _ev, _sc)
+            if _pr:
+                print(f"  prune  {_pr} duplicate {_sc} hook(s) at {launch_dir} -- {_msg}")
         if other:
-            # ONE SessionStart per launch dir (method 1.21): the context script emits a
-            # SEAT briefing covering every wired sibling repo it discovers, so a second
-            # hook would inject the whole seat twice. Guards and publish nags stay
-            # per-repo. This subsumes the 1.12 same-slug dedupe.
-            tpl["hooks"].pop("SessionStart", None)
-            print(f"  skip   SessionStart at {launch_dir} — the seat briefing is already "
-                  f"emitted from {other}; it will discover '{args.slug}' automatically")
+            # ONE hook of each kind per launch dir (1.21 for SessionStart; 1.28.3 for the
+            # guards). A sibling seat member already installed the launch-dir hooks, and
+            # the SEAT scripts discover every wired sibling — the context script briefs the
+            # whole seat, the write guard allows the slug UNION. A second repo's hooks would
+            # only double-inject the briefing or, for the write guard, deny this repo's
+            # outbox. So add none of them; the existing member's cover this repo too.
+            for _ev in ("SessionStart", "PreToolUse", "Stop"):
+                tpl["hooks"].pop(_ev, None)
+            print(f"  skip   launch-dir hooks at {launch_dir} — the seat's are already "
+                  f"installed from {other} and discover '{args.slug}' automatically")
         merge_settings(launch_dir, tpl, args.force, written, repo_root=repo)
         persist_launch_dir(repo, launch_dir, written)
         print(f"  hooks  also installed at {launch_dir}/.claude/settings.json "
