@@ -485,7 +485,7 @@ def main() -> int:
     if launch_dir and launch_dir != repo:
         tpl = hook_settings(repo, absolute=True)
         other = any_context_hook(launch_dir, exclude_root=repo)
-        # 1.28 (arc-platform finding): a pre-1.21 seat kept N per-repo SessionStart hooks,
+        # 1.27.4 (arc-platform finding): a pre-1.21 seat kept N per-repo SessionStart hooks,
         # and each now emits the whole SEAT briefing — 4 x 75KB, 3.6x worse than the bug
         # 1.21 fixed, silently. Skipping the add was never enough: prune the others.
         pruned = prune_context_hooks(launch_dir, keep_root=other or repo)
