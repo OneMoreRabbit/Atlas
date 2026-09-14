@@ -134,7 +134,18 @@ def refresh(explicit_slugs: str | None) -> int:
     try:
         reg = fetch(url)
     except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError) as e:
-        print(f"atlas-needs: refresh failed ({e}); keeping the existing file", file=sys.stderr)
+        # Never render a failed fetch as fresh (1.28.2, AgentEco): stamp the EXISTING file
+        # so --show and the briefing say the data is stale and why, rather than serving an
+        # hours-old "nothing open" as current. Continue degraded; declare it.
+        print(f"atlas-needs: refresh failed ({e}); keeping the existing file, marked stale",
+              file=sys.stderr)
+        if OUT.exists():
+            body = OUT.read_text(encoding="utf-8")
+            mark = f"> ⚠ **STALE — last refresh FAILED** ({str(e)[:80]}). This list is as of the "
+            if "STALE — last refresh FAILED" not in body:
+                lines = body.splitlines()
+                lines.insert(1, mark + "date below and may be out of date; the register was not reached.")
+                OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
     reg_date = str(reg.get("updated", ""))[:10]
     mine = [n for n in reg.get("needs", [])

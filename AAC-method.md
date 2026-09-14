@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.2 (2026-09-14, arc-platform + AgentEco field findings): (ARC) the arch alignment
+#   gate now fast-forwards silently past a pure derived-view regen echo (7 of 9 firings
+#   were noise); atlas_init --arch prefers the pinned .atlas-method for ATLAS_METHOD,
+#   warns on a non-pinned checkout, names --launch-dir in its refusal, and its verify rung
+#   proves the reorientation hook FIRES from the launch dir (not just that files exist).
+#   (validator) is_retired matches a retired word anywhere, not as a prefix, and adds
+#   `answered`/`retired`. (atlas-needs) a failed --refresh marks the file STALE rather than
+#   serving it as fresh. Canon: checks fail closed (§8, the catalogue); a re-pin certifies
+#   unchanged not true (§4). (atlas-sync exit-3 on a failed pull already shipped.)
 #   1.28.1 (2026-09-14, canary catches, orchestrator): atlas_init now copies AND
 #   --verify checks scripts/atlas-needs.py — the *.sh-only glob shipped it in 1.28.0 but
 #   never installed it, so component seats got no cross-vault needs signal while every
@@ -718,6 +727,15 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 - **`0.x`** = unstable / in development. Breaking changes allowed freely between minors.
 - **`1.0`+** = stable contract. MAJOR-is-breaking discipline applies. Crossing to `1.0` is
   the deliberate signal "this interface is now ratified."
+
+> **A re-pin certifies `unchanged`, never `true`** (1.28.2, rbac-compile). A version
+> bump and the drift check operate on a contract's bytes, never its claims: a false
+> promise rides a byte-identical re-stamp past every fidelity check, because nothing
+> executes a contract — code has tests, a contract has only readers, and its readers are
+> the consumers who want the promise true. Audit a contract's claims when it is re-stamped
+> (it is being touched anyway), not only when something breaks. A declared edge nobody
+> performs is a **phantom edge**; pins and drift never see it, so a claim-audit is the
+> only thing that will.
 
 > **A contract's version is its component's release line** (operator ruling 2026-09-11,
 > reversing the "independent versions" call of 1.26.6). A published contract carries the
@@ -1245,6 +1263,19 @@ ADRs use the Nygard format: Context → Decision → Status → Consequences.
 > signal. This closes the loop for `to: nav` asks: arch mirrors the ask to the bridge →
 > the operator decides → arch records the ADR with `responds_to:` → the raiser retires.
 > Without the `responds_to:`, a nav-need sat UNANSWERED in full, indefinitely.
+
+> **Checks fail closed, and distinguish "found nothing" from "could not look."** The
+> recurring estate failure (~27 catalogued instances, AgentEco 2026-09-14) is a check
+> honest about what it measured, measuring the wrong thing: a 404 or empty result read as
+> "clear" when it means "forbidden" or "not reached"; an operation over an empty set
+> reporting success; a hook that is installed but never fires; a re-pin that certifies the
+> bytes unchanged read as certifying the claims true. Two rules follow. (1) Only an
+> attempted write proves write access — a permission field or a read is not proof. (2) A
+> detector raises the odds; only **failing closed** changes the outcome when nobody is
+> watching — so where the method guards, it denies on an input it cannot parse, exits
+> non-zero on a degraded read (`atlas-sync` exit 3), and marks a stale surface stale
+> rather than rendering it fresh. The estate's living catalogue is
+> `checks-that-pass-for-the-wrong-reason` (AgentEco); read it in place.
 
 ## 8. Tooling — the validator
 

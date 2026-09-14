@@ -336,10 +336,38 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
             if m:
                 kept[m.group(1)] = m.group(2)
     kept["ATLAS_VAULT"] = str(vault)
-    kept.setdefault("ATLAS_METHOD", str(Path(__file__).resolve().parent.parent))
+    # ATLAS_METHOD must be the PINNED method the seat resolves, not a sibling clone on a
+    # branch (1.28.2, arc-platform): prefer a .atlas-method worktree beside the vault or in
+    # the launch dir; else the checkout the installer ran from — and warn if that looks like
+    # a full clone (Atlas) rather than a pinned worktree (.atlas-method).
+    invoked = Path(__file__).resolve().parent.parent
+    method = None
+    for cand in (vault / ".atlas-method", launch_dir / ".atlas-method"):
+        if (cand / "tools" / "atlas_init.py").exists():
+            method = cand.resolve(); break
+    if method is None:
+        method = invoked
+        if invoked.name != ".atlas-method":
+            print(f"  warn   ATLAS_METHOD={invoked} is not a `.atlas-method` pinned worktree; "
+                  "the arch briefing will compile with whatever this checkout is on. Run "
+                  "atlas_init from the pinned .atlas-method, or set ATLAS_METHOD by hand.")
+    kept.setdefault("ATLAS_METHOD", str(method))
     conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
                     encoding="utf-8", newline="\n")
     print(f"  write  {conf} (vault={kept['ATLAS_VAULT']}, method={kept['ATLAS_METHOD']})")
+    # Prove it FIRES, not just that files exist (1.28.2, arc-platform ask #2): run the
+    # reorientation hook the way the harness will, from the launch dir, and require a
+    # briefing on stdout. This is the arch analogue of the component --verify rung (1.12).
+    ctx = launch_dir / "atlas-arch-context.sh"
+    try:
+        env = dict(os.environ, ATLAS_VAULT=str(vault), ATLAS_METHOD=kept["ATLAS_METHOD"])
+        r = subprocess.run(["sh", str(ctx)], cwd=str(launch_dir), env=env,
+                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
+        ok = r.returncode == 0 and r.stdout.lstrip().startswith("# ATLAS-CONTEXT")
+        print(("  verify the arch reorientation hook fires from the launch dir: "
+               + ("PASS" if ok else f"FAIL (exit {r.returncode}) — {(r.stderr or '').strip()[:160]}")))
+    except (OSError, subprocess.SubprocessError) as e:
+        print(f"  verify the arch hook fires: FAIL ({str(e)[:120]})")
     print("atlas_init --arch: done — reorientation (SessionStart) + alignment gate "
           "(Stop) installed; both fire on compact as well as startup")
     return 0
@@ -403,8 +431,9 @@ def main() -> int:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
         if ld == repo:
             print("atlas_init --arch: refusing to install hooks into the vault working "
-                  "tree — an arch seat launches beside its vault, not inside it. Pass "
-                  "--launch-dir (e.g. --launch-dir \"$HOME/work\").", file=sys.stderr)
+                  "tree — hooks load from where the AGENT LAUNCHES (typically the vault's "
+                  f"parent), not the checkout. Re-run with `--launch-dir {repo.parent}` "
+                  "(commonly \"$HOME/work\").", file=sys.stderr)
             return 2
         return install_arch(repo, ld, args.force)
     if not args.slug:

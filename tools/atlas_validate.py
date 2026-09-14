@@ -933,15 +933,18 @@ def names_slug_exactly(value: str, slug: str) -> bool:
     return slug.lower() in addressee_tokens(value)
 
 
-RETIRED_STATUSES = ("superseded", "resolved", "closed", "done")
+RETIRED_STATUSES = ("superseded", "resolved", "closed", "done", "answered", "retired")
 
 
 def is_retired(fm: dict) -> bool:
     """A need the raiser has closed. The raiser owns `status:` and already writes these
     words; the emitter just ignored all but `superseded`, so a resolved ask kept landing
-    in its addressee's briefing every session, in full, forever (1.21)."""
+    in its addressee's briefing forever (1.21). Match a retired word as a WHOLE WORD
+    anywhere in the value, not a prefix (1.28.2, AgentEco): `status: finding — resolved
+    (2026-09-14)` retires; `unresolved` does not."""
     s = str(fm.get("status", "")).lower()
-    return any(s.startswith(w) for w in RETIRED_STATUSES)
+    toks = set(re.findall(r"[a-z]+", s))
+    return any(w in toks for w in RETIRED_STATUSES)
 
 
 def addressed_to(fm: dict, slug: str) -> bool:

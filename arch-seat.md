@@ -45,8 +45,9 @@ does, every session and at review. Components had a mechanical protocol from met
 Works against the vault's work branch directly (it is the reviewer, not a PR author).
 
 **Reorientation is mechanical.** Install with
-`python .atlas-method/tools/atlas_init.py --arch` from the vault checkout
-(`--launch-dir` if you start elsewhere) — it wires both arch hooks. Or by hand from
+`python .atlas-method/tools/atlas_init.py --arch --launch-dir "$HOME/work"` (name your
+launch dir — the parent of the vault, where hooks actually load; running from inside the
+vault installs hooks that never fire, 1.28.2) — it wires both arch hooks. Or by hand from
 `templates/arch-seat/` in your launch dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
 estate/drift, your review queue, `next-steps.md` as last stated (replace before

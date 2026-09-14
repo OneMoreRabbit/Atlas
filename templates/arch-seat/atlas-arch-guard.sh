@@ -68,5 +68,19 @@ if git -C "$ATLAS_VAULT" cat-file -e "$CUR" 2>/dev/null &&
    git -C "$ATLAS_VAULT" merge-base --is-ancestor "$CUR" "$HEADSHA" 2>/dev/null; then
   exit 0
 fi
-echo "Atlas: VAULT UPDATED under you — origin/$BR moved (a component publish, CI regen, or delivery). Before finishing: git -C '$ATLAS_VAULT' pull, re-run your reorientation (sh atlas-arch-context.sh), reconcile your in-flight review against what arrived, then finish." >&2
+# origin is ahead. Is it ONLY the seat's own regen echo? (1.28.2, arc-platform finding)
+# atlas-regen commits "atlas: regenerate derived views [skip ci]" — derived views the
+# arch seat may not author, recomputed from sources it already holds, so there is nothing
+# to re-orient on. If EVERY incoming commit is such a regen, fast-forward silently. Any
+# other commit blocks as before. Fail-closed: if the fetch or the ff fails, block.
+if git -C "$ATLAS_VAULT" fetch -q origin "$BR" 2>/dev/null; then
+  _n=$(git -C "$ATLAS_VAULT" rev-list --count "HEAD..FETCH_HEAD" 2>/dev/null || echo 0)
+  _regen=$(git -C "$ATLAS_VAULT" log --format='%s' "HEAD..FETCH_HEAD" 2>/dev/null |
+           grep -c '^atlas: regenerate derived views' || true)
+  if [ "$_n" -gt 0 ] && [ "$_n" = "$_regen" ] &&
+     git -C "$ATLAS_VAULT" merge -q --ff-only FETCH_HEAD 2>/dev/null; then
+    exit 0                                   # derived-view echo only — nothing to reconcile
+  fi
+fi
+echo "Atlas: VAULT UPDATED under you — origin/$BR moved (a component publish, delivery, or a change beyond CI's own regen). Before finishing: git -C '$ATLAS_VAULT' pull, re-run your reorientation (sh atlas-arch-context.sh), reconcile your in-flight review against what arrived, then finish." >&2
 exit 2
