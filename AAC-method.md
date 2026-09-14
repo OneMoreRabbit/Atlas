@@ -745,6 +745,18 @@ Frontmatter may carry the full `MAJOR.MINOR.PATCH`.
 > `responds_to:` but never `[[...]]`** — so the densest cross-reference mechanism in a vault is the one
 > with no check behind it. Worth a warn-only check.
 
+> **Between an io-graph merge and CI's regeneration, every briefing is confidently wrong — and the
+> window must declare itself.** *(agent-compile, from a clean clone inside the ~2-minute window after
+> an edge removal: their briefing served the deleted edge as an orange re-pin prompt — the exact action
+> the removal comment forbade — with a provenance line naming a fresh commit. "The staleness is
+> invisible precisely because the source it names is fresh.")* An edge change is authoritative in
+> `io-graph.yml` at merge but *reaches seats* only when `.compiled/` regenerates; nothing marks the
+> gap. Spec for the fix, not yet built: the compiled manifests carry the io-graph blob hash they were
+> generated from, and `--emit-context` compares it against the checkout's `io-graph.yml` — on mismatch
+> the briefing opens with a declared-degradation line ("registry views mid-regeneration; edge facts may
+> be stale — re-sync in a minute") instead of silence. Same shape as atlas-sync's exit 3: continue,
+> but never claim fresh.
+
 > **An archived version is byte-identical; supersession is recorded only in the successor.** *(Ruled
 > when one vault did both in one day — stamped `status: superseded` onto morning archives, archived
 > byte-identical in the evening.)* The test is the ratification precedent: did the document say
