@@ -349,6 +349,21 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.6 (2026-09-15, arc-platform 1.28.5 field findings): atlas_init imports
+#   subprocess at module scope (the --arch fire-verification crashed with NameError on
+#   the happy path — install done, self-proof dead); .atlas.conf is PRESERVED on
+#   re-install (only keys this run explicitly sets are updated — the template rewrite
+#   silently dropped ATLAS_MODE twice and ATLAS_NEEDS_REGISTER once); --verify FAILS on
+#   script drift vs the pinned method (an upgrade without --force had skipped every
+#   script while verify passed); atlas-needs.py --show never blocks on a held-open
+#   stdin (select-bounded one-chunk read); ~/.atlas/needs-slugs is authoritative when
+#   present (an override that could only widen was not an override); register listings
+#   de-duped by path (one need to 3 of a seat's slugs is one row); the write-guard
+#   refusal names every slug the seat holds. NEW: method CI workflow (RUNS the
+#   installer: component + arch + verify + conf-preservation + stdin bound, every push)
+#   ships at templates/method-repo-ci/ — operator installs it to .github/workflows/
+#   (seat token lacks workflow scope). The twice-made ask: the release's verification
+#   steps were its least-tested code.
 #   1.28.3 (2026-09-14, arc-platform): a seat holding two DIFFERENT publishing
 #   components could write to neither outbox (two per-repo write guards, each scoped to
 #   its own slug, denied the other's). The write guard now allows the UNION of the launch

@@ -1,0 +1,63 @@
+# Method CI (1.28.6, arc-platform ask, made twice): the release's own verification
+# steps were its least-tested code — a NameError on the --arch happy path and a *.sh
+# glob that never copied the needs tool both shipped in tagged releases while every
+# manual gate stayed green. So CI RUNS THE INSTALLER, both modes, on every push:
+# what would have caught both is an actual run, not a parse.
+name: method-ci
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse gate (shell, python, json)
+        run: |
+          set -e
+          for s in templates/component-repo/scripts/*.sh templates/arch-seat/*.sh; do sh -n "$s"; done
+          python3 -c "import ast,glob; [ast.parse(open(f).read()) for f in glob.glob('tools/*.py') + ['templates/component-repo/scripts/atlas-needs.py']]"
+          python3 -c "import json; [json.load(open(f)) for f in ['templates/component-repo/.claude/settings.json','templates/arch-seat/.claude/settings.json']]"
+
+      - name: Component install + verify (happy path, run for real)
+        run: |
+          set -e
+          git config --global user.email ci@ci && git config --global user.name ci
+          mkdir -p /tmp/ci/repo /tmp/ci/L && cd /tmp/ci/repo
+          git init -q . && echo x > f && git add -A && git commit -qm c
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
+            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L
+          test -f scripts/atlas-needs.py
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo --verify --launch-dir /tmp/ci/L
+
+      - name: Conf values survive a --force re-run with flags omitted
+        run: |
+          set -e
+          cd /tmp/ci/repo
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
+            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L \
+            --mode autonomous --needs-register https://example.invalid/needs.json
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
+            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L --force
+          grep -q 'ATLAS_MODE="autonomous"' .atlas.conf
+          grep -q 'ATLAS_NEEDS_REGISTER="https://example.invalid/needs.json"' .atlas.conf
+
+      - name: Arch install (the 1.28.5 NameError shipped on exactly this path)
+        run: |
+          set -e
+          mkdir -p /tmp/ci/vault/registry /tmp/ci/AL && cd /tmp/ci/vault
+          printf 'method: {pinned: "0.0.0"}\nbranching: {work: main}\ncomponents: []\nedges: []\n' > registry/io-graph.yml
+          git init -q . && git add -A && git commit -qm c
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --arch --repo /tmp/ci/vault --launch-dir /tmp/ci/AL
+
+      - name: Hook scripts never hang on an open-but-silent stdin
+        run: |
+          set -e
+          mkfifo /tmp/ci/p1 /tmp/ci/p2
+          ( exec 3>/tmp/ci/p1; sleep 30 ) &
+          ( exec 3>/tmp/ci/p2; sleep 30 ) &
+          timeout 10 sh -c 'exec < /tmp/ci/p1; cd /tmp/ci/repo && sh scripts/atlas-context.sh > /dev/null 2>&1 || true'
+          timeout 10 sh -c 'exec < /tmp/ci/p2; python3 /tmp/ci/repo/scripts/atlas-needs.py --show > /dev/null 2>&1 || true'

@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -245,9 +246,19 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
         check(found == slug, f".atlas.conf SLUG == {slug}", f"found {found!r}")
         check("\r" not in text, ".atlas.conf has no CRLF", "add gitattributes.fragment")
     check((repo / "AGENTS.md").exists(), "AGENTS.md committed at the repo root")
+    drifted = []
     for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
                  "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
-        check((repo / "scripts" / name).exists(), f"scripts/{name}")
+        dst = repo / "scripts" / name
+        check(dst.exists(), f"scripts/{name}")
+        src = TEMPLATES / "scripts" / name
+        if dst.exists() and src.exists() and read(dst) != read(src):
+            drifted.append(name)
+    # An upgrade without --force skips every drifted script and this verify still said
+    # PASS while the seat ran 1.28.0 code under a 1.28.5 pin (1.28.6, arc-platform).
+    # Compare bytes against the method checkout this verify runs from — the pinned one.
+    check(not drifted, "scripts match this method checkout's templates",
+          "DRIFTED: " + ", ".join(drifted) + " -- re-run atlas_init with --force" if drifted else "")
 
     settings = launch_dir / ".claude" / "settings.json"
     check(settings.exists(), f"hooks settings at the LAUNCH dir", str(settings))
@@ -283,7 +294,6 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     # reporting failure at every session start (arc-platform platform seat, 2026-09-03).
     ctx = repo / "scripts" / "atlas-context.sh"
     if ctx.exists():
-        import subprocess
         try:
             r = subprocess.run(["sh", str(ctx)], cwd=repo, capture_output=True, text=True,
                                stdin=subprocess.DEVNULL,
@@ -466,23 +476,46 @@ def main() -> int:
         if dst.exists():
             dst.chmod(0o755)
 
-    # .atlas.conf — the only per-repo values
-    conf = (read(TEMPLATES / ".atlas.conf.example")
-            .replace('SLUG="<slug>"', f'SLUG="{args.slug}"')
-            .replace('ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"',
-                     f'ATLAS_VAULT_REMOTE="{args.vault_remote}"'))
+    # .atlas.conf — the only per-repo values. PRESERVING (1.28.6, arc-platform): a
+    # rewrite that rebuilt the file from template + this run's flags silently dropped
+    # every previously-set value whose flag was omitted — ATLAS_MODE twice (an autonomous
+    # seat reverted to supervised, paging the operator per action), ATLAS_NEEDS_REGISTER
+    # once (a seat gone blind to needs) — and reported success either way. Now an
+    # existing conf is kept verbatim and only the keys THIS run explicitly sets are
+    # updated; the template seeds the file only when it does not exist yet.
+    def set_key(text: str, key: str, value: str, comment: str = "") -> str:
+        line = f'{key}="{value}"'
+        if re.search(rf"^{key}=", text, re.MULTILINE):
+            return re.sub(rf"^{key}=.*$", line, text, count=1, flags=re.MULTILINE)
+        block = (f"\n{comment}" if comment else "\n") + line + "\n"
+        return text.rstrip("\n") + "\n" + block
+    existing = repo / ".atlas.conf"
+    if existing.exists():
+        conf = read(existing)
+        conf = set_key(conf, "SLUG", args.slug)
+        conf = set_key(conf, "ATLAS_VAULT_REMOTE", args.vault_remote)
+    else:
+        conf = (read(TEMPLATES / ".atlas.conf.example")
+                .replace('SLUG="<slug>"', f'SLUG="{args.slug}"')
+                .replace('ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"',
+                         f'ATLAS_VAULT_REMOTE="{args.vault_remote}"'))
     if args.role == "both":
-        conf += ('\n# Both hats (AAC-method §9): this seat is the vault\'s architecture AND this\n'
-                 '# component\'s author — a single-seat project. Transitional by design.\n'
-                 'ATLAS_ROLE="both"\n')
+        conf = set_key(conf, "ATLAS_ROLE", "both",
+                       "# Both hats (AAC-method §9): this seat is the vault's architecture AND this\n"
+                       "# component's author — a single-seat project. Transitional by design.\n")
     if args.needs_register:
-        conf += (f'\n# Cross-vault needs (1.27.2): the estate needs register, read in place.\n'
-                 f'ATLAS_NEEDS_REGISTER="{args.needs_register}"\n')
+        conf = set_key(conf, "ATLAS_NEEDS_REGISTER", args.needs_register,
+                       "# Cross-vault needs (1.27.2): the estate needs register, read in place.\n")
     if args.mode:
-        conf += (f'\n# Development mode (AAC-method §6): supervised pauses to confirm before\n'
-                 f'# publishing/releasing; autonomous runs free. Default when unset: supervised.\n'
-                 f'ATLAS_MODE="{args.mode}"\n')
-    install(repo / ".atlas.conf", conf, args.force, written)
+        conf = set_key(conf, "ATLAS_MODE", args.mode,
+                       "# Development mode (AAC-method §6): supervised pauses to confirm before\n"
+                       "# publishing/releasing; autonomous runs free. Default when unset: supervised.\n")
+    if existing.exists() and read(existing) != conf:
+        existing.write_text(conf, encoding="utf-8", newline="\n")
+        written.append(existing)
+        print(f"  update {existing} (managed keys only; everything else preserved)")
+    elif not existing.exists():
+        install(repo / ".atlas.conf", conf, args.force, written)
     # Echo the posture, always — including when it is the default. The installer
     # echoed ATLAS_LAUNCH_DIR and was silent about ATLAS_MODE, so the one field
     # under discussion was the one it never mentioned: an arch seat told eight

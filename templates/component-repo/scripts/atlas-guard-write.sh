@@ -112,16 +112,18 @@ fi
 
 "$PY" -c '
 import json, sys
-slug, rel = sys.argv[1], sys.argv[2]
+slugs, rel = sys.argv[1], sys.argv[2]
+first = slugs.split(", ")[0]
+comp = "|".join(slugs.split(", ")) if ", " in slugs else slugs
 print(json.dumps({"hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
     "permissionDecisionReason": (
-        f"Atlas golden rule 2 - {slug} writes only to components/{slug}/**, an additive "
+        f"Atlas golden rule 2 - this seat ({slugs}) writes only to components/{{{comp}}}/**, an additive "
         f"architecture/proposals/NNNN-*.md, or its own edges in registry/io-graph.yml. "
         f"Refused: {rel}. If you need something that lives here, do not widen the write: "
-        f"raise it in components/{slug}/docs/needs/ with a `to:` naming the owner, or open "
+        f"raise it in components/{first}/docs/needs/ with a `to:` naming the owner, or open "
         f"an ADR if it is shared architecture."),
 }}))
-' "$SLUG" "$REL"
+' "$(printf '%s\n' "$SLUGS" | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//;s/,/, /g')" "$REL"
 exit 0

@@ -77,8 +77,15 @@ def my_slugs(explicit: str | None) -> list[str]:
         pj = c.get("ATLAS_PROJECT", "").strip().lower()
         if pj:
             slugs.append(f"{pj}-arch")
+    # Operator override (1.28.6, arc-platform v0.2): AUTHORITATIVE when present — it
+    # REPLACES the derived list. It was additive-only, so it could widen a match but
+    # never narrow one, and a seat told to fix a mis-match by setting it found the file
+    # had no effect on exactly the problem it was reaching for.
     if EXTRA_SLUGS.exists():
-        slugs += [l.strip() for l in EXTRA_SLUGS.read_text().splitlines() if l.strip()]
+        override = [l.strip() for l in EXTRA_SLUGS.read_text().splitlines()
+                    if l.strip() and not l.lstrip().startswith("#")]
+        if override:
+            return override
     return slugs
 
 
@@ -148,9 +155,17 @@ def refresh(explicit_slugs: str | None) -> int:
                 OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
     reg_date = str(reg.get("updated", ""))[:10]
-    mine = [n for n in reg.get("needs", [])
-            if not str(n.get("status", "open")).lower().startswith(RETIRED)
-            and addressed_to_me(n.get("addressee", ""), slugs)]
+    mine, _seen = [], set()
+    for n in reg.get("needs", []):
+        if str(n.get("status", "open")).lower().startswith(RETIRED):
+            continue
+        if not addressed_to_me(n.get("addressee", ""), slugs):
+            continue
+        key = n.get("path") or n.get("title") or repr(n)
+        if key in _seen:          # the register keys rows per addressee: one need
+            continue              # addressed to 3 of a seat's slugs is still ONE need
+        _seen.add(key)
+        mine.append(n)
     ext = sum(1 for n in mine if n.get("vault"))
     L = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
          f"_Estate register dated {reg_date}. **{len(mine)} open**, all EXTERNAL — filed in "
@@ -219,11 +234,31 @@ def refresh_consumers(slugs: list[str]) -> None:
     CONS.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
+def _stdin_payload(limit: int = 4096, wait: float = 1.0) -> str:
+    """Read the hook payload WITHOUT ever blocking (1.28.6, arc-platform v0.2): a
+    non-terminal stdin held open-but-silent made read() wait forever for bytes that were
+    not coming — a hang with no output that took the whole chained command with it. One
+    select-bounded os.read chunk: a payload not here within a second is not coming."""
+    try:
+        if sys.stdin.isatty():
+            return ""
+    except (OSError, ValueError):
+        return ""
+    try:
+        import select
+        r, _, _ = select.select([sys.stdin], [], [], wait)
+        if not r:
+            return ""
+        return os.read(sys.stdin.fileno(), limit).decode("utf-8", "replace")
+    except (OSError, ValueError, ImportError):
+        return ""
+
+
 def show() -> int:
     """Stop guard: exit 2 (block + message) ONLY when the file changed since last shown."""
     if not OUT.exists():
         return 0
-    payload = "" if sys.stdin.isatty() else sys.stdin.read(4096)
+    payload = _stdin_payload()
     if '"stop_hook_active": true' in payload or '"stop_hook_active":true' in payload:
         return 0
     cur = OUT.read_text(encoding="utf-8")
