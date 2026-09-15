@@ -22,14 +22,29 @@ jobs:
           python3 -c "import ast,glob; [ast.parse(open(f).read()) for f in glob.glob('tools/*.py') + ['templates/component-repo/scripts/atlas-needs.py']]"
           python3 -c "import json; [json.load(open(f)) for f in ['templates/component-repo/.claude/settings.json','templates/arch-seat/.claude/settings.json']]"
 
+      - name: Fixture vault (real local remote — verify RUNS the context script,
+              which clones and briefs; a fake URL fails exactly there)
+        run: |
+          set -e
+          pip install pyyaml >/dev/null 2>&1 || true
+          git config --global user.email ci@ci && git config --global user.name ci
+          mkdir -p /tmp/ci/vsrc/registry /tmp/ci/vsrc/components/demo/docs && cd /tmp/ci/vsrc
+          printf 'method:\n  pinned: "1.28.6"\nbranching:\n  work: main\nproject: demo\ncomponents:\n  - slug: demo\n    name: Demo\nedges: []\n' > registry/io-graph.yml
+          printf -- '---\nname: Demo\nslug: demo\n---\n\n# Demo\n\n<!-- atlas:edges -->\n<!-- /atlas:edges -->\n' > components/demo/component.md
+          echo "# Dashboard" > dashboard.md
+          python3 "$GITHUB_WORKSPACE/tools/atlas_validate.py" .    # compiles .compiled manifests
+          git init -q . && git add -A && git commit -qm vault
+          git init -q --bare /tmp/ci/vault.git
+          git -C /tmp/ci/vault.git symbolic-ref HEAD refs/heads/main
+          git push -q /tmp/ci/vault.git HEAD:main
+
       - name: Component install + verify (happy path, run for real)
         run: |
           set -e
-          git config --global user.email ci@ci && git config --global user.name ci
           mkdir -p /tmp/ci/repo /tmp/ci/L && cd /tmp/ci/repo
           git init -q . && echo x > f && git add -A && git commit -qm c
           python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
-            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L
+            --vault-remote /tmp/ci/vault.git --launch-dir /tmp/ci/L
           test -f scripts/atlas-needs.py
           python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo --verify --launch-dir /tmp/ci/L
 
@@ -38,10 +53,10 @@ jobs:
           set -e
           cd /tmp/ci/repo
           python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
-            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L \
+            --vault-remote /tmp/ci/vault.git --launch-dir /tmp/ci/L \
             --mode autonomous --needs-register https://example.invalid/needs.json
           python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
-            --vault-remote https://example.invalid/Atlas-Demo.git --launch-dir /tmp/ci/L --force
+            --vault-remote /tmp/ci/vault.git --launch-dir /tmp/ci/L --force
           grep -q 'ATLAS_MODE="autonomous"' .atlas.conf
           grep -q 'ATLAS_NEEDS_REGISTER="https://example.invalid/needs.json"' .atlas.conf
 
