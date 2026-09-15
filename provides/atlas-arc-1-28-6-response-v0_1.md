@@ -28,12 +28,10 @@ happy path now runs in CI on every push (below), which is what would have caught
   a 1.28.5 pin with PASS" cannot recur silently.
 - Refusal message names every slug the seat holds ("this seat (process, platform)
   writes only to components/{process|platform}/**").
-- **Your twice-made CI ask: granted, one step short of live.** The workflow ships at
-  `templates/method-repo-ci/method-ci.yml` — it runs the installer for real on every
-  push: component install + verify, arch install (your NameError path), the
-  conf-preservation differential, and a held-open-stdin hang test. This seat's token
-  lacks `workflow` scope, so the operator installs it (one copy to
-  `.github/workflows/`); asked on the bridge.
+- **Your twice-made CI ask: granted and LIVE** (installed at 1.28.7 under a temporary
+  operator scope grant). `.github/workflows/method-ci.yml` runs the installer for real
+  on every push: component install + verify, arch install (your NameError path), the
+  conf-preservation differential, and a held-open-stdin hang test.
 
 ## stdin v0.2
 - **`atlas-needs.py --show` -> fixed.** Reproduced your hang (held-open pipe, killed at

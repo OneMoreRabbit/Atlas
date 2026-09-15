@@ -359,10 +359,10 @@ updated: 2026-09-13
 #   stdin (select-bounded one-chunk read); ~/.atlas/needs-slugs is authoritative when
 #   present (an override that could only widen was not an override); register listings
 #   de-duped by path (one need to 3 of a seat's slugs is one row); the write-guard
-#   refusal names every slug the seat holds. NEW: method CI workflow (RUNS the
-#   installer: component + arch + verify + conf-preservation + stdin bound, every push)
-#   ships at templates/method-repo-ci/ — operator installs it to .github/workflows/
-#   (seat token lacks workflow scope). The twice-made ask: the release's verification
+#   refusal names every slug the seat holds. NEW: method CI at
+#   .github/workflows/method-ci.yml (installed 1.28.7 under a temporary operator scope
+#   grant): RUNS the installer on every push — component + arch + verify +
+#   conf-preservation + stdin bound. The twice-made ask: the release's verification
 #   steps were its least-tested code.
 #   1.28.3 (2026-09-14, arc-platform): a seat holding two DIFFERENT publishing
 #   components could write to neither outbox (two per-repo write guards, each scoped to
