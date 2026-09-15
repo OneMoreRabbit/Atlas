@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.8 (2026-09-15, operator housekeeping): registry/ is the ONE home for a
+#   project's registry facts — canonical io-graph.yml; method-derived graph.md and
+#   .compiled/; orchestrator-published project-scoped views (registry/estate.md, the
+#   runtime seats, was estate/registry.md — the single-file estate/ folder is retired,
+#   moved by its author's generator). A vault's registry/ (singular) is not the hub's
+#   registries/ (plural, estate-wide). Top level stays the human surfaces (dashboard,
+#   next-steps, roadmap). Also: the validator prose still said `nav` stays a valid
+#   addressee — corrected to match the 1.27.8 deprecation. Estate deploys Monday
+#   2026-09-21; interim file moves asked of the orchestrator (needs/).
 #   1.28.6 (2026-09-15, arc-platform 1.28.5 field findings): atlas_init imports
 #   subprocess at module scope (the --arch fire-verification crashed with NameError on
 #   the happy path — install done, self-proof dead); .atlas.conf is PRESERVED on
@@ -968,6 +977,20 @@ under a published version are a contract change: bump the version.
 
 ## 5. The I/O graph (registry)
 
+> **`registry/` is the one home for a project's registry facts** (1.28.8). It holds three
+> kinds of file, by writer: the **canonical** `io-graph.yml` (arch-owned; components edit
+> only their own edges, §9); the **method-derived** views the validator regenerates
+> (`graph.md`, `.compiled/`); and **orchestrator-published, project-scoped** views —
+> today `registry/estate.md`, the project's runtime seats (containers, access, repos),
+> rewritten at every estate apply. Every generated file opens by naming its generator and
+> refresh trigger and says *do not edit*. The old single-file `estate/` folder is retired:
+> `estate/registry.md` becomes `registry/estate.md`, moved by its author (the
+> orchestrator's generator), not by hand. Do not confuse a vault's `registry/` (singular,
+> this project) with the estate hub's `registries/` (plural, the whole estate — needs,
+> edges, audits); they are different scopes and stay separate. Top level remains the
+> human working surfaces — `dashboard.md`, `next-steps.md`, the roadmap — which are not
+> registry facts and do not move.
+
 `registry/io-graph.yml` is the single source of truth for who depends on whom. It is the
 edge list of a directed graph. Each edge pins the version the consumer builds against:
 
@@ -1326,7 +1349,8 @@ drift — run it as a CI gate on the vault repo, on push and nightly, so drift s
 no local machine switched on). It also lists live-folder documents whose names fall outside
 the **naming canon** (§4) — warn-only; `archive/`, `_triage/`, `reference/` and
 `generated/` are never checked. It likewise warns — warn-only — on a `to:` addressee
-matching no component or declared external (`nav` stays valid — the human) and on an
+matching no component or declared external, on `to: nav` on a need (deprecated 1.27.8 —
+a component reaches the human through its arch seat, §3) and on an
 absent addressee, which is a silent broadcast to everyone in range (§3).
 
 **`--check-wiring`** (opt-in; decisions/0001) extends the estate table with a **Wired**

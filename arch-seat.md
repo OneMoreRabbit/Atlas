@@ -50,7 +50,8 @@ launch dir — the parent of the vault, where hooks actually load; running from 
 vault installs hooks that never fire, 1.28.2) — it wires both arch hooks. Or by hand from
 `templates/arch-seat/` in your launch dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
-estate/drift, your review queue, `next-steps.md` as last stated (replace before
+estate/drift, your review queue, `registry/estate.md` (your project's runtime seats,
+orchestrator-generated; at `estate/registry.md` until the 1.28.8 move lands), `next-steps.md` as last stated (replace before
 ending if anything moved), and where the bridge is. Because it fires on **compact**
 as well as startup, a compaction re-injects your bearings with a directive to resume;
 you never need the operator to re-orient you. (Component seats get this from their own
