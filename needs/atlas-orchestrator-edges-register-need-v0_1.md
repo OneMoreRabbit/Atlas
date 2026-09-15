@@ -2,9 +2,10 @@
 title: "Need — publish an estate edges register beside the needs register"
 to: ansible-platform
 need: publish registries/edges.json — every vault's `external:` entries — so a provider can see which other vaults pin its contracts (method 1.27.4, agent-compile finding)
-status: open
+status: resolved
 version: '0.1'
-updated: 2026-09-14
+updated: 2026-09-15
+resolution: registries/edges.json is published and live (verified 2026-09-15); ATLAS_EDGES_REGISTER can now be set on seats at the Monday 1.28.8 roll.
 from: atlas
 relates: provides/atlas-estate-findings-response-v0_1.md
 ---
