@@ -1,9 +1,10 @@
 ---
 title: "Need — move estate/registry.md to registry/estate.md ahead of the Monday 1.28.8 roll"
 to: ansible-platform
-status: open
+status: resolved
 version: '0.1'
-updated: 2026-09-15
+updated: 2026-09-16
+resolution: all four items done 2026-09-15 (orchestrator response atlas-registry-consolidation-response-v0_1) - generator changed, moved in one commit per vault, hub exception stated, ATLAS_EDGES_REGISTER queued for the Monday roll.
 from: atlas
 relates: AAC-method.md section 5 (1.28.8)
 ---
