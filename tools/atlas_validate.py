@@ -279,6 +279,10 @@ def addressee_warnings(graph) -> list[str]:
     addressee must be visible. Warn-only, like naming."""
     slugs = [c["slug"] for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
     slugs += arch_addressees(graph)[1:]        # <project>-arch: this vault's arch, cross-vault form
+    # <project>-product routes ONLY where the seat is declared (product: enabled, 1.28.9)
+    if (graph.get("product") or {}).get("enabled"):
+        pn = project_name(graph)
+        slugs += ["product"] + ([f"{pn}-product"] if pn else [])
     # an external provider is a legitimate addressee: asks travel to it by the normal
     # route, picked up when its arch seat reads this vault (§5, decisions/0006).
     # Each declared external answers to its provider slug AND its project name derived
@@ -884,6 +888,70 @@ def arch_addressees(graph) -> list:
     pn = project_name(graph)
     return [ARCH_ADDRESSEE] + ([f"{pn}-arch"] if pn else [])
 WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, ARCH_ADDRESSEE)
+
+
+def requirements_report(graph) -> tuple[list, list]:
+    """The product seat's standing tracking + audit (1.28.9, §10). Reads
+    product/requirements/R-*.md (id stable for life; version: moves with the product
+    release line; criteria: [{id, given/when/then}]) and every contract's `satisfies:`
+    citations ("R-0001.AC1" or "R-0001.AC1@0.2"). Returns (table rows, warnings).
+    Inert when product/requirements/ does not exist."""
+    rdir = ROOT / "product" / "requirements"
+    if not rdir.is_dir():
+        return [], []
+    reqs, warns = {}, []
+    # canon shape only (R-NNNN-<slug>.md): the shipped requirement-template.md sits in
+    # this folder too, and a bare *.md glob let its example id shadow a real requirement
+    for p in sorted(rdir.glob("R-*.md")):
+        fm = parse_frontmatter(p)
+        rid = str(fm.get("id", "")).strip()
+        rel = p.relative_to(ROOT).as_posix()
+        if not re.match(r"^R-\d{4}$", rid):
+            warns.append(f"{rel} — requirement has no well-formed `id:` (R-NNNN); "
+                         "citations cannot reach it")
+            continue
+        crits = fm.get("criteria") or []
+        cids = [str(c.get("id", "")).strip() for c in crits if isinstance(c, dict)]
+        if not cids or any(not re.match(r"^AC\d+$", c) for c in cids):
+            warns.append(f"{rel} — criteria need ids (AC1, AC2, ...); a criterion "
+                         "without an id cannot be satisfied by name")
+        if rid in reqs:
+            warns.append(f"{rel} — duplicate id {rid} (also {reqs[rid]['path']}); "
+                         "citations are ambiguous until one is renumbered")
+            continue
+        reqs[rid] = {"path": rel, "status": str(fm.get("status", "draft")).lower(),
+                     "version": str(fm.get("version", "?")).strip("'\""),
+                     "title": str(fm.get("title", "")), "criteria": cids, "cited": []}
+    # citations: every contract frontmatter in the vault
+    for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
+        fm = parse_frontmatter(p)
+        for s in (fm.get("satisfies") or []):
+            m = re.match(r"^(R-\d{4})(?:\.(AC\d+))?(?:@(\S+))?$", str(s).strip())
+            rel = p.relative_to(ROOT).as_posix()
+            if not m:
+                warns.append(f"{rel} — satisfies entry '{s}' is not R-NNNN[.ACn][@version]")
+                continue
+            rid, ac, pin = m.groups()
+            if rid not in reqs:
+                warns.append(f"{rel} — satisfies '{s}' cites unknown requirement {rid}")
+                continue
+            r = reqs[rid]
+            r["cited"].append(p.parent.parent.parent.name)
+            if ac and ac not in r["criteria"]:
+                warns.append(f"{rel} — satisfies '{s}': {rid} has no criterion {ac}")
+            if pin and pin != r["version"]:
+                warns.append(f"{rel} — satisfies '{s}' pinned @{pin} but {rid} is now "
+                             f"v{r['version']} — the requirement moved under this contract")
+    rows = []
+    for rid in sorted(reqs):
+        r = reqs[rid]
+        if r["status"] == "accepted" and not r["cited"]:
+            warns.append(f"{r['path']} — {rid} is `accepted` and nothing cites it: "
+                         "either it is not yet built (fine, say so in next-steps) or "
+                         "it is scope nobody owns")
+        rows.append((rid, r["status"], r["version"], len(r["criteria"]),
+                     ", ".join(sorted(set(r["cited"]))) or "—"))
+    return rows, warns
 
 
 def addressee(fm: dict) -> str | None:
@@ -1550,6 +1618,15 @@ def main(wiring_flag: bool = False) -> int:
             encoding="utf-8",
         )
     print(f"regenerated {len(names)} component edge blocks + io-manifests")
+
+    # -- requirements report (product seat, 1.28.9) — inert without product/ ------
+    req_rows, req_warns = requirements_report(graph)
+    if req_rows or req_warns:
+        print("\nREQUIREMENTS")
+        for rid, st, ver, ncrit, cited in req_rows:
+            print(f"  {rid}  {st:<10} v{ver:<6} {ncrit} criteria   satisfied-by: {cited}")
+        for w in req_warns:
+            print(f"  ⚠ {w}")
 
     # -- drift report -----------------------------------------------------------
     print("\nDRIFT REPORT")

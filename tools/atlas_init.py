@@ -312,6 +312,67 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
 
 
 ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-seat"
+PRODUCT_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "product-seat"
+
+
+def install_product(vault: Path, launch_dir: Path, force: bool) -> int:
+    """Product-seat mode (1.28.9, §10): installs the reorientation hook, the product/**
+    write guard and the alignment gate into the launch dir, plus .atlas-product.conf.
+    Deliberately simple — mirrors --arch without the arch briefing machinery."""
+    if not (vault / "registry" / "io-graph.yml").exists():
+        print(f"atlas_init --product: {vault} has no registry/io-graph.yml — point "
+              "--repo at the project VAULT checkout", file=sys.stderr)
+        return 2
+    graph_text = read(vault / "registry" / "io-graph.yml")
+    if not re.search(r"^product:", graph_text, re.MULTILINE):
+        print("  warn   the io-graph declares no `product:` block — the seat is not yet "
+              "declared (§10). Ask the arch seat to add `product: {enabled: true}`.")
+    written = []
+    for name in ("atlas-product-context.sh", "atlas-product-guard.sh",
+                 "atlas-product-align.sh"):
+        dst = launch_dir / name
+        dst.write_text(read(PRODUCT_TEMPLATES / name), encoding="utf-8", newline="\n")
+        dst.chmod(0o755)
+        written.append(dst)
+        print(f"  write  {dst}")
+    (vault / "product" / "requirements").mkdir(parents=True, exist_ok=True)
+    tpl = vault / "product" / "requirements" / "requirement-template.md"
+    if not tpl.exists():
+        tpl.write_text(read(PRODUCT_TEMPLATES / "requirement-template.md"),
+                       encoding="utf-8", newline="\n")
+        print(f"  write  {tpl} (copy per requirement as R-NNNN-<slug>.md)")
+    conf = launch_dir / ".atlas-product.conf"
+    kept = {}
+    if conf.exists():
+        for line in read(conf).splitlines():
+            m = re.match(r'^([A-Z_]+)="?([^"]*)"?$', line)
+            if m:
+                kept[m.group(1)] = m.group(2)
+    kept["ATLAS_VAULT"] = str(vault)
+    kept.setdefault("ATLAS_METHOD", str(Path(__file__).resolve().parent.parent))
+    conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
+                    encoding="utf-8", newline="\n")
+    print(f"  write  {conf} (vault={kept['ATLAS_VAULT']})")
+    tpl_settings = json.loads(read(PRODUCT_TEMPLATES / "settings.json"))
+    # hooks live at the launch dir with absolute paths (the arch launch-dir lesson, 1.28.2)
+    for ev in tpl_settings["hooks"].values():
+        for entry in ev:
+            for h in entry["hooks"]:
+                h["command"] = h["command"].replace("$CLAUDE_PROJECT_DIR", str(launch_dir))
+    merge_settings(launch_dir, tpl_settings, force, written, repo_root=launch_dir)
+    # prove the reorientation hook FIRES from the launch dir (the 1.28.2 rung)
+    try:
+        r = subprocess.run(["sh", str(launch_dir / "atlas-product-context.sh")],
+                           cwd=str(launch_dir), stdin=subprocess.DEVNULL,
+                           capture_output=True, text=True, timeout=120)
+        ok = r.returncode == 0 and "ATLAS-PRODUCT-CONTEXT" in r.stdout
+        print("  verify the product reorientation hook fires from the launch dir: "
+              + ("PASS" if ok else f"FAIL (exit {r.returncode}) {(r.stderr or '').strip()[:140]}"))
+    except (OSError, subprocess.SubprocessError) as e:
+        print(f"  verify the product hook fires: FAIL ({str(e)[:120]})")
+    print("atlas_init --product: done — reorientation + product/** write guard + "
+          "alignment gate installed")
+    return 0
 
 
 def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
@@ -412,6 +473,10 @@ def main() -> int:
                          "reviewable in the committed .atlas.conf; never inferred "
                          "(1.24.5). Transitional: split back when a second component "
                          "arrives (AAC-method §9)")
+    ap.add_argument("--product", action="store_true",
+                    help="install a PRODUCT seat (1.28.9, §10): reorientation hook, "
+                         "product/** write guard and alignment gate at the launch dir; "
+                         "point --repo at the vault checkout")
     ap.add_argument("--arch", action="store_true",
                     help="install the ARCH SEAT hooks instead (no slug): reorientation "
                          "(SessionStart -> --emit-arch-context) and the alignment gate "
@@ -445,6 +510,14 @@ def main() -> int:
     if not repo.is_dir():
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
+    if args.product:
+        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
+        if ld == repo:
+            print("atlas_init --product: refusing to install hooks into the vault working "
+                  f"tree — hooks load from the launch dir. Re-run with `--launch-dir {repo.parent}`.",
+                  file=sys.stderr)
+            return 2
+        return install_product(repo, ld, args.force)
     if args.arch:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
         if ld == repo:

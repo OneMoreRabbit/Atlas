@@ -278,3 +278,11 @@ outcome up in its next `ATLAS-CONTEXT.md`; the asking component archives its own
 - Wire component code repos on their behalf (decisions/0001) — wiring is a commit to
   their repo, by them.
 - Write anywhere in a Nav vault except `_bridge/`.
+
+## Product seat (where declared)
+
+If the io-graph declares `product: {enabled: true}` (§10): the product seat writes
+requirements to `product/requirements/`; you pin cost — a requirement you rule too
+expensive goes back as a need addressed to `<project>-product` (your word on cost is
+final). A component's contract cites what it satisfies (`satisfies:`); the validator's
+REQUIREMENTS section is the audit — read it at review.

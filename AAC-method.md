@@ -349,6 +349,17 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.9 (2026-09-16, operator): the PRODUCT SEAT — optional per project
+#   (product: {enabled: true} in the io-graph). Holds the what-and-why in
+#   product/requirements/ (R-NNNN ids stable for life; version: moves with the product
+#   release line; criteria as Given/When/Then with AC ids); researches the product as a
+#   thing in the world (what it is), never its design (arch's); inputs are the bridge
+#   and evidence — an invented need is its failure mode. The loop is vault-only outbox
+#   traffic: arch raises reshape asks to <project>-product and has the FINAL WORD on
+#   cost. Contracts cite satisfies: ["R-0001.AC1@0.1"]; the validator's requirements
+#   report is the standing tracking + audit (unknown citation, version drift, accepted
+#   -but-uncited). Ships templates/product-seat/ (context, write guard scoped to
+#   product/**, settings, requirement template), atlas_init --product, product-init.md.
 #   1.28.8 (2026-09-15, operator housekeeping): registry/ is the ONE home for a
 #   project's registry facts — canonical io-graph.yml; method-derived graph.md and
 #   .compiled/; orchestrator-published project-scoped views (registry/estate.md, the
@@ -667,6 +678,13 @@ components/<slug>/
 > technical question there both misaddresses it and pushes vault traffic through a
 > channel reserved for human judgment.
 >
+> **`<project>-product` addresses a project's product seat** (1.28.9), where one is
+> declared (§10). One rule, same shape as the arch address: project-qualified
+> everywhere. The traffic that belongs there: arch's feasibility and reshape asks on a
+> requirement (arch has the final word on cost), and anything questioning what the
+> product IS rather than how it is built. A vault with no `product:` declaration has no
+> such addressee, and the validator warns on the address as unroutable.
+>
 > Note what the addressee is *for* here, since it is not delivery: an arch seat sweeps
 > `components/*/docs/needs/` every session regardless of `to:`, so an ask reaches it
 > either way. Naming `arch` stops the doc **fanning out to peers** — the fail-open
@@ -942,6 +960,16 @@ their historical names — renaming history breaks every wikilink that points in
   contracts and milestone documents, where consumers pin.
 - **Exempt by convention:** `README.md`, `component.md`, `AGENTS.md`, `dashboard.md`,
   `INDEX.md` (1.21, library indexes), and the `NNNN-` numeric prefix on ADR files.
+- **Requirements** (1.28.9, product seat — §10) are the other exemption:
+  `product/requirements/R-NNNN-<slug>.md`. The id `R-NNNN` is **stable for life** — no
+  version suffix in the filename, because consumers cite the id and criteria ids, and a
+  moving filename would break every citation. The `version:` frontmatter field moves
+  with the **product release line**; `status:` is one of `draft`, `proposed`,
+  `accepted`, `superseded`; acceptance criteria are a frontmatter `criteria:` list,
+  each entry `id` (`AC1`, `AC2`, …) plus a Given/When/Then. A contract cites what it
+  satisfies as `satisfies: ["R-0001.AC1", "R-0001.AC2@0.2"]` — the optional `@version`
+  pins the requirement version the contract was built against, and the validator warns
+  when the requirement has moved past it.
 
 The validator (§8) warns on live-folder names outside the canon — warn-only; a name never
 blocks a publish.
@@ -1002,6 +1030,8 @@ method:
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
   release: main                # merged by the architecture session at periodic review
+product:                       # OPTIONAL (1.28.9): this project runs a product seat (§10)
+  enabled: true                # omit the block entirely for no product seat — most projects
 comms:                         # OPTIONAL (1.22): this project's seats share a chat hub
   hub: true                    # omit the block, or hub: false, for no hub — most projects; manual: [[comms]]
   channel: "#<project>"        # ephemeral chat only; design stays in the vault ([[comms]])
@@ -1638,7 +1668,7 @@ repo, checksum-verified against the pinned method version by `atlas-sync.sh`.
 ## 10. The seat model — who sits where, and how an estate grows
 
 A **seat** is one agent with a standing role, a working directory, declared credentials,
-and the hooks that make its protocol mechanical. Four seat types and one human:
+and the hooks that make its protocol mechanical. Five seat types and one human:
 
 | Seat | Owns / writes | Reads | Credentials | Defined by |
 |---|---|---|---|---|
@@ -1646,7 +1676,28 @@ and the hooks that make its protocol mechanical. Four seat types and one human:
 | **arch** — one per project | `architecture/**`, io-graph, derived views; merges `release` at periodic review; writes `_bridge/` in the Nav vault and nothing else there | the vault, the bridge, component repos (read-only) | vault write + `<project>-arch-read` (Contents/PRs/Actions **read** over the project's component repos; never write, never org-wide) | works the vault checkout, no slug; `atlas_init --arch` |
 | **component** — per component; may hold several repos | its code repo(s) and `components/<slug>/**` outbox (via guarded PRs) | its `ATLAS-CONTEXT.md` — never the wider vault | its repos' write + outbox path | `SLUG` in a wired repo's `.atlas.conf`; `atlas_init --slug` |
 | **both-hats** — a single-seat project | the union: outbox + `architecture/**` + own edges | as arch | as both, one identity | `ATLAS_ROLE="both"`; transitional — the §9 migration is the exit |
+| **product** — OPTIONAL, per project (`product:` in the io-graph) | `product/**` only: requirements with acceptance criteria; the what-and-why | the bridge (direction), evidence (users, data, the running product), the vault | vault write scoped to `product/` | `atlas_init --product`; declared in the io-graph |
 | **orchestrator** — at most one per ESTATE | its own project's vault (as a both-hats seat of the estate project) + the estate services it delivers | every repo it serves (org read); machine access to every seat (SSH) | **the widest in the estate**: org-scoped tokens it mints and rotates for everyone else; infrastructure access | its service contract, below |
+
+**The product seat holds the what-and-why; the arch seat holds the how** (1.28.9,
+optional per project — declare `product: {enabled: true}` in the io-graph or the seat
+does not exist). It stays in the problem space: it writes **requirements** — each with
+testable acceptance criteria — into `product/requirements/`, and it **researches the
+product as a thing in the world** (users, market, domain, value: what it is), never its
+design (arch researches design). Its inputs are the operator's direction (the bridge)
+and evidence; an invented need is this seat's failure mode, so a requirement that cites
+no direction and no evidence is not a requirement. It makes no implementation
+decisions, but it must hear feasibility: the arch seat raises reshape asks as ordinary
+needs addressed to `<project>-product`, and **arch has the final word on cost** — a
+requirement arch rules unaffordable goes back for reshaping, not into the graph. The
+loop is vault-only outbox traffic (no hub lane). Requirements **version with the
+product release line** (§4): the id is stable for life, the `version:` field moves with
+the product's releases, history is git. A component's contract cites the criteria it
+satisfies (`satisfies:` — §5), and the validator's requirements report is the standing
+audit: every requirement's status, version, criteria and citations, with warnings for a
+citation of an unknown requirement, a version mismatch, and an accepted requirement
+nothing cites. Works the vault checkout like the arch seat; scope guard on writes
+(`product/**` and nothing else); one per project at most.
 
 **The orchestrator is a role, not a mechanic.** In Atlas terms it is an ordinary
 both-hats seat of its own project (the estate project — vault, outbox, guards, releases
