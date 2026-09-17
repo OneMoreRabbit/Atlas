@@ -147,3 +147,11 @@ Alongside `_bridge/` (arch↔operator), a project with a product seat has `_gps/
 (product↔operator): direction down, requirement drafts and product research up. The
 product seat writes only `_gps/`; the operator owns the rest of the Nav vault; nothing
 in `_gps/` is a requirement until filed in the project vault's `product/requirements/`.
+
+## One writer per bridge file (1.28.11)
+
+`_bridge/tasks.md` is the OPERATOR'S file: read it every session for items addressed
+to you; never write it. The arch seat appends its updates — dated, newest first — to
+`_bridge/from-arch.md`, and writes no other bridge file. Two writers on one file
+guaranteed the operator a sync conflict every time they edited offline; one writer per
+file ends it. (The product seat's lane is `_gps/`, same discipline.)

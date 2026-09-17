@@ -286,3 +286,10 @@ requirements to `product/requirements/`; you pin cost — a requirement you rule
 expensive goes back as a need addressed to `<project>-product` (your word on cost is
 final). A component's contract cites what it satisfies (`satisfies:`); the validator's
 REQUIREMENTS section is the audit — read it at review.
+
+## Daily housekeeping (1.28.11, where the estate triggers it)
+
+The estate may wake you daily at ~05:00 with `housekeeping-prompt.md` (beside your
+scripts in the method's arch-seat template). Follow it exactly: no releases, no
+merges, no pin changes in that run. Bridge rule regardless of the trigger:
+`_bridge/tasks.md` is the operator's — you append only to `_bridge/from-arch.md`.

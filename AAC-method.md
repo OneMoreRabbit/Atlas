@@ -349,6 +349,16 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.11 (2026-09-17, operator): the DAILY HOUSEKEEPING RUN — each arch seat woken
+#   ~05:00 by the estate's trigger (orchestrator-owned, configurable, inert untriggered)
+#   runs templates/arch-seat/housekeeping-prompt.md: validator green; 14-day staleness
+#   pass (uncertain = flag, never act); next-steps/roadmap/dashboard truthfulness;
+#   retire answered needs, chase unretired; sweep the operator's bridge tasks; report
+#   in the seat's own feed. No releases/merges/pins. No mode change needed (arch pushes
+#   are not supervise-gated; both-hats trigger may set autonomous per-session). PLUS
+#   the bridge ONE-WRITER rule in bridge-init: _bridge/tasks.md is the operator's file,
+#   never written by a seat; the arch seat appends only to _bridge/from-arch.md —
+#   shared-write of tasks.md guaranteed the operator sync conflicts.
 #   1.28.10 (2026-09-17, operator + estate-review): (1) _gps/ — the product seat's
 #   lane to the human in the project's Nav vault (top level, alongside _bridge/): seat
 #   writes only _gps/ there (guard-enforced, Nav PAT scoped to the repo); conversation
@@ -1719,6 +1729,19 @@ operator owns everything else, and nothing in `_gps/` is a requirement until it 
 filed in `product/requirements/` — the Nav vault is conversation, the project vault is
 record. Access is a Nav PAT scoped to the project's Nav repo, granted by the operator;
 a project with no product seat has no `_gps/`.
+
+**The daily housekeeping run** (1.28.11, operator). Each arch seat is woken once a day
+(~05:00, by the estate's own trigger — host timer, orchestrator-owned and -configurable,
+off by default until the estate turns it on) to run
+`templates/arch-seat/housekeeping-prompt.md`: confirm the validator green, judge every
+live doc staler than 14 days (`ATLAS_STALE_DAYS` overrides; uncertain docs are flagged,
+never acted on), bring `next-steps.md`, the roadmap and the dashboard back to the truth,
+retire answered needs and chase unretired ones, sweep the operator's bridge tasks, and
+report in the seat's own bridge feed. **No releases, no PR merges, no pin changes** in a
+housekeeping run. No mode change is needed — arch pushes are not supervise-gated; the
+one exception is a both-hats seat, where the trigger may set `ATLAS_MODE=autonomous`
+for that session only. The judgment work is the point: regeneration is CI's job, and a
+run that only re-derives derived views has done nothing.
 
 **The review seat — oversight that only reads** (1.28.10, adopting the estate's
 ADR-0011). An estate may run a standing reviewer: weekly, one project in depth plus one
