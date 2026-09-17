@@ -40,7 +40,7 @@ merges, NO pin changes — those belong to interactive sessions.
 
 - Idempotent and boring: re-stamping is cheap, archiving is careful, uncertainty is
   flagged, never acted on.
-- Both-hats seats only: if your push hits the supervised-mode ask, the trigger runs
-  you with ATLAS_MODE=autonomous for this session — scope unchanged, guards still on.
+- If a supervised-mode gate asks, it asks — nothing overrides it (operator ruling).
+  Commit locally; the push waits for confirmation or the next interactive session.
 - The trigger is the estate's (host timer, orchestrator-owned, can be off). This
   prompt is inert without it.

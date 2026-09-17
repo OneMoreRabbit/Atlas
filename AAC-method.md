@@ -355,7 +355,8 @@ updated: 2026-09-13
 #   pass (uncertain = flag, never act); next-steps/roadmap/dashboard truthfulness;
 #   retire answered needs, chase unretired; sweep the operator's bridge tasks; report
 #   in the seat's own feed. No releases/merges/pins. No mode change needed (arch pushes
-#   are not supervise-gated; both-hats trigger may set autonomous per-session). PLUS
+#   are not supervise-gated). 1.28.12: NO autonomous override at all, operator ruling —
+#   on a both-hats seat the gate asks and the push simply waits. PLUS
 #   the bridge ONE-WRITER rule in bridge-init: _bridge/tasks.md is the operator's file,
 #   never written by a seat; the arch seat appends only to _bridge/from-arch.md —
 #   shared-write of tasks.md guaranteed the operator sync conflicts.
@@ -1738,9 +1739,9 @@ live doc staler than 14 days (`ATLAS_STALE_DAYS` overrides; uncertain docs are f
 never acted on), bring `next-steps.md`, the roadmap and the dashboard back to the truth,
 retire answered needs and chase unretired ones, sweep the operator's bridge tasks, and
 report in the seat's own bridge feed. **No releases, no PR merges, no pin changes** in a
-housekeeping run. No mode change is needed — arch pushes are not supervise-gated; the
-one exception is a both-hats seat, where the trigger may set `ATLAS_MODE=autonomous`
-for that session only. The judgment work is the point: regeneration is CI's job, and a
+housekeeping run. There is NO mode override, ever (operator ruling) — arch
+pushes are not supervise-gated anyway, and on a both-hats seat the gate simply asks:
+the commit lands, the push waits for confirmation or the next interactive session. The judgment work is the point: regeneration is CI's job, and a
 run that only re-derives derived views has done nothing.
 
 **The review seat — oversight that only reads** (1.28.10, adopting the estate's
