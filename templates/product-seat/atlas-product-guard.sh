@@ -23,6 +23,23 @@ if [ "$P" = "__ATLAS_PARSE_ERROR__" ]; then
 fi
 [ -n "$P" ] || exit 0
 P=$(printf '%s' "$P" | tr '\\' '/'); V=$(printf '%s' "$ATLAS_VAULT" | tr '\\' '/')
+# the Nav vault, when configured: the seat's lane there is _gps/ and nothing else
+# (1.28.10, operator — mirrors the arch seat's _bridge/ discipline)
+N=$(printf '%s' "${ATLAS_NAV:-}" | tr '\\' '/')
+if [ -n "$N" ]; then
+  case "$P" in
+    "$N"/*|*"/$N/"*)
+      NREL=${P#*"$N"/}
+      case "$NREL" in _gps/*) exit 0 ;; esac
+      "$PY" -c '
+import json, sys
+print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+  "permissionDecision": "deny",
+  "permissionDecisionReason": "Atlas product seat writes only _gps/** in the Nav vault (method 1.28.10) - the operator owns everything else there. Refused: " + sys.argv[1]}}))
+' "$NREL"
+      exit 0 ;;
+  esac
+fi
 case "$P" in
   "$V"/*|*"/$V/"*) REL=${P#*"$V"/} ;;
   *) exit 0 ;;                                   # not a vault write

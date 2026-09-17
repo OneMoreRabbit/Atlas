@@ -315,7 +315,7 @@ ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-se
 PRODUCT_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "product-seat"
 
 
-def install_product(vault: Path, launch_dir: Path, force: bool) -> int:
+def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None = None) -> int:
     """Product-seat mode (1.28.9, §10): installs the reorientation hook, the product/**
     write guard and the alignment gate into the launch dir, plus .atlas-product.conf.
     Deliberately simple — mirrors --arch without the arch briefing machinery."""
@@ -349,6 +349,8 @@ def install_product(vault: Path, launch_dir: Path, force: bool) -> int:
             if m:
                 kept[m.group(1)] = m.group(2)
     kept["ATLAS_VAULT"] = str(vault)
+    if nav:
+        kept["ATLAS_NAV"] = str(Path(nav).resolve())
     kept.setdefault("ATLAS_METHOD", str(Path(__file__).resolve().parent.parent))
     conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
                     encoding="utf-8", newline="\n")
@@ -473,6 +475,10 @@ def main() -> int:
                          "reviewable in the committed .atlas.conf; never inferred "
                          "(1.24.5). Transitional: split back when a second component "
                          "arrives (AAC-method §9)")
+    ap.add_argument("--nav", metavar="PATH", default=None,
+                    help="product seat: path to the project's Nav vault checkout — "
+                         "written to .atlas-product.conf as ATLAS_NAV so the guard "
+                         "scopes writes there to _gps/ (1.28.10)")
     ap.add_argument("--product", action="store_true",
                     help="install a PRODUCT seat (1.28.9, §10): reorientation hook, "
                          "product/** write guard and alignment gate at the launch dir; "
@@ -517,7 +523,7 @@ def main() -> int:
                   f"tree — hooks load from the launch dir. Re-run with `--launch-dir {repo.parent}`.",
                   file=sys.stderr)
             return 2
-        return install_product(repo, ld, args.force)
+        return install_product(repo, ld, args.force, args.nav)
     if args.arch:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
         if ld == repo:

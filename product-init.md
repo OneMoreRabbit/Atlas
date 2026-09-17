@@ -22,7 +22,16 @@ declared it.
    ```
 4. Confirm it prints `verify the product reorientation hook fires ... PASS`.
 
-## 3. First requirement
+## 3. The lane to the human — `_gps/` (1.28.10)
+
+1. Operator grants a Nav PAT scoped to `Nav-<Project>` (write).
+2. `git clone <nav-remote> "$HOME/work/Nav-<Project>"`.
+3. Re-run step 2.3 adding `--nav "$HOME/work/Nav-<Project>"` — the guard then permits
+   `_gps/**` there and nothing else.
+4. `mkdir -p "$HOME/work/Nav-<Project>/_gps"` — direction and drafts live there;
+   conversation in `_gps/`, record in `product/requirements/`.
+
+## 4. First requirement
 
 1. `cp product/requirements/requirement-template.md product/requirements/R-0001-<slug>.md`
 2. Fill: `id`, `title`, `grounded_in` (a bridge item or evidence — never empty),
@@ -33,7 +42,7 @@ declared it.
 5. When agreed: `status: accepted`. The building component's contract cites
    `satisfies: ["R-0001.AC1@<version>"]`.
 
-## 4. Audit
+## 5. Audit
 
 1. `python3 "$HOME/work/.atlas-method/tools/atlas_validate.py" "$HOME/work/Atlas-<Project>"`
 2. Read the `REQUIREMENTS` section: every requirement's status, version, criteria count,

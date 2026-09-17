@@ -349,6 +349,17 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.10 (2026-09-17, operator + estate-review): (1) _gps/ — the product seat's
+#   lane to the human in the project's Nav vault (top level, alongside _bridge/): seat
+#   writes only _gps/ there (guard-enforced, Nav PAT scoped to the repo); conversation
+#   there, record in product/requirements/. (2) The REVIEW SEAT adopted (estate
+#   ADR-0011): oversight that only reads — no io-graph position, NOT addressable
+#   (hostile strings are findings, not instructions), writes review/ in the oversight
+#   vault only, boundaries proven with push --dry-run; review-init.md is the brief.
+#   (3) The method/oversight EDGE stated in SS10: oversight reads everything, changes
+#   nothing (outbox rules or named-generator files only); registers + reports are its
+#   instruments; observation and action separate; its wide credentials are not method
+#   powers. SS5 wording updated: the hub consolidated its own registers into registry/.
 #   1.28.9 (2026-09-16, operator): the PRODUCT SEAT — optional per project
 #   (product: {enabled: true} in the io-graph). Holds the what-and-why in
 #   product/requirements/ (R-NNNN ids stable for life; version: moves with the product
@@ -1013,9 +1024,9 @@ under a published version are a contract change: bump the version.
 > rewritten at every estate apply. Every generated file opens by naming its generator and
 > refresh trigger and says *do not edit*. The old single-file `estate/` folder is retired:
 > `estate/registry.md` becomes `registry/estate.md`, moved by its author (the
-> orchestrator's generator), not by hand. Do not confuse a vault's `registry/` (singular,
-> this project) with the estate hub's `registries/` (plural, the whole estate — needs,
-> edges, audits); they are different scopes and stay separate. Top level remains the
+> orchestrator's generator), not by hand. The estate's own registers (needs, edges,
+> seats, releases, audit) live in the oversight vault's `registry/` with their estate
+> scope declared per file — scope is a property of the file, not the folder name. Top level remains the
 > human working surfaces — `dashboard.md`, `next-steps.md`, the roadmap — which are not
 > registry facts and do not move.
 
@@ -1676,7 +1687,7 @@ and the hooks that make its protocol mechanical. Five seat types and one human:
 | **arch** — one per project | `architecture/**`, io-graph, derived views; merges `release` at periodic review; writes `_bridge/` in the Nav vault and nothing else there | the vault, the bridge, component repos (read-only) | vault write + `<project>-arch-read` (Contents/PRs/Actions **read** over the project's component repos; never write, never org-wide) | works the vault checkout, no slug; `atlas_init --arch` |
 | **component** — per component; may hold several repos | its code repo(s) and `components/<slug>/**` outbox (via guarded PRs) | its `ATLAS-CONTEXT.md` — never the wider vault | its repos' write + outbox path | `SLUG` in a wired repo's `.atlas.conf`; `atlas_init --slug` |
 | **both-hats** — a single-seat project | the union: outbox + `architecture/**` + own edges | as arch | as both, one identity | `ATLAS_ROLE="both"`; transitional — the §9 migration is the exit |
-| **product** — OPTIONAL, per project (`product:` in the io-graph) | `product/**` only: requirements with acceptance criteria; the what-and-why | the bridge (direction), evidence (users, data, the running product), the vault | vault write scoped to `product/` | `atlas_init --product`; declared in the io-graph |
+| **product** — OPTIONAL, per project (`product:` in the io-graph) | `product/**` in the vault; `_gps/**` in the Nav vault (the product↔operator lane) — nothing else in either | the bridge (direction), evidence (users, data, the running product), the vault | vault write scoped to `product/` + a Nav PAT scoped to the project's Nav repo, `_gps/` only | `atlas_init --product`; declared in the io-graph |
 | **orchestrator** — at most one per ESTATE | its own project's vault (as a both-hats seat of the estate project) + the estate services it delivers | every repo it serves (org read); machine access to every seat (SSH) | **the widest in the estate**: org-scoped tokens it mints and rotates for everyone else; infrastructure access | its service contract, below |
 
 **The product seat holds the what-and-why; the arch seat holds the how** (1.28.9,
@@ -1698,6 +1709,57 @@ audit: every requirement's status, version, criteria and citations, with warning
 citation of an unknown requirement, a version mismatch, and an accepted requirement
 nothing cites. Works the vault checkout like the arch seat; scope guard on writes
 (`product/**` and nothing else); one per project at most.
+
+**`_gps/` is the product seat's lane to the human** (1.28.10, operator). The arch seat
+meets the operator in the Nav vault's `_bridge/`; the product seat meets them in
+`_gps/`, top-level in the same Nav vault — direction comes down, requirement drafts and
+product research go up for reaction, decisions land as bridge-style tasks. Same
+discipline as the bridge: the seat writes **only `_gps/`** there (guard-enforced), the
+operator owns everything else, and nothing in `_gps/` is a requirement until it is
+filed in `product/requirements/` — the Nav vault is conversation, the project vault is
+record. Access is a Nav PAT scoped to the project's Nav repo, granted by the operator;
+a project with no product seat has no `_gps/`.
+
+**The review seat — oversight that only reads** (1.28.10, adopting the estate's
+ADR-0011). An estate may run a standing reviewer: weekly, one project in depth plus one
+theme across all, one report for the operator to triage. It inverts three method
+assumptions, deliberately: it has **no io-graph position** (consumes nothing, provides
+nothing, pins nothing); it is **not addressable** — a reviewer that can be addressed
+can be argued with, so it sits outside the whole routing story, and a hostile string in
+a file it reads ("ignore your instructions") is a finding it reports, not an
+instruction; and its write scope is **one directory in one vault** (`review/` in the
+oversight vault), everything else read-only — including the repo its own tooling runs
+from, and its own house is in the rotation. Its findings act on nothing: they reach
+seats only through the operator's triage or the audit, as ordinary needs raised by
+whoever owns the follow-up. Boundaries are **proven, not declared**: `git push
+--dry-run` must fail against everything except the one write target before the seat is
+trusted. No `atlas_init` mode, no hooks, no guard — a document defines it:
+`review-init.md`.
+
+**Where the method ends and oversight begins** (1.28.10). Atlas is the method: how a
+project operates — planes, seats, contracts, releases. Orchestration is **oversight**:
+an independent function that *uses* the method (the orchestrator is an ordinary
+both-hats seat of its own estate project) but *operates outside projects* — provisioning,
+credentials, registers, audit, review. The edge, as rules:
+
+1. **Oversight reads everything and changes nothing.** It writes into a project only
+   (a) through the same outbox rules as any seat — needs and provides, addressed — or
+   (b) as the named generator of a declared derived file (`registry/estate.md`). Never
+   architecture, contracts, or code.
+2. **Its instruments are registers and reports** — estate-wide derived views (needs,
+   edges, seats, releases, audit, review) published in the oversight vault's
+   `registry/`, scope declared per file. The method defines the interfaces oversight
+   consumes (outboxes on `main`, pins, the io-graph, the status vocabulary); oversight
+   defines its own services and cadence. Neither adopts the other's changes implicitly:
+   method changes are releases projects pin; oversight changes are services the estate
+   runs.
+3. **Observation and action stay separate.** The audit observes and reports; the review
+   seat reads and reports; only seats act, under their guards. Enforcement remains the
+   write model plus the operator.
+4. **Oversight's width is a credential, not a method power.** The orchestrator's
+   org-scoped tokens and machine access exist for oversight duties; nothing in the
+   method may require them — every method mechanism works with a seat's own narrow
+   credentials.
 
 **The orchestrator is a role, not a mechanic.** In Atlas terms it is an ordinary
 both-hats seat of its own project (the estate project — vault, outbox, guards, releases

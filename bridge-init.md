@@ -140,3 +140,10 @@ owner (`tasks-nav.md` / `tasks-atlas.md`, owner edits, other side appends).
 Keep it this simple and work with it. Not yet built, extracted later from practice if
 practice wants them: mechanical write-scope guards on `_bridge/`, dashboard
 awaiting-@nav / awaiting-@atlas counts, task aging, multi-human lanes.
+
+## _gps/ — the product seat's lane (1.28.10, where a product seat is declared)
+
+Alongside `_bridge/` (arch↔operator), a project with a product seat has `_gps/`
+(product↔operator): direction down, requirement drafts and product research up. The
+product seat writes only `_gps/`; the operator owns the rest of the Nav vault; nothing
+in `_gps/` is a requirement until filed in the project vault's `product/requirements/`.
