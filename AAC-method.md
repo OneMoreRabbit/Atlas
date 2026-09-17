@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.13 (2026-09-17, operator): HOUSE STYLE injected into every briefing on the
+#   estate — house-style.md at the method root ("SIMPLE IS BETTER THAN COMPLEX"; short
+#   plain English; no invented terms, one name per thing; jargon minimal; an action
+#   names its exact file/repo/seat/terminal). One managed file: edit it, cut a patch,
+#   seats receive it at their pin. Injected at the TOP of the component/seat briefing,
+#   the arch briefing and the product briefing; falls back to the headline if the file
+#   is missing so no briefing ever emits without it.
 #   1.28.11 (2026-09-17, operator): the DAILY HOUSEKEEPING RUN — each arch seat woken
 #   ~05:00 by the estate's trigger (orchestrator-owned, configurable, inert untriggered)
 #   runs templates/arch-seat/housekeeping-prompt.md: validator green; 14-day staleness

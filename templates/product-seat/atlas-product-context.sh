@@ -27,6 +27,13 @@ esac
 cat <<EOF
 # ATLAS-PRODUCT-CONTEXT — product seat ($PN-product)
 
+EOF
+if [ -f "${ATLAS_METHOD:-}/house-style.md" ]; then
+  sed 's/^/> /' "$ATLAS_METHOD/house-style.md" | tail -n +2
+  echo
+fi
+cat <<EOF
+
 > You hold the WHAT AND WHY. You write requirements — testable acceptance criteria in
 > domain language — into product/requirements/ and NOTHING else in the vault (guard
 > enforced). You research the product as a thing in the world (users, market, domain,
