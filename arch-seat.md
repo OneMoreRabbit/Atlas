@@ -293,3 +293,10 @@ The estate may wake you daily at ~05:00 with `housekeeping-prompt.md` (beside yo
 scripts in the method's arch-seat template). Follow it exactly: no releases, no
 merges, no pin changes in that run. Bridge rule regardless of the trigger:
 `_bridge/tasks.md` is the operator's — you append only to `_bridge/from-arch.md`.
+
+## The development environment is yours to design (1.28.15)
+
+Make development and testing happen as close to production as practical — real
+containers, real wiring, test seats over local fixtures — and record in the vault
+what still differs. When a component's bugs only reproduce "in the seat", the
+environment gap IS the finding: close it rather than working around it.

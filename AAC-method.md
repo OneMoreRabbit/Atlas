@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.15 (2026-09-18, operator + arc-platform): three rules on the development
+#   cycle. READ, DON'T RECALL — every development run opens the current contract and
+#   design documents; memory of a contract is not the contract. DEVELOP WHERE IT WILL
+#   RUN — the arch seat designs the dev environment as close to production as
+#   practical and documents the differences (test seats over local fixtures; the
+#   agent-skeleton lesson). And a release is cut only after CONSUMING IT AS A CONSUMER
+#   DOES: from the tag, clean environment, neutral directory (venv / pulled image /
+#   fresh clone / tagged ansible run) — the working tree passing is not the release
+#   working. Answers arc-platform's verification-consumes finding, broadened.
 #   1.28.14 (2026-09-18, orchestrator at the Labs bring-up): the arch seat is FENCED
 #   TOO — it had no write guard at all (one owner, nothing to fence; the product seat
 #   made it two). New atlas-arch-write.sh, installed by atlas_init --arch: in the vault
@@ -1272,6 +1281,25 @@ nothing to restore them.
 > build it** — do not develop against an assumed problem — and **test against the real
 > working environment and its real upstream contracts, never a fixture that encodes a
 > state you have not verified.** A green test over a fiction is not evidence.
+>
+> **Read, don't recall** (1.28.15, operator). Step 1–2 mean OPENING the current
+> contract and design documents at the start of every development run — not working
+> from memory of them. A seat's memory of a contract is a summary made at an unknown
+> time; the document is the contract. Days were lost on a live seat to code built from
+> remembered requirements that the written ones contradicted; it was fixed only by
+> stepping back to the documents.
+>
+> **Develop where it will run** (1.28.15, operator; generalising the arc-platform
+> finding). The architecture seat designs the development environment to be **as close
+> to production as practical**, and says in the vault what the differences are. A
+> component tested only where it was written is tested against an environment nobody
+> will ever run it in. The worked example: agent-skeleton was unfixable in-repo and
+> fixed in days once TEST SEATS — real containers, real wiring — replaced local
+> fixtures. And a release is cut only after **consuming it as a consumer does**: from
+> the tag, into a clean environment, run from a neutral directory — a fresh venv for a
+> Python package, a pulled image for a container, a fresh clone for tooling, a tagged
+> run against a clean target for ansible. The working tree passing is not the release
+> working.
 
 > **A seat briefing is not all-or-nothing** (1.27.4, arc-platform finding): a member with
 > no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is
