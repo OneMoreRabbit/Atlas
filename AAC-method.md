@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.28.14 (2026-09-18, orchestrator at the Labs bring-up): the arch seat is FENCED
+#   TOO — it had no write guard at all (one owner, nothing to fence; the product seat
+#   made it two). New atlas-arch-write.sh, installed by atlas_init --arch: in the vault
+#   everything but product/** (denied, with the reshape-loop pointer); in the Nav vault
+#   _bridge/** only and never tasks.md (the 1.28.11 one-writer rule made mechanical).
 #   1.28.13 (2026-09-17, operator): HOUSE STYLE injected into every briefing on the
 #   estate — house-style.md at the method root ("SIMPLE IS BETTER THAN COMPLEX"; short
 #   plain English; no invented terms, one name per thing; jargon minimal; an action
@@ -1727,6 +1732,15 @@ audit: every requirement's status, version, criteria and citations, with warning
 citation of an unknown requirement, a version mismatch, and an accepted requirement
 nothing cites. Works the vault checkout like the arch seat; scope guard on writes
 (`product/**` and nothing else); one per project at most.
+
+**The boundary holds both ways** (1.28.14, orchestrator finding at the Labs bring-up).
+The product guard fenced the product seat from day one; the arch seat had no write
+guard at all — one owner, nothing to fence. With two owners it is fenced too:
+`atlas-arch-write.sh` denies the arch seat `product/**` in its vault (reshape asks go
+to `<project>-product`; arch's word on cost is final, the text is the product seat's)
+and, in the Nav vault, permits `_bridge/**` only — never `_bridge/tasks.md`, the
+operator's file. "Neither writes the other's tree" is now mechanical in both
+directions.
 
 **`_gps/` is the product seat's lane to the human** (1.28.10, operator). The arch seat
 meets the operator in the Nav vault's `_bridge/`; the product seat meets them in

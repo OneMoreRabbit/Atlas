@@ -388,7 +388,7 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
               file=sys.stderr)
         return 2
     written = []
-    for name in ("atlas-arch-context.sh", "atlas-arch-guard.sh"):
+    for name in ("atlas-arch-context.sh", "atlas-arch-guard.sh", "atlas-arch-write.sh"):
         src, dst = ARCH_TEMPLATES / name, launch_dir / name
         if dst.exists() and not force and read(dst) == read(src):
             pass
