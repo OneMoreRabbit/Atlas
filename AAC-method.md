@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.28"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.29"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.29.0 (2026-09-18): ESTATE RELEASE — rolls up the whole 1.28.x line. The seats
+#   beyond the component: the PRODUCT seat (requirements as contracts, _gps lane, the
+#   boundary fenced BOTH ways), the review seat (oversight that only reads), the
+#   method/oversight edge, the daily housekeeping run (no autonomous, ever), house
+#   style opening every briefing. Tooling hardened by field findings: installer
+#   preserves .atlas.conf, installs the needs tool, prunes duplicate hooks, proves
+#   hooks FIRE; --verify fails on script drift; nothing hangs on a held-open stdin;
+#   union write guard for multi-component seats; arch gate ignores its own regen echo;
+#   method CI runs the installer on every push. Structure: registry/ the one home
+#   (estate/ retired); one writer per bridge file. Discipline: read don't recall;
+#   develop where it will run; a release is consumed from the tag, not inspected.
+#   Arch seats pin '1.29.0'; the orchestrator announces and does the estate-owned parts.
 #   1.28.15 (2026-09-18, operator + arc-platform): three rules on the development
 #   cycle. READ, DON'T RECALL — every development run opens the current contract and
 #   design documents; memory of a contract is not the contract. DEVELOP WHERE IT WILL
