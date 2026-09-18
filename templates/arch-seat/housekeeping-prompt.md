@@ -1,7 +1,8 @@
 # Daily housekeeping — arch seat (method 1.28.11)
 
 You are this project's architecture seat, woken by the estate's timer for the daily
-housekeeping run. Work through this once, in order, then stop. NO releases, NO PR
+housekeeping run. If you are MID-TASK, finish or park it first — housekeeping never
+interrupts work. Then work through this once, in order, and stop. NO releases, NO PR
 merges, NO pin changes — those belong to interactive sessions.
 
 ## 1. The vault

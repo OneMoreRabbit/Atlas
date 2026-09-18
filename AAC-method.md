@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.29.1 (2026-09-18, operator): housekeeping trigger contract — delivery is
+#   message-if-live, start-if-not (`seat msg <project>-arch` with a one-line POINTER at
+#   the prompt file, never the prompt pasted — the file is the one home, followed at
+#   the vault's pin). Mid-task rule added to the prompt: finish or park first;
+#   housekeeping never interrupts work. Doc-only; seats stay pinned at 1.29.0.
 # 1.29.0 (2026-09-18): ESTATE RELEASE — rolls up the whole 1.28.x line. The seats
 #   beyond the component: the PRODUCT seat (requirements as contracts, _gps lane, the
 #   boundary fenced BOTH ways), the review seat (oversight that only reads), the
@@ -1795,7 +1800,13 @@ a project with no product seat has no `_gps/`.
 **The daily housekeeping run** (1.28.11, operator). Each arch seat is woken once a day
 (~05:00, by the estate's own trigger — host timer, orchestrator-owned and -configurable,
 off by default until the estate turns it on) to run
-`templates/arch-seat/housekeeping-prompt.md`: confirm the validator green, judge every
+`templates/arch-seat/housekeeping-prompt.md`. Delivery is either form (1.29.1): message
+a LIVE session — `seat msg <project>-arch "Daily housekeeping: read and follow
+.atlas-method/templates/arch-seat/housekeeping-prompt.md, then stop."` — or start a
+session with that same line when none is live (message-if-live, start-if-not). The
+message is a POINTER, never the prompt pasted: the file is the one home, so the seat
+follows the version at its vault's pin and the trigger never changes. A mid-task seat
+finishes or parks first — housekeeping never interrupts work. The run itself: confirm the validator green, judge every
 live doc staler than 14 days (`ATLAS_STALE_DAYS` overrides; uncertain docs are flagged,
 never acted on), bring `next-steps.md`, the roadmap and the dashboard back to the truth,
 retire answered needs and chase unretired ones, sweep the operator's bridge tasks, and
