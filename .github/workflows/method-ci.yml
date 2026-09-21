@@ -21,6 +21,7 @@ jobs:
           for s in templates/component-repo/scripts/*.sh templates/arch-seat/*.sh; do sh -n "$s"; done
           python3 -c "import ast,glob; [ast.parse(open(f).read()) for f in glob.glob('tools/*.py') + ['templates/component-repo/scripts/atlas-needs.py']]"
           python3 -c "import json; [json.load(open(f)) for f in ['templates/component-repo/.claude/settings.json','templates/arch-seat/.claude/settings.json']]"
+          python3 tools/tests/test_retired_agreement.py
 
       - name: Fixture vault (real local remote — verify RUNS the context script,
               which clones and briefs; a fake URL fails exactly there)
