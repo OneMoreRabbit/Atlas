@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.29"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.30"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,14 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.30.0 (2026-09-21): ESTATE RELEASE — rolls up 1.29.1-1.29.2. The 1.29.0 roll's own
+#   findings fixed and proven: contract resolution follows the io-graph's CURRENT
+#   provider and an archive-only hit warns loudly (a consumer can no longer be briefed
+#   on superseded text after a provider move); upgrades mandate --force on wired seats;
+#   the register view labels external per row; template register URLs corrected; two
+#   warn-only hygiene rungs (repin re-decided; live links to archived docs); the
+#   housekeeping trigger contract (message-if-live, start-if-not; mid-task rule).
+#   Arch seats pin '1.30.0' themselves; the orchestrator announces and relays.
 #   1.29.2 (2026-09-21, the 1.29.0 roll findings — AgentEco wave + arc-platform):
 #   contract resolution FIXED — an archive/-only hit is never silent (loud ARCHIVED
 #   COPY note) and the briefing resolves at the io-graph's CURRENT provider, so a
