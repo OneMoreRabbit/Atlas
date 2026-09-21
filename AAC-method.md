@@ -349,6 +349,17 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.29.2 (2026-09-21, the 1.29.0 roll findings — AgentEco wave + arc-platform):
+#   contract resolution FIXED — an archive/-only hit is never silent (loud ARCHIVED
+#   COPY note) and the briefing resolves at the io-graph's CURRENT provider, so a
+#   provider move can no longer brief a consumer on superseded text; upgrade prompt
+#   mandates --force on wired seats (silent-skip finding); atlas-needs.py labels
+#   external PER ROW from the register's vault column (the "all EXTERNAL" blanket was
+#   false three measured times); .atlas.conf.example register URLs registry/ singular;
+#   two new warn-only rungs — repin: re-decided on every bump (escape: repin-decided:
+#   == updated:) and live-links-to-archived ([[name]] **(archived)** is the declared
+#   historical spelling). Contract-reading mechanism: raw material received, design at
+#   the operator's table.
 #   1.29.1 (2026-09-18, operator): housekeeping trigger contract — delivery is
 #   message-if-live, start-if-not (`seat msg <project>-arch` with a one-line POINTER at
 #   the prompt file, never the prompt pasted — the file is the one home, followed at

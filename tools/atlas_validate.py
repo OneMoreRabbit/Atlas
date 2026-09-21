@@ -850,11 +850,25 @@ def contract_at_pin(provides_dir: Path, interface: str, pinned: str):
     if not live and not archived:
         return None, None, f"no contract file for `{interface}` under {provides_dir}"
     want = version_tuple(pinned)[:2]
-    for p, ver in live + archived:  # live listed first — live wins on exact match
+    for p, ver in live:
         if version_tuple(ver)[:2] == want:
             return p, ver, ""
+    # An exact match that exists ONLY under archive/ is never returned silently
+    # (1.29.2, AgentEco: a consumer was briefed on an archived, superseded copy after a
+    # component split moved the live contract — wrong text, wrong provider, everything
+    # reported aligned). The archived text is shown, loudly, so the session can act.
+    for p, ver in archived:
+        if version_tuple(ver)[:2] == want:
+            return p, ver, (f"ARCHIVED COPY — `{interface}` {ver} here is superseded and the "
+                            "live contract is NOT in this folder: the provider has likely "
+                            "moved (read registry/io-graph.yml for the current provider) or "
+                            "the version was retired. Do not build against this text without "
+                            "confirming where the live contract now lives.")
     p, ver = max(live or archived, key=lambda c: version_tuple(c[1]))
-    return p, ver, f"pinned {pinned} not found — showing latest {ver}; re-pin deliberately"
+    note = f"pinned {pinned} not found — showing latest {ver}; re-pin deliberately"
+    if not live:
+        note += " (from archive/ — nothing live here; the provider has likely moved)"
+    return p, ver, note
 
 
 # `to:` is canonical (AAC-method §3); `addressed-to:` is accepted because a
@@ -888,6 +902,73 @@ def arch_addressees(graph) -> list:
     pn = project_name(graph)
     return [ARCH_ADDRESSEE] + ([f"{pn}-arch"] if pn else [])
 WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, ARCH_ADDRESSEE)
+
+
+def repin_redecided_warnings() -> list[str]:
+    """Warn-only (1.29.2, agent-compile): `repin:` describes the TRANSITION between two
+    versions, but frontmatter is copied forward with the file — so a re-stamp's class
+    silently survives into the next real change. When a live contract carries the same
+    `repin:` as its newest archive/ predecessor AND its `updated:` differs (i.e. the file
+    moved without the field being re-decided), warn. Escape: re-date `updated:` after
+    deciding, or set `repin-decided: <date>` equal to `updated:`."""
+    warns = []
+    for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
+        fm = parse_frontmatter(p)
+        iface, rp = fm.get("interface") or fm.get("contract"), fm.get("repin")
+        if not iface or not rp:
+            continue
+        if str(fm.get("repin-decided", "")) == str(fm.get("updated", "x")):
+            continue                       # explicitly re-decided for this version
+        arc = p.parent / "archive"
+        if not arc.is_dir():
+            continue
+        preds = [(version_tuple(str(a_fm.get("version"))), a_fm)
+                 for a in arc.glob("*.md")
+                 for a_fm in [parse_frontmatter(a)]
+                 if (a_fm.get("interface") or a_fm.get("contract")) == iface
+                 and a_fm.get("version") is not None]
+        if not preds:
+            continue
+        prev = max(preds)[1]
+        if str(prev.get("repin")) == str(rp) and str(prev.get("version")) != str(fm.get("version")):
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — `repin: {rp}` unchanged from "
+                         f"predecessor v{prev.get('version')}: re-decide it — the class "
+                         "belongs to the transition, not the document (set "
+                         "`repin-decided:` equal to `updated:` when the sameness is deliberate)")
+    return warns
+
+
+ARCHIVED_LINK_OK = re.compile(r"\]\]\s*\*\*\(archived\)\*\*")
+
+
+def archived_link_warnings() -> list[str]:
+    """Warn-only (1.29.2, agent-skeleton, 20 measured): archiving is the one edit whose
+    damage lands somewhere else — the archiver never sees the dangling link, the link's
+    owner never sees the archival, so the VAULT checks it. A live doc wiki-linking a doc
+    that now lives under archive/ warns, unless the link carries the declared historical
+    spelling `[[name]] **(archived)**`."""
+    archived = {p.stem for p in ROOT.rglob("archive/*.md")}
+    if not archived:
+        return []
+    warns = []
+    for p in sorted(ROOT.rglob("*.md")):
+        rel = p.relative_to(ROOT).as_posix()
+        if "/archive/" in rel or rel.startswith(("reference/", "generated/", "_triage/")):
+            continue
+        try:
+            body = p.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for m in re.finditer(r"\[\[([^\]|#]+?)(?:[|#][^\]]*)?\]\]", body):
+            name = m.group(1).strip()
+            if name not in archived:
+                continue
+            tail = body[m.end():m.end() + 20]
+            if re.match(r"\s*\*\*\(archived\)\*\*", tail):
+                continue                   # declared historical mention — fine
+            warns.append(f"{rel} — links [[{name}]], which is ARCHIVED: repoint it, or "
+                         "mark the mention historical as `[[" + name + "]] **(archived)**`")
+    return warns
 
 
 def requirements_report(graph) -> tuple[list, list]:
@@ -1401,9 +1482,23 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         if not inputs:
             sections.append("_none — no upstream edges._")
         for inp in inputs:
-            path, ver, note = contract_at_pin(
-                ROOT / inp["path"], inp["interface"], str(inp["pinned"]))
-            head = (f"## `{inp['interface']}` from {inp['provider']} — "
+            # Resolution happens at the io-graph's CURRENT provider (1.29.2, AgentEco):
+            # the compiled manifest can lag a provider move (a split, an ADR-0008 hand-
+            # over) for exactly the regen window, and a lagging manifest briefed the old
+            # home's archive as the contract. The live graph is the authority.
+            prov, pdir = inp["provider"], ROOT / inp["path"]
+            cur = next((str(e["from"]) for e in graph.get("edges", [])
+                        if str(e.get("to")) == s and str(e.get("interface")) == inp["interface"]),
+                       None)
+            moved = cur is not None and cur != prov
+            if moved:
+                prov, pdir = cur, ROOT / "components" / cur / "docs" / "provides"
+            path, ver, note = contract_at_pin(pdir, inp["interface"], str(inp["pinned"]))
+            if moved:
+                note = (f"provider MOVED: the manifest still says {inp['provider']}, the "
+                        f"io-graph says {prov} — briefed from {prov}; regen will catch up. "
+                        + (note or "")).strip()
+            head = (f"## `{inp['interface']}` from {prov} — "
                     f"pinned {inp['pinned']}, state: {inp.get('state', '?')}")
             if note:
                 head += f"\n\n> ⚠ {note}"
@@ -1637,6 +1732,15 @@ def main(wiring_flag: bool = False) -> int:
             encoding="utf-8",
         )
     print(f"regenerated {len(names)} component edge blocks + io-manifests")
+
+    # -- hygiene rungs (1.29.2, both warn-only) ----------------------------------
+    for w in repin_redecided_warnings():
+        print(f"  ⚠ {w}")
+    _alw = archived_link_warnings()
+    for w in _alw[:20]:
+        print(f"  ⚠ {w}")
+    if len(_alw) > 20:
+        print(f"  ⚠ ... and {len(_alw) - 20} more live links to archived documents")
 
     # -- requirements report (product seat, 1.28.9) — inert without product/ ------
     req_rows, req_warns = requirements_report(graph)

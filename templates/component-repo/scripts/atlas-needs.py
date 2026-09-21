@@ -166,12 +166,24 @@ def refresh(explicit_slugs: str | None) -> int:
             continue              # addressed to 3 of a seat's slugs is still ONE need
         _seen.add(key)
         mine.append(n)
-    ext = sum(1 for n in mine if n.get("vault"))
+    # Per-row truth, never a blanket (1.29.2, three AgentEco consumers measured the
+    # same wrong sentence): a row's own `vault` column decides whether it is external.
+    own_vault = ""
+    m = re.search(r"/((?:Atlas|Nav)-[\w.-]+?)(?:\.git)?$",
+                  conf(REPO / ".atlas.conf").get("ATLAS_VAULT_REMOTE", ""))
+    if m:
+        own_vault = m.group(1)
+    for n in mine:
+        n["_ext"] = bool(n.get("vault")) and n.get("vault") != own_vault
+    ext = sum(1 for n in mine if n["_ext"])
+    inv = len(mine) - ext
+    desc = f"**{len(mine)} open** — {ext} external (filed in other vaults; your briefing cannot render those), "
+    desc += (f"{inv} in YOUR vault: for those the briefing is the closer view — if it "
+             "disagrees with this register, believe the briefing and report the disagreement."
+             if inv else "none in this vault.")
     L = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
-         f"_Estate register dated {reg_date}. **{len(mine)} open**, all EXTERNAL — filed in "
-         "other vaults, so this vault's briefing cannot render them (a location fact, not a "
-         "read state). Read each where it lives (you hold the vault-read token); answer in "
-         "your own provides/ with `responds_to:`._", ""]
+         f"_Estate register dated {reg_date}. {desc} Answer in your own provides/ with "
+         "`responds_to:`._", ""]
     try:
         age = (date.today() - datetime.strptime(reg_date, "%Y-%m-%d").date()).days
         if age > 3:
@@ -182,7 +194,9 @@ def refresh(explicit_slugs: str | None) -> int:
     if mine:
         L += ["| need | from | vault | updated |", "|---|---|---|---|"]
         L += [f"| {n.get('title', n.get('path', '?'))} <br>`{n.get('path', '?')}` | "
-              f"{n.get('author', '?')} | {n.get('vault', '?')} | {n.get('updated', '?')} |"
+              f"{n.get('author', '?')} | "
+              f"{n.get('vault', '?')}{'' if n['_ext'] else ' (YOURS — trust your briefing)'} | "
+              f"{n.get('updated', '?')} |"
               for n in mine]
     else:
         L.append("_none open._")
@@ -266,8 +280,8 @@ def show() -> int:
         return 0
     STAMP.write_text(cur, encoding="utf-8")
     n = cur.count("\n| ") - (1 if "| need |" in cur else 0)
-    print(f"Atlas: {max(n, 0)} EXTERNAL need(s) addressed to you — filed in other vaults, so "
-          f"your in-vault briefing cannot render them (a location fact, not unread). Read "
+    print(f"Atlas: {max(n, 0)} open need(s) on the estate register addressed to you (the "
+          f"file says which are external and which are in your own vault). Read "
           f"{OUT} (also in your briefing), then finish.", file=sys.stderr)
     return 2
 

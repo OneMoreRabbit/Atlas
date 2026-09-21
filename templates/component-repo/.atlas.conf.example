@@ -17,11 +17,11 @@ ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"
 
 # Cross-vault needs (1.27.2, optional): the estate's needs register, read in place with
 # the vault-read token. Unset = single-vault project, atlas-needs.py stays inert.
-# ATLAS_NEEDS_REGISTER="https://api.github.com/repos/<org>/Atlas-Orchestrator/contents/registries/needs.json?ref=dev"
+# ATLAS_NEEDS_REGISTER="https://api.github.com/repos/<org>/Atlas-Orchestrator/contents/registry/needs.json?ref=dev"
 # Cross-vault consumers (1.27.4, optional): the estate's edges register — every vault's
 # external: entries — so a provider can see which other vaults pin its contracts.
 # Unset = atlas-needs.py writes no consumers.md.
-# ATLAS_EDGES_REGISTER="https://api.github.com/repos/<org>/Atlas-Orchestrator/contents/registries/edges.json?ref=dev"
+# ATLAS_EDGES_REGISTER="https://api.github.com/repos/<org>/Atlas-Orchestrator/contents/registry/edges.json?ref=dev"
 
 # Project name (1.27.5, optional): the vault's declared `project:` — used so a both-hats
 # seat also answers to `<project>-arch` in the estate needs register.

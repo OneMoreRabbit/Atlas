@@ -101,6 +101,13 @@ so declare it only once the vault actually conforms.
 > the truth). The orchestrator announces the release and does the estate-owned parts
 > (credentials, images, retiring interim tooling); the pinning is each arch seat's act.
 
+> **Upgrading an already-wired seat: re-run the installer WITH `--force`** (1.29.2,
+> AgentEco's upgrade-wave finding). Without it the installer skips every existing file —
+> "1 file(s) written", every line ok, git clean — and leaves drifted scripts stale behind
+> a successful-looking run; only `--verify`'s stale-script check exposes it. `--force` is
+> safe on upgrade: `.atlas.conf` is preserved (1.28.6 — SLUG, mode, registers, launch
+> dir all survive). First installs need no flag.
+
 1. **Re-pin.** Set `method: pinned:` in `registry/io-graph.yml` to the release
    (exact, `MAJOR.MINOR.PATCH` — a two-part pin is deprecated and never floats). From
    here the vault is governed by that version of
