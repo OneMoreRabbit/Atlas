@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.1 (2026-09-21, orchestrator canary — cascade was halted for this): the seat
+#   needs-view (atlas-needs.py) now agrees with the validator on what retired means —
+#   its copied constant had drifted since 1.28.2 (missing answered/retired; prefix not
+#   whole-word match), carrying 25 closed needs as open estate-wide. Aligned, and
+#   method CI now ASSERTS the two constants are equal on every push, so the copy can
+#   never drift silently again. Dedupe key is (vault, path). Cascade targets '1.30.1'.
 # 1.30.0 (2026-09-21): ESTATE RELEASE — rolls up 1.29.1-1.29.2. The 1.29.0 roll's own
 #   findings fixed and proven: contract resolution follows the io-graph's CURRENT
 #   provider and an archive-only hit warns loudly (a consumer can no longer be briefed

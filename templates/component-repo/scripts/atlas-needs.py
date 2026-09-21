@@ -157,11 +157,11 @@ def refresh(explicit_slugs: str | None) -> int:
     reg_date = str(reg.get("updated", ""))[:10]
     mine, _seen = [], set()
     for n in reg.get("needs", []):
-        if str(n.get("status", "open")).lower().startswith(RETIRED):
+        if is_retired_status(n.get("status", "open")):
             continue
         if not addressed_to_me(n.get("addressee", ""), slugs):
             continue
-        key = n.get("path") or n.get("title") or repr(n)
+        key = (n.get("vault", ""), n.get("path") or n.get("title") or repr(n))
         if key in _seen:          # the register keys rows per addressee: one need
             continue              # addressed to 3 of a seat's slugs is still ONE need
         _seen.add(key)
@@ -208,7 +208,15 @@ def refresh(explicit_slugs: str | None) -> int:
     return 0
 
 
-RETIRED = ("resolved", "closed", "done", "superseded")   # a need is live unless retired (method RETIRED_STATUSES); 1.27.8
+# The method's retirement vocabulary — MUST equal atlas_validate.py RETIRED_STATUSES
+# (method CI asserts they agree, 1.30.1: this copy drifted from 1.28.2 to 1.30.0 and
+# carried 25 closed needs as open work estate-wide). Whole-word match, not prefix.
+RETIRED = ("superseded", "resolved", "closed", "done", "answered", "retired")
+
+
+def is_retired_status(status: str) -> bool:
+    toks = set(re.findall(r"[a-z]+", str(status).lower()))
+    return any(w in toks for w in RETIRED)
 CONS = STATE / "consumers.md"
 
 
