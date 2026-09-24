@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.2 (2026-09-25, operator): stated in SS3 — a proposal is location-addressed
+#   and never leaves its vault; a CROSS-PROJECT proposal is a need to that project's
+#   arch seat (to: atlas for the method), answered, when structural, by a decision
+#   that retires it. One lane across vault boundaries; no second name. New warn-only
+#   rung: a proposal with a terminal status still sitting in architecture/proposals/
+#   (not archived with a resolution: pointer) warns - decided work should not look
+#   like queue.
 #   1.30.1 (2026-09-21, orchestrator canary — cascade was halted for this): the seat
 #   needs-view (atlas-needs.py) now agrees with the validator on what retired means —
 #   its copied constant had drifted since 1.28.2 (missing answered/retired; prefix not
@@ -775,6 +782,18 @@ components/<slug>/
 > either way. Naming `arch` stops the doc **fanning out to peers** — the fail-open
 > delivery — and records who was asked. That is also why this was invisible for so long:
 > the wrong addressee cost nothing observable.
+
+> **A proposal travels inside its own vault; a cross-project proposal is a need**
+> (1.30.2). `architecture/proposals/` is location-addressed: dropping a file there IS
+> addressing your own arch seat, and nothing in it routes anywhere else. To propose a
+> change to ANOTHER project — the method included — raise a **need** to that project's
+> arch seat (`to: <project>-arch`; `to: atlas` for the method): one lane for
+> everything that crosses a vault boundary, with delivery, the answered-join and
+> retirement already built. The proposal character lives in the answer, not the lane:
+> when the ask is structural, the owning seat answers with a **decision** (an ADR, or
+> a method release, carrying `responds_to:`), and the decision retires the need —
+> accepted is a shipped change, rejected is a recorded no. Do not invent an
+> addressable cross-vault proposal; it would be the needs plane with a second name.
 
 > **Vault-level `needs/`.** A project may need something that belongs to **no single
 > component of it** — most commonly a dependency on another vault ("this project needs a

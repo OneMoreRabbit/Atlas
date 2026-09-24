@@ -971,6 +971,29 @@ def archived_link_warnings() -> list[str]:
     return warns
 
 
+PROPOSAL_TERMINAL = ("accepted", "rejected", "implemented", "superseded", "withdrawn",
+                     "done", "closed")
+
+
+def decided_proposal_warnings() -> list[str]:
+    """Warn-only (1.30.2): a proposal with a terminal status still sitting in
+    architecture/proposals/ — decided work looking like queue. The convention it
+    nudges toward: archive to architecture/archive/proposals/ with a `resolution:`
+    line pointing at what settled it (arch-seat.md, periodic review step 4)."""
+    warns = []
+    pdir = ROOT / "architecture" / "proposals"
+    if not pdir.is_dir():
+        return warns
+    for p in sorted(pdir.glob("*.md")):
+        fm = parse_frontmatter(p)
+        st = str(fm.get("status", "proposed")).lower()
+        if any(w in st for w in PROPOSAL_TERMINAL):
+            warns.append(f"{p.relative_to(ROOT).as_posix()} — status '{st}' is decided "
+                         "but the file still sits in the queue: archive it to "
+                         "architecture/archive/proposals/ with a `resolution:` pointer")
+    return warns
+
+
 def requirements_report(graph) -> tuple[list, list]:
     """The product seat's standing tracking + audit (1.28.9, §10). Reads
     product/requirements/R-*.md (id stable for life; version: moves with the product
@@ -1733,8 +1756,10 @@ def main(wiring_flag: bool = False) -> int:
         )
     print(f"regenerated {len(names)} component edge blocks + io-manifests")
 
-    # -- hygiene rungs (1.29.2, both warn-only) ----------------------------------
+    # -- hygiene rungs (1.29.2/1.30.2, all warn-only) ----------------------------
     for w in repin_redecided_warnings():
+        print(f"  ⚠ {w}")
+    for w in decided_proposal_warnings():
         print(f"  ⚠ {w}")
     _alw = archived_link_warnings()
     for w in _alw[:20]:
