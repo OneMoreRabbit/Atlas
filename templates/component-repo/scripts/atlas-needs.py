@@ -72,11 +72,17 @@ def my_slugs(explicit: str | None) -> list[str]:
                 slugs.append(s)
     # a both-hats seat is ALSO its vault's arch: answer to `arch` and `<project>-arch`
     # (1.27.5; ATLAS_PROJECT in .atlas.conf, else nothing project-specific is assumed)
+    pj = c.get("ATLAS_PROJECT", "").strip().lower()
+    # full contract addresses (ADR-0014, 1.30.3): <project>.component.<name> for each
+    # held component; the older bare and qualified forms stay accepted through the
+    # migration (the register carries both estates for a while).
+    if pj:
+        slugs += [f"{pj}.component.{s}" for s in list(slugs)]
     if c.get("ATLAS_ROLE", "").strip().lower() == "both":
         slugs.append("arch")
-        pj = c.get("ATLAS_PROJECT", "").strip().lower()
         if pj:
             slugs.append(f"{pj}-arch")
+            slugs.append(f"{pj}.arch")
     # Operator override (1.28.6, arc-platform v0.2): AUTHORITATIVE when present — it
     # REPLACES the derived list. It was additive-only, so it could widen a match but
     # never narrow one, and a seat told to fix a mis-match by setting it found the file

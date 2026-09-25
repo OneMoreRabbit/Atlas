@@ -63,7 +63,7 @@ echo "## Asks addressed to this seat"
 FOUND=0
 for f in "$ATLAS_VAULT"/needs/*.md "$ATLAS_VAULT"/components/*/docs/needs/*.md; do
   [ -f "$f" ] || continue
-  grep -qiE "^(to|addressed-to):.*(${PN}-product|\bproduct\b)" "$f" 2>/dev/null || continue
+  grep -qiE "^(to|addressed-to):.*(${PN}-product|${PN}\.product|\bproduct\b)" "$f" 2>/dev/null || continue
   grep -qiE '^status:.*(resolved|closed|done|superseded|answered|retired)' "$f" 2>/dev/null && continue
   echo "- ${f#"$ATLAS_VAULT"/}: $(sed -n 's/^title:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}/\1/p' "$f" | head -1)"
   FOUND=1

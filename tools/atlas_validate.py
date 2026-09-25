@@ -256,11 +256,23 @@ def responds_to_warnings(graph) -> list[str]:
                 # only LIVE documents earn this warning.
                 in_archive = "archive" in p.relative_to(ROOT).parts
                 if first in ("components", "needs", "architecture", "manual") and not in_archive:
-                    warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
-                                 f"'{ref}' is an in-vault path that resolves to nothing: "
-                                 "target deleted, renamed — or its component moved vaults "
-                                 "(ADR-0008-style); if so, name the owning vault or use "
-                                 "the interface name instead of a dead local path")
+                    # HEALING (1.30.3, the migration trap): a recorded path breaks when
+                    # its target MOVES (root needs/ retirement moves 147 estate-wide).
+                    # If the basename resolves uniquely elsewhere in the vault, the link
+                    # heals by name — a moved answer is a fragile link, not an error.
+                    base = ref.rsplit("/", 1)[-1]
+                    hits = [q for q in ROOT.rglob(base) if q.is_file()]
+                    if len(hits) == 1:
+                        warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
+                                     f"'{ref}': the path is stale but the document "
+                                     f"resolved by name at {hits[0].relative_to(ROOT).as_posix()} "
+                                     "(healed; update the path at next touch)")
+                    else:
+                        warns.append(f"{p.relative_to(ROOT).as_posix()} — responds_to "
+                                     f"'{ref}' is an in-vault path that resolves to nothing: "
+                                     "target deleted, renamed — or its component moved vaults "
+                                     "(ADR-0008-style); if so, name the owning vault or use "
+                                     "the interface name instead of a dead local path")
                 else:
                     cross_vault += 1
             else:
@@ -272,12 +284,21 @@ def responds_to_warnings(graph) -> list[str]:
     return warns
 
 
-def addressee_warnings(graph) -> list[str]:
+def addressee_warnings(graph) -> tuple[list[str], list[str]]:
     """needs/ documents whose addressee matches no component (decisions/0003 §4).
 
     Routing by addressee turns a typo into silent non-delivery, so an unroutable
     addressee must be visible. Warn-only, like naming."""
-    slugs = [c["slug"] for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
+    pn_full = project_name(graph)
+    slugs = [comp_name(c) for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
+    # full contract addresses (ADR-0014, 1.30.3): <project>.<role> and
+    # <project>.component.<name> — both resolvable here when they name this vault
+    if pn_full:
+        slugs += [f"{pn_full}.component.{comp_name(c)}"
+                  for c in graph.get("components", []) if is_repo_component(c)]
+        slugs += [f"{pn_full}.{comp_role(c)}"
+                  for c in graph.get("components", []) if not is_repo_component(c)]
+        slugs += [f"{pn_full}.arch", f"{pn_full}.product", "method.arch"]
     slugs += arch_addressees(graph)[1:]        # <project>-arch: this vault's arch, cross-vault form
     # <project>-product routes ONLY where the seat is declared (product: enabled, 1.28.9)
     if (graph.get("product") or {}).get("enabled"):
@@ -296,12 +317,18 @@ def addressee_warnings(graph) -> list[str]:
             slugs.append(m.group(1).lower())
             slugs.append(f"{m.group(1).lower()}-arch")   # that vault's arch seat, cross-vault (1.27.5)
     warns = []
+    refusals = []                        # ADR-0014 (1.30.3): never-resolvable addressing
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
                     + list(ROOT.glob("needs/*.md"))):
         fm = parse_frontmatter(p)
         named = addressee(fm)
         if is_retired(fm):
             continue
+        rel0 = p.relative_to(ROOT).as_posix()
+        if not rel0.startswith("components/"):
+            warns.append(f"{rel0} — vault-root needs/ is RETIRED (1.30.3, ADR-0014): "
+                         "every contract lives in components/<owner>/docs/needs/ — move "
+                         "it (and rewrite responds_to/relates paths in the same commit)")
         # No addressee at all is the *broad* failure, and it was the silent one: the
         # warning fired when `to:` was wrong (narrow, one doc lost) and said nothing
         # when `to:` was absent (fail-open, one doc delivered to everyone in reach) —
@@ -314,7 +341,10 @@ def addressee_warnings(graph) -> list[str]:
                          "this folder. Name the slug(s), or `to: all` if you mean it")
             continue
         if is_broadcast(named):
-            continue                    # the same delivery, declared instead of implied
+            refusals.append(f"{p.relative_to(ROOT).as_posix()} — `to: all` cannot resolve "
+                            "to a component (ADR-0014): name the components, one need each "
+                            "if the asks differ")
+            continue
         # `to: nav` on a need is deprecated (1.27.8, operator ruling): human work lives on
         # the bridge, and a component reaches the human THROUGH its arch seat now that arch
         # seats are addressable (<project>-arch, 1.27.6). Warn-only; still routes so nothing
@@ -336,31 +366,33 @@ def addressee_warnings(graph) -> list[str]:
         # here (token-aware) but a naive sweep elsewhere mis-reads them — warn so authors
         # converge (orchestrator finding 2026-09-13; warn-only, never a failure)
         raw = fm.get("to") if fm.get("to") is not None else fm.get("addressed-to")
-        if isinstance(raw, str) and re.search(r"[;,/]|\band\b|[;,.]\s*$", raw):
+        if isinstance(raw, str) and re.search(r"[;()]|\band\b", raw):
+            refusals.append(f"{p.relative_to(ROOT).as_posix()} — `to: {raw}` can never "
+                            "resolve (ADR-0014): a semicolon list or parenthetical note is "
+                            "not an address — write one component address, or a YAML list")
+        elif isinstance(raw, str) and re.search(r"[,/]|[;,.]\s*$", raw):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: {raw}` is not canonical; "
-                         "write a slug or a YAML list of slugs (`to: [a, b]`)")
+                         "write one address or a YAML list (`to: [a, b]`)")
         if not any(names_slug(named, s) for s in slugs):
-            warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee "
-                         f"'{named}' matches no component and no declared external "
-                         "provider; it will reach nobody. If this is another vault's "
-                         "seat, have the architecture session declare it under "
-                         "`external:` (the estate's service directory in `reference/` "
-                         "lists what exists) — declared providers are addressable by "
-                         "slug or project name")
+            refusals.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
+                            "matches no component, role, or declared external in this "
+                            "vault: it will reach nobody (ADR-0014 refuses at "
+                            "authoring). Fix the address, or have the architecture "
+                            "session declare the provider under `external:`")
         elif not any(names_slug_exactly(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
                          "resolved by prose, not a slug; write the slug (or a list of "
                          "slugs) so delivery cannot turn on wording")
         # nav (the human) mixed with a component slug: the bridge is human<->AI only, so
         # this is a seat trying to reach another seat through the human. Pick one channel.
-        comp = [c["slug"] for c in graph.get("components", [])]
+        comp = [comp_name(c) for c in graph.get("components", [])]
         toks = addressee_tokens(named)
         if BRIDGE_ADDRESSEE in toks and any(s in toks for s in comp):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' names "
                          "both `nav` (the human) and a component; the bridge is not a "
                          "seat-to-seat relay — address the component's slug alone, or "
                          "`nav` alone for a human decision")
-    return warns
+    return warns, refusals
 
 
 def edge_rows(graph, latest):
@@ -465,7 +497,10 @@ def remote_repo_info(url: str, *branches: str) -> dict | None:
 def component_source(graph, c) -> str:
     """The component's clone URL. Canonical home: its io-graph entry (§5, 1.6+);
     component.md frontmatter is the fallback for pre-1.6 vaults."""
-    fm = parse_frontmatter(ROOT / "components" / c["slug"] / "component.md")
+    if not is_repo_component(c):
+        return ""                        # a role has no clone URL (1.30.3)
+    mdp = ROOT / "components" / comp_name(c) / "component.md"
+    fm = parse_frontmatter(mdp) if mdp.exists() else {}
     return str(c.get("source") or fm.get("source") or "")
 
 
@@ -479,7 +514,9 @@ def check_wiring(graph) -> dict:
     not be unwired invisibly."""
     results = {}
     for c in graph["components"]:
-        slug = c["slug"]
+        if not is_repo_component(c):
+            continue                     # a role has no repository to wire (1.30.3)
+        slug = comp_name(c)
         url = component_source(graph, c)
         if not ("://" in url or url.startswith("git@")):
             results[slug] = ("⚪", "unaddressable — `source:` is not a clone URL")
@@ -617,7 +654,8 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
           "|---|---|---|---|---|"]
     console.append(f"  🧭 branching  work {work}" + (f" -> release {release}" if release else ""))
     repos = [("vault", (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip())]
-    repos += [(c["slug"], component_source(graph, c)) for c in graph["components"]]
+    repos += [(comp_name(c), component_source(graph, c)) for c in graph["components"]
+              if is_repo_component(c)]
     for name, url in repos:
         if not ("://" in url or url.startswith("git@")):
             md.append(f"| {name} | — | _no source URL_ | — | {wired_cell(name)} |")
@@ -643,7 +681,7 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
 
 
 def gen_graph_md(graph, rows) -> str:
-    names = {c["slug"]: c for c in graph["components"]}
+    names = {comp_name(c): c for c in graph["components"]}
     ids = {slug: re.sub(r"[^a-z0-9]", "", slug) for slug in names}
     lines = [
         "---", "title: I/O Graph — rendered view", "type: graph-view", "---", "",
@@ -883,6 +921,26 @@ METHOD_ADDRESSEE = "atlas"   # the method seat — every vault pins the method, 
 ARCH_ADDRESSEE = "arch"      # this vault's own architecture seat (1.27.2)
 
 
+def comp_name(c) -> str:
+    """The component's addressable name (ADR-0014, 1.30.3): `component:` is canonical,
+    `slug:` the accepted spelling until every vault migrates (§6 report tracks it).
+    One accessor so the fallback drops in one line later."""
+    return str(c.get("component") or c.get("slug") or "")
+
+
+def comp_role(c) -> str:
+    """`role:` — component | architect | product | review (1.30.3). Absent means
+    component, so every existing vault keeps its meaning with no edit."""
+    return str(c.get("role", "component")).strip().lower() or "component"
+
+
+def is_repo_component(c) -> bool:
+    """Roles own no repository and no components/<name>/ directory: skip directory-
+    shaped checks for them (arc/labs finding — a roles-only vault would otherwise
+    carry placeholder files to satisfy checks about repos it does not have)."""
+    return comp_role(c) == "component"
+
+
 def project_name(graph) -> str:
     """The project's name: declared `project:` in io-graph.yml, else derived from the
     vault's origin URL (Atlas-AgentEco -> agenteco; the 1.25.3 rule). Used for the
@@ -901,7 +959,7 @@ def arch_addressees(graph) -> list:
     `<project>-arch` from anywhere (the cross-vault form, matching the estate register)."""
     pn = project_name(graph)
     return [ARCH_ADDRESSEE] + ([f"{pn}-arch"] if pn else [])
-WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, ARCH_ADDRESSEE)
+WELL_KNOWN_ADDRESSEES = (BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, "method", ARCH_ADDRESSEE)
 
 
 def repin_redecided_warnings() -> list[str]:
@@ -1442,7 +1500,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     outstanding, done_count = 0, 0
     for needs_dir in needs_dirs:
         rel = needs_dir.relative_to(ROOT)
-        owner = rel.parts[1] if rel.parts[0] == "components" else "the vault"
+        owner = rel.parts[1] if rel.parts[0] == "components" else "the vault"  # root needs/ retired 1.30.3; branch kept for un-migrated vaults
         for p in sorted(needs_dir.glob("*.md")):
             fm = parse_frontmatter(p)
             if is_retired(fm):
@@ -1697,7 +1755,7 @@ def main(wiring_flag: bool = False) -> int:
               "or pass the vault path as the first argument.")
         return 2
     graph = load_graph()
-    names = {c["slug"]: c for c in graph["components"]}
+    names = {comp_name(c): c for c in graph["components"]}
 
     # -- referential integrity ------------------------------------------------
     errors = []
@@ -1706,8 +1764,11 @@ def main(wiring_flag: bool = False) -> int:
             if e[end] not in names:
                 errors.append(f"edge {e['from']}->{e['to']}: unknown component '{e[end]}'")
     for c in graph["components"]:
-        if not (ROOT / "components" / c["slug"] / "component.md").exists():
-            errors.append(f"component '{c['slug']}' has no components/{c['slug']}/component.md")
+        if not is_repo_component(c):
+            continue                     # a role owns no directory (1.30.3, ADR-0014)
+        n = comp_name(c)
+        if not (ROOT / "components" / n / "component.md").exists():
+            errors.append(f"component '{n}' has no components/{n}/component.md")
     for cpath in ROOT.glob("components/*/docs/provides/*.md"):
         _, aerrs = contract_artifacts(cpath, parse_frontmatter(cpath))
         errors += aerrs
@@ -1744,6 +1805,8 @@ def main(wiring_flag: bool = False) -> int:
     print("regenerated dashboard.md drift panel")
 
     for slug in names:
+        if not is_repo_component(names[slug]):
+            continue                     # roles: no component.md to stamp, no manifest
         replace_block(
             ROOT / "components" / slug / "component.md", "edges",
             gen_component_block(slug, graph, rows, names),
@@ -1755,6 +1818,22 @@ def main(wiring_flag: bool = False) -> int:
             encoding="utf-8",
         )
     print(f"regenerated {len(names)} component edge blocks + io-manifests")
+
+    # -- ADR-0014 migration report (1.30.3, §6 of the consolidated need) ----------
+    mig = []
+    if not str(graph.get("project", "")).strip():
+        mig.append("`project:` not declared (required under contract addressing — the "
+                   "derived name is what produced agenteco beside agent-eco)")
+    if any("slug" in c and "component" not in c for c in graph.get("components", [])):
+        mig.append("`slug:` still in use (rename to `component:`; the fallback drops "
+                   "when no vault reports this line)")
+    if list(ROOT.glob("needs/*.md")) or list(ROOT.glob("provides/*.md")):
+        mig.append("vault-root needs//provides/ still hold documents (retired: move to "
+                   "components/<owner>/docs/, rewriting responds_to/relates in the same commit)")
+    if mig:
+        print("\nCONTRACT-ADDRESSING MIGRATION — not finished in this vault (info):")
+        for m in mig:
+            print(f"  ◻ {m}")
 
     # -- hygiene rungs (1.29.2/1.30.2, all warn-only) ----------------------------
     for w in repin_redecided_warnings():
@@ -1807,12 +1886,18 @@ def main(wiring_flag: bool = False) -> int:
         worst = max(worst, 1)
 
     # -- naming canon (AAC-method §4) — warn-only, never affects the exit code --
-    unroutable = addressee_warnings(graph)
+    unroutable, refused = addressee_warnings(graph)
     if unroutable:
         print(f"\nROUTING — {len(unroutable)} needs document(s) with an unroutable "
               "addressee (AAC-method §3; warn-only):")
         for w in unroutable:
             print(f"  ⚠ {w}")
+    if refused:
+        print(f"\nADDRESSING REFUSED — {len(refused)} document(s) whose addressing can "
+              "never resolve (ADR-0014, 1.30.3; each needs a human decision):")
+        for w in refused:
+            print(f"  ✗ {w}")
+        worst = max(worst, 1)
 
     dangling = responds_to_warnings(graph)
     if dangling:

@@ -349,6 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.3 (2026-09-25, ADR-0014 via the orchestrator's consolidated need): CONTRACT
+#   ADDRESSING. Full addresses (<project>.<role> / <project>.component.<name>); role: in
+#   the io-graph (a role is a component owning no repository — exempt from component.md,
+#   wiring and regen checks; Labs is the roles-only case); slug: -> component: through
+#   one accessor (fallback drops when the migration report is clean); project: required;
+#   vault-root needs//provides/ retired (owner attribution disagreed with storage) with
+#   the outbox-only source (the method repo) as the stated exception; the validator
+#   REFUSES never-resolvable addressing (to: all, semicolons, parentheticals,
+#   unresolvable names) and reports per-vault migration state; responds_to paths HEAL by
+#   unique basename when a target moved (147 root docs move estate-wide); role
+#   component.md template shipped; method addressable as `method` and `atlas`,
+#   full form `method.arch`. Older spellings route during the migration.
 #   1.30.2 (2026-09-25, operator): stated in SS3 — a proposal is location-addressed
 #   and never leaves its vault; a CROSS-PROJECT proposal is a need to that project's
 #   arch seat (to: atlas for the method), answered, when structural, by a decision
@@ -783,6 +795,26 @@ components/<slug>/
 > delivery — and records who was asked. That is also why this was invisible for so long:
 > the wrong addressee cost nothing observable.
 
+> **Contract addressing** (ADR-0014, adopted 1.30.3). The canonical address of a
+> contract's counterparty is a **full address**: `<project>.<role>` for a role
+> (`orchestrator.arch`, `labs.product`) or `<project>.component.<name>` for a
+> repository-owning component (`agent-eco.component.agent-seat`). A **role is a
+> component that owns no repository** (`role:` in the io-graph: `component` |
+> `architect` | `product` | `review`; absent means component). Every component's —
+> and every role's — contracts live in `components/<name>/docs/{needs,provides}`;
+> **vault-root `needs/` and `provides/` are retired** (storage said "the vault", the
+> frontmatter said `<project>-arch`, and the method carried a branch to paper over
+> the disagreement). Addresses are immutable; display names are not; there are no
+> aliases. The method seat answers to `method` and `atlas`; `method.arch` is its full
+> form. The validator **refuses** addressing that can never resolve — `to: all`,
+> semicolon lists, parenthetical notes, names no vault can resolve — at authoring,
+> where fixing is cheap. During the estate's migration the older spellings (bare
+> component names, `<project>-arch`) still route; each vault rewrites its documents
+> in the same commit as its re-pin, and the validator's migration report shows what
+> remains. The one exception to root retirement is the **outbox-only source** (§10):
+> the method repo has no `components/`, so its root `needs/` and `provides/` remain
+> its outbox, addressed in full form like everything else.
+
 > **A proposal travels inside its own vault; a cross-project proposal is a need**
 > (1.30.2). `architecture/proposals/` is location-addressed: dropping a file there IS
 > addressing your own arch seat, and nothing in it routes anywhere else. To propose a
@@ -1139,9 +1171,20 @@ product:                       # OPTIONAL (1.28.9): this project runs a product 
 comms:                         # OPTIONAL (1.22): this project's seats share a chat hub
   hub: true                    # omit the block, or hub: false, for no hub — most projects; manual: [[comms]]
   channel: "#<project>"        # ephemeral chat only; design stays in the vault ([[comms]])
+project: <name>                # REQUIRED (1.30.3): the estate spelling of this project.
+                               # Deriving it from the repo name produced agenteco beside
+                               # agent-eco; declared once, used by every address.
 components:
-  - slug: agent-image
+  - component: agent-image     # the addressable name (was `slug:` — accepted until every
+                               # vault migrates; the migration report tracks it)
+    role: component            # component | architect | product | review (1.30.3).
+                               # Absent = component. A non-component role owns NO
+                               # repository and takes a two-segment address
+                               # (<project>.<role>); its contracts, if any, live in
+                               # components/<name>/docs/ like anyone's (template:
+                               # templates/role-component.md)
     name: Agent Image
+    description: what it is    # prose home (the old prose `role:` field renamed)
     maturity: 0.2
     source: https://github.com/<org>/agent-image.git   # canonical clone URL of the code
                           # repo — never a machine path (1.6+, decisions/0001); this is
