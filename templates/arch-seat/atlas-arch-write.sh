@@ -53,8 +53,6 @@ for _d in "$LD"/*/; do
   [ -f "${_d}registry/io-graph.yml" ] && continue
   N=${_d%/}
   case "$P" in
-    "$N"/_bridge/tasks.md|*"/$N/_bridge/tasks.md")
-      deny "Atlas: _bridge/tasks.md is the OPERATOR'S file - one writer per file (1.28.11). Read it; append your updates to _bridge/from-arch.md." ;;
     "$N"/_bridge/*|*"/$N/_bridge/"*) exit 0 ;;
     "$N"/*|*"/$N/"*)
       deny "Atlas: in the Nav vault the arch seat writes _bridge/** only (method 1.28.11). Refused: ${P#*"$N"/}." ;;

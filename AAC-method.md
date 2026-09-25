@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.4 (2026-09-25, operator): the bridge task list is SHARED again —
+#   _bridge/tasks.md written by operator AND arch seat; the 1.28.11 one-writer split
+#   (from-arch.md feeds) is reverted: it traded sync conflicts for a second file the
+#   operator had to cross-reference, which defeated the task list. from-arch feeds
+#   retire to _bridge/archive/. Guard, bridge-init and the housekeeping prompt updated.
 #   1.30.3 (2026-09-25, ADR-0014 via the orchestrator's consolidated need): CONTRACT
 #   ADDRESSING. Full addresses (<project>.<role> / <project>.component.<name>); role: in
 #   the io-graph (a role is a component owning no repository — exempt from component.md,
@@ -1870,8 +1875,10 @@ The product guard fenced the product seat from day one; the arch seat had no wri
 guard at all — one owner, nothing to fence. With two owners it is fenced too:
 `atlas-arch-write.sh` denies the arch seat `product/**` in its vault (reshape asks go
 to `<project>-product`; arch's word on cost is final, the text is the product seat's)
-and, in the Nav vault, permits `_bridge/**` only — never `_bridge/tasks.md`, the
-operator's file. "Neither writes the other's tree" is now mechanical in both
+and, in the Nav vault, permits `_bridge/**` only. (`tasks.md` is SHARED again since
+1.30.4 — the 1.28.11 one-writer split made the seat's updates a second file the
+operator had to cross-reference, defeating the task list; occasional merge conflicts
+are accepted instead.) "Neither writes the other's tree" is mechanical in both
 directions.
 
 **`_gps/` is the product seat's lane to the human** (1.28.10, operator). The arch seat

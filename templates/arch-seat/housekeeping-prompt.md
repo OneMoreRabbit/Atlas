@@ -30,11 +30,10 @@ merges, NO pin changes — those belong to interactive sessions.
 ## 3. The bridge (Nav vault)
 
 1. `git -C <nav> pull --ff-only`.
-2. Read `_bridge/tasks.md` — the OPERATOR'S file: never write it. Anything there
-   addressed to you: act on it if it fits this run's rules, otherwise queue it in
-   next-steps.
-3. Append one dated housekeeping entry to `_bridge/from-arch.md` (your file — the only
-   bridge file you write): what changed, what needs the operator, what was archived.
+2. Read `_bridge/tasks.md`. Anything there addressed to you: act on it if it fits
+   this run's rules, otherwise queue it in next-steps.
+3. Append one SHORT dated housekeeping line to `_bridge/tasks.md` (shared file,
+   1.30.4): what changed, what needs the operator. Pull before writing.
 4. Commit and push both vaults (work branch).
 
 ## Rules
