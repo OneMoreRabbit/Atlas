@@ -338,7 +338,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
         if named is None:
             warns.append(f"{p.relative_to(ROOT).as_posix()} — no addressee; delivery "
                          "fails open, so this rides into every seat whose edges scan "
-                         "this folder. Name the slug(s), or `to: all` if you mean it")
+                         "this folder. Name the component(s) it is for")
             continue
         if is_broadcast(named):
             refusals.append(f"{p.relative_to(ROOT).as_posix()} — `to: all` cannot resolve "
@@ -381,7 +381,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
                             "session declare the provider under `external:`")
         elif not any(names_slug_exactly(named, s) for s in slugs):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
-                         "resolved by prose, not a slug; write the slug (or a list of "
+                         "resolved by prose, not a component name; write the name (or a list of "
                          "slugs) so delivery cannot turn on wording")
         # nav (the human) mixed with a component slug: the bridge is human<->AI only, so
         # this is a seat trying to reach another seat through the human. Pick one channel.

@@ -16,7 +16,7 @@ contract drift on each project's dashboard.
 - `product-init.md` — add the OPTIONAL product seat to a project (1.28.9, §10): declare `product: {enabled: true}`, install with `atlas_init --product`, write requirements in `product/requirements/`.
 - `review-init.md` — bring up an estate REVIEW seat (1.28.10, oversight): reads everything, writes `review/` in the oversight vault only, not addressable; boundaries proven with `git push --dry-run`.
 - [`tools/atlas_validate.py`](tools/atlas_validate.py) — regenerates a project vault's derived views (graph, drift panel, edge blocks, io-manifests) and reports drift; `--emit-context <slug>[,<slug>...]` compiles a seat's session reading list — one briefing covering all the seat's components, shared sections once — into one `ATLAS-CONTEXT.md`; `--check-wiring` verifies each component repo actually carries the committed Atlas half (warn-only, for CI). Run from the project-vault root, or pass the vault path as the first argument. Dependency pinned in [`tools/requirements.txt`](tools/requirements.txt).
-- [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/` (component or `--role both` both-hats seats) or, with `--arch`, the `templates/arch-seat/` hooks: `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`. `--launch-dir <path>` when the agent starts outside the repo (a seat in the clone parent) — otherwise the hooks never load; `--verify` self-tests an install end to end (decisions/0002).
+- [`tools/atlas_init.py`](tools/atlas_init.py) — one-command installer for `templates/component-repo/` (component or `--role both` both-hats seats) or, with `--arch`, the `templates/arch-seat/` hooks: `python .atlas-method/tools/atlas_init.py --component <slug> --vault-remote <url>` from a code-repo root. Stdlib only; idempotent; merges hooks into an existing `.claude/settings.json`. `--launch-dir <path>` when the agent starts outside the repo (a seat in the clone parent) — otherwise the hooks never load; `--verify` self-tests an install end to end (decisions/0002).
 - [`templates/vault-ci/`](templates/vault-ci/) — GitHub Actions templates for project vaults: `atlas-guard.yml` (PR path guard — the write model, AAC-method §9) and `atlas-regen.yml` (derived views regenerated on the default branch).
 - [`templates/arch-seat/`](templates/arch-seat/) — the arch seat's hooks: a `SessionStart` reorientation hook emitting `atlas_validate.py --emit-arch-context`, so an arch seat re-orients itself after a compaction (component seats get this from their own hook), and the seat's `Stop` alignment gate (`atlas-arch-guard.sh`); both installed by `atlas_init --arch`.
 - [`templates/component-repo/`](templates/component-repo/) — the installable code-repo half: sync/context scripts (byte-identical everywhere, config in `.atlas.conf`, checksum-verified against the pinned method), local hook guards (write scope, publish nag), `AGENTS.md` template, `/atlas-publish`.
@@ -37,7 +37,7 @@ contract drift on each project's dashboard.
 The method is self-sufficient (git as the only transport — a directory of bare repos
 on one PC is a complete offline estate), and there are **two ways in** (AAC-method §10):
 **method-first** — one both-hats seat of your first project
-(`python .atlas-method/tools/atlas_init.py --slug <x> --role both --vault-remote <url>`),
+(`python .atlas-method/tools/atlas_init.py --component <x> --role both --vault-remote <url>`),
 growing arch/component splits and an orchestrator only when estate chores deserve a
 seat; or **orchestrator-first** — stand up the estate seat first and let it provision
 machines, credentials, vaults and seats for everything else. Either way the
@@ -121,7 +121,7 @@ so declare it only once the vault actually conforms.
    outbox-only PRs per the merge-policy note in `atlas-guard.yml`.
 4. **Install the code-repo half in every component repo** (1.1+). From each code-repo root:
    `git clone --depth 1 <method-remote> .atlas-method`, then
-   `python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url>`;
+   `python .atlas-method/tools/atlas_init.py --component <slug> --vault-remote <vault-url>`;
    commit the result (`AGENTS.md` and `.atlas.conf` must be committed). Details and the
    manual equivalent: [`component-init.md`](component-init.md) §4.
 5. **History is grandfathered.** Commits that predate the write model stay as they are;

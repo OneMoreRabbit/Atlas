@@ -1,6 +1,6 @@
 # AGENTS.md — Atlas hook
 
-This repo is the **<slug>** component of <Project>, governed by Architecture-Above-Code.
+This repo is the **<component name>** component of <Project>, governed by Architecture-Above-Code.
 The architecture lives in the project's Atlas vault — a git repo resolved by
 `scripts/atlas-sync.sh` into `$ATLAS_VAULT` (default `./.atlas`), at the method version
 pinned in the vault's `registry/io-graph.yml`. Never reference the vault by a machine path.
@@ -36,11 +36,11 @@ releasing (push, PR, tag) will pause for their approval — do not work around i
 cascade and the hub. **House style, always:** plain English, concise; use the method's
 existing terms, coin none; say less.
 
-**While working:** you may write only to `components/<slug>/**`, an additive
+**While working:** you may write only to `components/<component name>/**`, an additive
 `architecture/proposals/NNNN-*.md`, and edges in `registry/io-graph.yml` that name you.
 A `PreToolUse` guard refuses anything else. That is not an obstacle to route around: if you
-need something owned elsewhere, ask for it in `components/<slug>/docs/needs/`.
+need something owned elsewhere, ask for it in `components/<component name>/docs/needs/`.
 
 **After working:** run `/atlas-publish` (contracts to provides/, asks to needs/, ADRs for
 shared changes, bump `updated:`, recompile as a check, commit authored files only on
-`atlas/<slug>/<topic>`, open the PR).
+`atlas/<component name>/<topic>`, open the PR).

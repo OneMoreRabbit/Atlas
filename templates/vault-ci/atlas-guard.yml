@@ -46,18 +46,18 @@ jobs:
           [ "$RELEASE_MERGE" = "1" ] && { echo "release merge — skipping outbox scope"; exit 0; }
           BR="${{ github.head_ref }}"
           case "$BR" in
-            atlas/*/*) SLUG=$(echo "$BR" | cut -d/ -f2) ;;
+            atlas/*/*) COMPONENT=$(echo "$BR" | cut -d/ -f2) ;;
             *) echo "::error::branch must be atlas/<slug>/<topic>"; exit 1 ;;
           esac
-          echo "SLUG=$SLUG" >> "$GITHUB_ENV"
+          echo "COMPONENT=$COMPONENT" >> "$GITHUB_ENV"
           git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
           FAIL=0
           while IFS= read -r f; do
             case "$f" in
-              "components/$SLUG"/*) ;;                # own subtree — the outbox
+              "components/$COMPONENT"/*) ;;                # own subtree — the outbox
               architecture/proposals/*) ;;            # additive ADRs, status: proposed
               registry/io-graph.yml) ;;               # ownership checked below
-              *) echo "::error file=$f::$SLUG may not write $f"; FAIL=1 ;;
+              *) echo "::error file=$f::$COMPONENT may not write $f"; FAIL=1 ;;
             esac
           done < /tmp/changed.txt                     # redirect, not a pipe: FAIL survives
           exit $FAIL
@@ -68,7 +68,7 @@ jobs:
           git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- registry/io-graph.yml && exit 0
           pip install -q PyYAML
           git show "origin/${{ github.base_ref }}:registry/io-graph.yml" > /tmp/base.yml
-          python - "$SLUG" <<'PYEOF'
+          python - "$COMPONENT" <<'PYEOF'
           import sys, yaml
           slug = sys.argv[1]
 

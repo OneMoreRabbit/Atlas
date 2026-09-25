@@ -62,12 +62,14 @@ def my_slugs(explicit: str | None) -> list[str]:
     if explicit:
         return [s.strip() for s in explicit.split(",") if s.strip()]
     c = conf(REPO / ".atlas.conf")
-    slugs = [c["SLUG"]] if c.get("SLUG") else []
+    first = c.get("COMPONENT") or c.get("SLUG")
+    slugs = [first] if first else []
     # a seat holding N wired repos answers to all of them (launch-dir siblings, 1.21)
     launch = c.get("ATLAS_LAUNCH_DIR", "").replace("$HOME", str(HOME))
     if launch and Path(launch).is_dir():
         for d in Path(launch).iterdir():
-            s = conf(d / ".atlas.conf").get("SLUG")
+            sc = conf(d / ".atlas.conf")
+            s = sc.get("COMPONENT") or sc.get("SLUG")
             if s and s not in slugs:
                 slugs.append(s)
     # a both-hats seat is ALSO its vault's arch: answer to `arch` and `<project>-arch`

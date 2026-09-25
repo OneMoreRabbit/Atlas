@@ -75,7 +75,7 @@ ${_d%/}"
     _sv=$(sed -n 's/^ATLAS_VAULT_REMOTE="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${_d}.atlas.conf" | tr -d '
 ' | head -1)
     [ "$_sv" = "$ATLAS_VAULT_REMOTE" ] || continue
-    _ss=$(sed -n 's/^SLUG="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${_d}.atlas.conf" | tr -d '
+    _ss=$(sed -n 's/^\(COMPONENT\|SLUG\)="\{0,1\}\([^"]*\)"\{0,1\}$/\2/p' "${_d}.atlas.conf" | tr -d '
 ' | head -1)
     [ -n "$_ss" ] && SLUGS="$SLUGS
 $_ss"
@@ -126,6 +126,9 @@ for m in re.finditer(r"^\s*-\s+(?:component|slug):\s*([\w.-]+)(.*?)(?=^\s*-\s|\Z
     r = re.search(r"^\s*role:\s*([\w-]+)", m.group(2), re.M)
     (roles if (r and r.group(1).lower() != "component") else comps).append(
         (name, r.group(1).lower() if r else "component"))
+if not comps and not roles:
+    sys.exit(0)      # graph parsed to nothing: OUR limitation (flow-style yaml?),
+                     # never a confident no-match - allow, CI refusal backstops
 ok = {"atlas", "method", "arch", "nav"}
 ok |= {n for n, _ in comps} | {n for n, _ in roles}
 if pn:

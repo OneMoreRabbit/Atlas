@@ -241,9 +241,13 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     check(conf.exists(), ".atlas.conf present", "" if conf.exists() else str(conf))
     if conf.exists():
         text = conf.read_text(encoding="utf-8")
-        m = re.search(r'^SLUG="?([^"\r\n]*)"?', text, re.MULTILINE)
-        found = m.group(1) if m else None
-        check(found == slug, f".atlas.conf SLUG == {slug}", f"found {found!r}")
+        m = re.search(r'^COMPONENT="?([^"\r\n]*)"?', text, re.MULTILINE)
+        legacy = re.search(r'^SLUG="?([^"\r\n]*)"?', text, re.MULTILINE)
+        found = (m or legacy).group(1) if (m or legacy) else None
+        check(found == slug, f".atlas.conf COMPONENT == {slug}", f"found {found!r}")
+        if legacy and not m:
+            print("  ◻ migration: .atlas.conf still uses SLUG= — re-run the installer "
+                  "to write COMPONENT= (the fallback dies with the estate migration)")
         check("\r" not in text, ".atlas.conf has no CRLF", "add gitattributes.fragment")
     check((repo / "AGENTS.md").exists(), "AGENTS.md committed at the repo root")
     drifted = []
@@ -457,7 +461,10 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--slug", help="this component's Atlas slug (component mode)")
+    ap.add_argument("--component", dest="slug",
+                    help="this seat's component name (matches the io-graph entry)")
+    ap.add_argument("--slug", dest="slug",
+                    help=argparse.SUPPRESS)   # retired spelling (1.30.9); same dest
     ap.add_argument("--needs-register", metavar="URL", default=None,
                     help="the estate's needs register (raw JSON URL) written to .atlas.conf "
                          "as ATLAS_NEEDS_REGISTER so atlas-needs.py can show this seat the "
@@ -571,11 +578,13 @@ def main() -> int:
     existing = repo / ".atlas.conf"
     if existing.exists():
         conf = read(existing)
-        conf = set_key(conf, "SLUG", args.slug)
+        conf = set_key(conf, "COMPONENT", args.slug)
+        # retire the old key in the same write (managed transition, not preservation)
+        conf = re.sub(r"^SLUG=.*\n?", "", conf, flags=re.MULTILINE)
         conf = set_key(conf, "ATLAS_VAULT_REMOTE", args.vault_remote)
     else:
         conf = (read(TEMPLATES / ".atlas.conf.example")
-                .replace('SLUG="<slug>"', f'SLUG="{args.slug}"')
+                .replace('COMPONENT="<component>"', f'COMPONENT="{args.slug}"')
                 .replace('ATLAS_VAULT_REMOTE="https://github.com/<org>/Atlas-<Project>.git"',
                          f'ATLAS_VAULT_REMOTE="{args.vault_remote}"'))
     if args.role == "both":

@@ -349,6 +349,14 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.9 (2026-09-25, operator: the word slug is retired): COMPONENT= is the seat
+#   conf key (the root of write authorisation - the guards, CI path guard, needs
+#   matching and installer all key on it); SLUG= reads as the temporary fallback,
+#   surfaced by --verify, dying with the estate migration like slug: in the graph.
+#   atlas_init --component is the flag (--slug hidden alias); templates, CI guard
+#   variable, messages and manuals updated. Guard hardening: an io-graph that parses
+#   to no components is OUR parse failure - allow, never a confident deny (flow-style
+#   yaml found the gap in test).
 #   1.30.6 (2026-09-25, operator): ADDRESSING IS LOOKED UP, NOT RECALLED — every
 #   briefing opens with the vault's address book (the resolvable set, copyable); the
 #   write guard refuses a needs doc at authoring when to: resolves to nothing in the

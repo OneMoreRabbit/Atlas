@@ -41,7 +41,7 @@ One command, from the target code-repo root:
 
 ```sh
 git clone --depth 1 https://github.com/OneMoreRabbit/Atlas.git .atlas-method   # bootstrap only
-python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>
+python .atlas-method/tools/atlas_init.py --component <slug> --vault-remote <url>
 ```
 
 It copies the tree in, fills `.atlas.conf` and `AGENTS.md`, appends both fragments

@@ -135,7 +135,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    to the method itself). One command, from the code-repo root:
    ```sh
    git clone --depth 1 <method-remote> .atlas-method    # bootstrap only; atlas-sync manages it after
-   python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <vault-url>
+   python .atlas-method/tools/atlas_init.py --component <slug> --vault-remote <vault-url>
    ```
    **If the agent does not launch with this repo as its project directory** — a devagent
    seat starting in the clone parent, for example — add `--launch-dir "$HOME/work"`.
@@ -145,7 +145,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    committed), so later verifies check the real launch dir automatically. Then prove
    it, on the seat, before trusting the guard:
    ```sh
-   python .atlas-method/tools/atlas_init.py --slug <slug> --verify
+   python .atlas-method/tools/atlas_init.py --component <slug> --verify
    ```
    Non-zero means the hook layer is not live; a WARN about a defaulted launch dir means
    the verify proved nothing — re-install with `--launch-dir`. "Wired" on the dashboard
