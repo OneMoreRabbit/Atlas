@@ -325,7 +325,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
         if is_retired(fm):
             continue
         rel0 = p.relative_to(ROOT).as_posix()
-        if not rel0.startswith("components/"):
+        if not rel0.startswith("components/") and not rel0.endswith("README.md"):
             warns.append(f"{rel0} — vault-root needs/ is RETIRED (1.30.3, ADR-0014): "
                          "every contract lives in components/<owner>/docs/needs/ — move "
                          "it (and rewrite responds_to/relates paths in the same commit)")
@@ -928,10 +928,17 @@ def comp_name(c) -> str:
     return str(c.get("component") or c.get("slug") or "")
 
 
+ROLE_VOCAB = ("component", "architect", "product", "review", "arch")
+
+
 def comp_role(c) -> str:
-    """`role:` — component | architect | product | review (1.30.3). Absent means
-    component, so every existing vault keeps its meaning with no edit."""
-    return str(c.get("role", "component")).strip().lower() or "component"
+    """`role:` — CLOSED vocabulary (1.30.7 fix): component | architect | product |
+    review. Absent means component — and so does ANY value outside the vocabulary,
+    because the pre-ADR-0014 field held prose ("Data proxy in front of Qdrant") and
+    1.30.6 read that prose as a role, silently exempting real components from
+    integrity, wiring and regen on every un-migrated vault."""
+    v = str(c.get("role", "component")).strip().lower()
+    return v if v in ROLE_VOCAB else "component"
 
 
 def is_repo_component(c) -> bool:
