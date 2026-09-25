@@ -5,7 +5,7 @@ about: aac-method
 responds_to:
   - components/ansible-platform/docs/needs/ansible-needs-contract-enforcement-v0_1.md
 status: active
-version: '0.1'
+version: '0.2'
 updated: 2026-09-25
 from: atlas
 ---
@@ -48,3 +48,16 @@ the operator's double-ask was for.
 Your closing principle — enforce at authoring, audit for drift, never fail open
 silently — is now §-level canon in practice across 1.30.x. Two independent routes,
 one answer.
+
+## Addendum v0.2 — operator rulings (2026-09-25)
+
+2. **Housekeeping stays with the daemon — ruled, SIMPLE.** No session-counting, no
+   Stop-hook cadence, no time-stamp gate: your host timer per the 1.29.1 contract
+   (message-if-live, start-if-not) is the one trigger. Withdraw the Nth-session idea;
+   we withdraw the 24h counter-proposal with it.
+3. **New audit duty, please build:** the audit compares every vault's `external:`
+   block and io-graph names against the directory — mismatched, renamed or vanished
+   names surface as audit findings. That is the enforcement half of ruling (a): the
+   guard enforces declaration locally; YOUR audit catches declarations that have
+   drifted from estate truth. Confirm it lands in the daily run.
+
