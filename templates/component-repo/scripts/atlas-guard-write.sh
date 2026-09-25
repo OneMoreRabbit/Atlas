@@ -12,7 +12,7 @@ set -e
 
 PY=$(command -v python3 || command -v python)
 
-P=$("$PY" -c '
+_PL=$("$PY" -c '
 import json, sys
 try:
     d = json.load(sys.stdin)
@@ -21,7 +21,13 @@ except Exception:
     raise SystemExit
 ti = d.get("tool_input") or {}
 print(ti.get("file_path") or ti.get("notebook_path") or "")
+body = (ti.get("content") or ti.get("new_string") or "").replace("\r", "")
+import re
+m = re.search(r"^(?:to|addressed-to):\s*(.+)$", body, re.M)
+print(m.group(1).strip() if m else "")
 ')
+P=$(printf '%s\n' "$_PL" | sed -n 1p)
+TO=$(printf '%s\n' "$_PL" | sed -n 2p)
 
 # A guard that cannot parse its input denies, never allows (AAC-method §9).
 if [ "$P" = "__ATLAS_PARSE_ERROR__" ]; then
@@ -97,8 +103,62 @@ done
 # the component this write targets, if any
 _comp=""
 case "$REL" in components/*/*) _comp=${REL#components/}; _comp=${_comp%%/*} ;; esac
+addr_check() {
+  # to:-lookup at authoring (1.30.6, operator): a needs doc whose addressee the LOCAL
+  # io-graph cannot resolve is refused, with the valid list in the message. Local
+  # files only — never the network; the estate audit covers cross-vault drift.
+  # Advisory-hard: OUR parse failure allows (the path-scope guard above stays the
+  # fail-closed one); a confident no-match denies.
+  case "$REL" in components/*/docs/needs/*.md) ;; *) return 0 ;; esac
+  [ -n "$TO" ] || return 0                    # Edit without frontmatter in the diff: CI backstops
+  _rc=0
+  "$PY" - "$V" "$TO" <<'PYEOF2' || _rc=$?
+import re, sys
+vault, to = sys.argv[1], sys.argv[2]
+try:
+    g = open(vault + "/registry/io-graph.yml", encoding="utf-8").read()
+except OSError:
+    sys.exit(0)                                # no graph readable: allow, CI decides
+pn = (re.search(r"^project:\s*([\w.-]+)", g, re.M) or [None, ""])[1].lower()
+comps, roles = [], []
+for m in re.finditer(r"^\s*-\s+(?:component|slug):\s*([\w.-]+)(.*?)(?=^\s*-\s|\Z)", g, re.M | re.S):
+    name = m.group(1).lower()
+    r = re.search(r"^\s*role:\s*([\w-]+)", m.group(2), re.M)
+    (roles if (r and r.group(1).lower() != "component") else comps).append(
+        (name, r.group(1).lower() if r else "component"))
+ok = {"atlas", "method", "arch", "nav"}
+ok |= {n for n, _ in comps} | {n for n, _ in roles}
+if pn:
+    ok |= {f"{pn}.component.{n}" for n, _ in comps}
+    ok |= {f"{pn}.{r}" for _, r in roles} | {f"{pn}.arch", f"{pn}-arch", pn}
+ext_pj = set()
+for m in re.finditer(r"provider:\s*([\w.-]+)", g):
+    ok.add(m.group(1).lower())
+for m in re.finditer(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?\s*$", g, re.M):
+    pj = m.group(1).lower(); ext_pj.add(pj)
+    ok |= {pj, f"{pj}-arch", f"{pj}.arch"}
+toks = [x.strip().lower().strip('[]').strip(chr(39)).strip(chr(34)) for x in re.split(r'[,;]', to) if x.strip().strip('[]')]
+bad = [x for x in toks
+       if x not in ok and not any(x.startswith(p + ".") for p in ext_pj)]
+if not toks or not bad:
+    sys.exit(0)
+valid = ", ".join(sorted(ok - {"arch", "nav"}))
+import json
+print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+  "permissionDecision": "deny",
+  "permissionDecisionReason": (
+    "Atlas addressing (1.30.6): '" + ", ".join(bad) + "' resolves to nothing in this "
+    "vault's io-graph. Addressable from here: " + valid + ". A new external must be "
+    "declared by your arch seat before you can address it (AAC-method 5).")}}))
+sys.exit(3)
+PYEOF2
+  [ "$_rc" = 3 ] && exit 0 || return 0
+}
 for _s in $(printf '%s\n' "$SLUGS" | sort -u); do
-  [ -n "$_s" ] && [ "$_comp" = "$_s" ] && exit 0     # a component of THIS seat: allowed
+  if [ -n "$_s" ] && [ "$_comp" = "$_s" ]; then
+    addr_check
+    exit 0                                     # a component of THIS seat: allowed
+  fi
 done
 case "$REL" in
   architecture/proposals/*) exit 0 ;;

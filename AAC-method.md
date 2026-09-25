@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.6 (2026-09-25, operator): ADDRESSING IS LOOKED UP, NOT RECALLED — every
+#   briefing opens with the vault's address book (the resolvable set, copyable); the
+#   write guard refuses a needs doc at authoring when to: resolves to nothing in the
+#   local io-graph, naming the valid set in the refusal (local files only, no network;
+#   estate audit covers cross-vault). Plus the retirement rung: a need answered by an
+#   in-vault responds_to but still open warns — the local half of the lag dies.
 #   1.30.5 (2026-09-25, operator "go" x2): the method repo's outbox MOVES to the
 #   standard path components/method/docs/{needs,provides} — the root-retirement
 #   exception is dead; no tool special-cases one repo (register re-points, asked). On
@@ -824,6 +830,15 @@ components/<slug>/
 > remains. There are NO exceptions to root retirement (1.30.5): the method repo's
 > outbox — the outbox-only source, §10 — lives at `components/method/docs/` like
 > every other component's, so no tool special-cases one repo.
+
+> **Addressing is looked up, not recalled** (1.30.6, operator). Every briefing opens
+> with the vault's **address book** — the full resolvable set (own components and
+> roles in full form, declared externals, the method seat) — so an agent copies an
+> address instead of remembering one. And the write guard refuses a needs doc at
+> authoring when its `to:` resolves to nothing in the LOCAL io-graph, naming the
+> valid set in the refusal. Local files only, never the network; the estate audit
+> covers cross-vault drift. Advisory-hard: the guard's own parse failure allows (CI
+> backstops); a confident no-match denies.
 
 > **On a need, the topic field is `about:`** (1.30.5, operator). `to:` is the
 > addressee, always. The habit of labelling a need's topic `interface:` reads as
