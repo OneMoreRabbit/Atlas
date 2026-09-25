@@ -932,11 +932,11 @@ ROLE_VOCAB = ("component", "architect", "product", "review", "arch")
 
 
 def comp_role(c) -> str:
-    """`role:` — CLOSED vocabulary (1.30.7 fix): component | architect | product |
-    review. Absent means component — and so does ANY value outside the vocabulary,
-    because the pre-ADR-0014 field held prose ("Data proxy in front of Qdrant") and
-    1.30.6 read that prose as a role, silently exempting real components from
-    integrity, wiring and regen on every un-migrated vault."""
+    """`role:` — component | architect | product | review; absent means component.
+    A value outside the vocabulary is pre-ADR-0014 prose and reads as component —
+    a TEMPORARY fallback (1.30.8) that exists only until vaults migrate that prose
+    to `description:`; it is surfaced in the migration report, and it dies with the
+    `slug:` fallback when the report is clean. It is not typo forgiveness."""
     v = str(c.get("role", "component")).strip().lower()
     return v if v in ROLE_VOCAB else "component"
 
@@ -1883,6 +1883,10 @@ def main(wiring_flag: bool = False) -> int:
     if not str(graph.get("project", "")).strip():
         mig.append("`project:` not declared (required under contract addressing — the "
                    "derived name is what produced agenteco beside agent-eco)")
+    if any(str(c.get("role", "component")).strip().lower() not in ROLE_VOCAB
+           for c in graph.get("components", [])):
+        mig.append("`role:` holds prose on some entries (pre-ADR-0014) — move the prose "
+                   "to `description:`; until then those entries read as components")
     if any("slug" in c and "component" not in c for c in graph.get("components", [])):
         mig.append("`slug:` still in use (rename to `component:`; the fallback drops "
                    "when no vault reports this line)")
