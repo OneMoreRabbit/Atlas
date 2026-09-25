@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.30"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.31"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.31.0 (2026-09-26): ESTATE RELEASE — rolls up 1.30.1-1.30.12. CONTRACT ADDRESSING
+#   complete (ADR-0014: full addresses, role: vocabulary, project: required, root
+#   contracts retired, slug retired from graph AND seat conf, never-resolvable
+#   addressing refused, per-vault migration report, responds_to healing); addressing
+#   looked up not recalled (address book in every briefing; to:-lookup at the write
+#   guard, local only); the TEST role (optional) and ADR-0007 (a release is judged by
+#   its use cases — the process binds every project, test seat or arch operating it);
+#   cross-project proposals are needs; the method outbox at the standard path; about:
+#   the need topic field; shared bridge task list; retirement rung; credential-404
+#   fix; house style in every briefing AND every turn (TL;DR first). Each vault
+#   adopts by the MIGRATION RUNBOOK: one commit — pin '1.31.0' + io-graph rename +
+#   root-docs move + address rewrite; smallest first; un-migrated vaults untouched.
 #   1.30.12 (2026-09-26, operator): house style into EVERY TURN — a one-line
 #   UserPromptSubmit hook (scripts/atlas-style.sh, all seat kinds, deduped one per
 #   launch dir): "TL;DR first. Short plain English, only what the decision needs.
