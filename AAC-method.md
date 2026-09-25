@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.5 (2026-09-25, operator "go" x2): the method repo's outbox MOVES to the
+#   standard path components/method/docs/{needs,provides} — the root-retirement
+#   exception is dead; no tool special-cases one repo (register re-points, asked). On
+#   a NEED the topic field is `about:`, not `interface:` (which stays correct on
+#   contracts); only `to:` routes. Plus 1.30.4's shared-tasks revert rides along.
 #   1.30.4 (2026-09-25, operator): the bridge task list is SHARED again —
 #   _bridge/tasks.md written by operator AND arch seat; the 1.28.11 one-writer split
 #   (from-arch.md feeds) is reverted: it traded sync conflicts for a second file the
@@ -816,9 +821,16 @@ components/<slug>/
 > where fixing is cheap. During the estate's migration the older spellings (bare
 > component names, `<project>-arch`) still route; each vault rewrites its documents
 > in the same commit as its re-pin, and the validator's migration report shows what
-> remains. The one exception to root retirement is the **outbox-only source** (§10):
-> the method repo has no `components/`, so its root `needs/` and `provides/` remain
-> its outbox, addressed in full form like everything else.
+> remains. There are NO exceptions to root retirement (1.30.5): the method repo's
+> outbox — the outbox-only source, §10 — lives at `components/method/docs/` like
+> every other component's, so no tool special-cases one repo.
+
+> **On a need, the topic field is `about:`** (1.30.5, operator). `to:` is the
+> addressee, always. The habit of labelling a need's topic `interface:` reads as
+> contract machinery and confused the two; write `about:` for the topic
+> (`about: aac-method`). `interface:` remains correct on CONTRACTS, where it names the
+> published interface. Existing needs keep working — the field is a label, read by
+> humans; only `to:` routes.
 
 > **A proposal travels inside its own vault; a cross-project proposal is a need**
 > (1.30.2). `architecture/proposals/` is location-addressed: dropping a file there IS
@@ -2000,18 +2012,16 @@ Its properties are boundaries as much as powers:
 
 ### The outbox-only source — a repo on the needs plane that is not a vault
 
-The **method seat's own repo** (this one, `Atlas`) files `needs/` and publishes
-`provides/` at its root, yet has no `registry/io-graph.yml`, `components/` or
-`architecture/`. It is an **outbox-only source**: it participates fully in the needs
-plane — raising asks, answering them with `responds_to:` — without being a vault.
-
-A tool walking the needs plane must therefore treat such a repo specially, because "not
-a vault" and "unreadable vault" look identical from the outside and a vault-iterator
-skips it in silence (this cost the estate register a day of showing answered needs as
-open). The rule: **read both `needs/` and `provides/` from an outbox-only source, on its
-default branch (`main`)** — its outbox traffic commits straight to `main`, untagged (§9),
-so `dev` is the wrong place to look. The method seat is the only such source today; name
-the shape rather than hard-code the exception.
+The **method seat's own repo** (this one, `Atlas`) participates fully in the needs
+plane — raising asks, answering them with `responds_to:` — without being a vault: no
+`registry/io-graph.yml`, no `architecture/`, no other components. Since 1.30.5 its
+outbox lives at the **standard path**, `components/method/docs/{needs,provides}` (with
+`components/method/component.md`, `type: role`, as the identity), so a tool walking the
+needs plane needs NO special case for it — one shape everywhere. What remains special
+is only the branch: an outbox-only source has no work/release split for its outbox —
+**its outbox traffic commits straight to `main`, untagged (§9)**, so read `main`, not
+`dev`. (Pre-1.30.5 the outbox sat at the repo root; the register scanned it as an
+exception, which is exactly why it moved.)
 
 A `responds_to:` value (which marks a need answered) is **either an inline reference or a
 YAML block list**; a closure check reads both:
