@@ -365,6 +365,9 @@ def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None 
         print("  warn   the io-graph declares no `product:` block — the seat is not yet "
               "declared (§10). Ask the arch seat to add `product: {enabled: true}`.")
     written = []
+    (launch_dir / "atlas-style.sh").write_text(
+        read(TEMPLATES / "scripts" / "atlas-style.sh"), encoding="utf-8", newline="\n")
+    (launch_dir / "atlas-style.sh").chmod(0o755)
     for name in ("atlas-product-context.sh", "atlas-product-guard.sh",
                  "atlas-product-align.sh"):
         dst = launch_dir / name
@@ -425,6 +428,9 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
               file=sys.stderr)
         return 2
     written = []
+    style_src = TEMPLATES / "scripts" / "atlas-style.sh"
+    (launch_dir / "atlas-style.sh").write_text(read(style_src), encoding="utf-8", newline="\n")
+    (launch_dir / "atlas-style.sh").chmod(0o755)
     for name in ("atlas-arch-context.sh", "atlas-arch-guard.sh", "atlas-arch-write.sh"):
         src, dst = ARCH_TEMPLATES / name, launch_dir / name
         if dst.exists() and not force and read(dst) == read(src):
@@ -694,6 +700,7 @@ def main() -> int:
         # 1.21 fixed, silently. Skipping the add was never enough: prune the others.
         keep = other or repo
         for _ev, _sc, _msg in (("SessionStart", "atlas-context.sh", "one seat briefing, emitted once"),
+                               ("UserPromptSubmit", "atlas-style.sh", "one style line per turn"),
                                ("PreToolUse", "atlas-guard-write.sh", "one write guard (union of the seat's slugs)"),
                                ("Stop", "atlas-guard-publish.sh", "one publish guard"),
                                ("PreToolUse", "atlas-guard-supervise.sh", "one supervise guard")):

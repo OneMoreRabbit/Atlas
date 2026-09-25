@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.12 (2026-09-26, operator): house style into EVERY TURN — a one-line
+#   UserPromptSubmit hook (scripts/atlas-style.sh, all seat kinds, deduped one per
+#   launch dir): "TL;DR first. Short plain English, only what the decision needs.
+#   NO INVENTED TERMS." house-style.md rule 1 is now TL;DR-first; the full file still
+#   opens every briefing. One line on purpose — a long reminder would be the disease.
 #   1.30.11 (2026-09-26, operator ratification + orch finding): ADR-0007 — a release
 #   is judged by its USE CASES, not its test suite (decisions/0007): cases written by
 #   not-the-builder in components/<name>/tests/, operator-reviewed before build,

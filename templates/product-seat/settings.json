@@ -1,14 +1,45 @@
 {
   "hooks": {
     "SessionStart": [
-      {"hooks": [{"type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-context.sh\""}]}
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-context.sh\""
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      {"matcher": "Write|Edit|NotebookEdit",
-       "hooks": [{"type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-guard.sh\""}]}
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-guard.sh\""
+          }
+        ]
+      }
     ],
     "Stop": [
-      {"hooks": [{"type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-align.sh\""}]}
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-align.sh\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-style.sh\""
+          }
+        ]
+      }
     ]
   }
 }
