@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.11 (2026-09-26, operator ratification + orch finding): ADR-0007 — a release
+#   is judged by its USE CASES, not its test suite (decisions/0007): cases written by
+#   not-the-builder in components/<name>/tests/, operator-reviewed before build,
+#   proven by human-readable companion scripts run in the real test environment,
+#   verdict read against the case never an exit code; operated by the test seat where
+#   declared, arch otherwise; the release rule now has both halves. atlas-needs:
+#   api.github.com credential falls back to github.com, and a tokenless 404 says
+#   "missing credential, not missing register". Responses: test-role (shipped
+#   1.30.10); slug-regression (superseded, retires at migration).
 #   1.30.10 (2026-09-26, estate ask + operator): the TEST ROLE — optional, role: test,
 #   addressed <project>.test; writes tests/ + components/<name>/tests/ + own outbox,
 #   never architecture or code (atlas_init --test installs the guard); runs against
@@ -1449,7 +1458,14 @@ nothing to restore them.
 > the tag, into a clean environment, run from a neutral directory — a fresh venv for a
 > Python package, a pulled image for a container, a fresh clone for tooling, a tagged
 > run against a clean target for ansible. The working tree passing is not the release
-> working.
+> working. And (ADR-0007, 1.30.11) **only when its use cases pass by observation,
+> against criteria the builder did not write**: use cases live in
+> `components/<name>/tests/`, authored by the test seat (arch where none is declared)
+> or the consuming component, reviewed by the operator before build; the builder runs
+> one human-readable companion script per case in the real test environment and the
+> verdict is read against the case — never an exit code — by someone who did not
+> build the thing. Unit tests keep the internal invariants; they lose authority over
+> the release verdict.
 
 > **A seat briefing is not all-or-nothing** (1.27.4, arc-platform finding): a member with
 > no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is

@@ -107,14 +107,19 @@ def token_for(url: str) -> str | None:
     m = re.match(r"https?://([^/]+)", url)
     if not m:
         return None
-    try:
-        out = subprocess.run(["git", "credential", "fill"], input=f"protocol=https\nhost={m.group(1)}\n\n",
-                             capture_output=True, text=True, timeout=10).stdout
-        for line in out.splitlines():
-            if line.startswith("password="):
-                return line[len("password="):]
-    except (OSError, subprocess.SubprocessError):
-        pass
+    hosts = [m.group(1)]
+    if m.group(1) == "api.github.com":
+        hosts.append("github.com")   # a seat holding only the base-host credential is
+                                     # normal (1.30.11): fall back rather than go tokenless
+    for host in hosts:
+        try:
+            out = subprocess.run(["git", "credential", "fill"], input=f"protocol=https\nhost={host}\n\n",
+                                 capture_output=True, text=True, timeout=10).stdout
+            for line in out.splitlines():
+                if line.startswith("password="):
+                    return line[len("password="):]
+        except (OSError, subprocess.SubprocessError):
+            pass
     return os.environ.get("GITHUB_TOKEN")
 
 
@@ -152,7 +157,12 @@ def refresh(explicit_slugs: str | None) -> int:
         # Never render a failed fetch as fresh (1.28.2, AgentEco): stamp the EXISTING file
         # so --show and the briefing say the data is stale and why, rather than serving an
         # hours-old "nothing open" as current. Continue degraded; declare it.
-        print(f"atlas-needs: refresh failed ({e}); keeping the existing file, marked stale",
+        hint = ""
+        if "404" in str(e) and not token_for(url):
+            hint = (" — NO CREDENTIAL resolved for this URL's host: to GitHub, a private "
+                    "file without a token IS a 404, so this likely means missing "
+                    "credential, not missing register (1.30.11)")
+        print(f"atlas-needs: refresh failed ({e}){hint}; keeping the existing file, marked stale",
               file=sys.stderr)
         if OUT.exists():
             body = OUT.read_text(encoding="utf-8")
