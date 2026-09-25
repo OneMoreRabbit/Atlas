@@ -928,7 +928,7 @@ def comp_name(c) -> str:
     return str(c.get("component") or c.get("slug") or "")
 
 
-ROLE_VOCAB = ("component", "architect", "product", "review", "arch")
+ROLE_VOCAB = ("component", "architect", "product", "review", "arch", "test")
 
 
 def comp_role(c) -> str:

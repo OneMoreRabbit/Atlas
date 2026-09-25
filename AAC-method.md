@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.30.10 (2026-09-26, estate ask + operator): the TEST ROLE — optional, role: test,
+#   addressed <project>.test; writes tests/ + components/<name>/tests/ + own outbox,
+#   never architecture or code (atlas_init --test installs the guard); runs against
+#   REAL components read-only, verdicts against the case never a bare exit code; read
+#   breadth = arch-read (operator ruling); defects travel as needs to the owner.
+#   Vocabulary, test-component.md template, guard and installer mode shipped.
 #   1.30.9 (2026-09-25, operator: the word slug is retired): COMPONENT= is the seat
 #   conf key (the root of write authorisation - the guards, CI path guard, needs
 #   matching and installer all key on it); SLUG= reads as the temporary fallback,
@@ -1944,6 +1950,19 @@ housekeeping run. There is NO mode override, ever (operator ruling) — arch
 pushes are not supervise-gated anyway, and on a both-hats seat the gate simply asks:
 the commit lands, the push waits for confirmation or the next interactive session. The judgment work is the point: regeneration is CI's job, and a
 run that only re-derives derived views has done nothing.
+
+**The test role — independence made structural** (1.30.10, optional per project,
+estate-asked). A component with no repository, `role: test` in the io-graph, addressed
+as `<project>.test`. It writes **use cases and test scripts** — `tests/` at the vault
+root, `components/<name>/tests/` per component, and its own outbox — never
+architecture, never component code (guard-enforced; `atlas_init --test` installs it).
+It runs its suites against the REAL components, read-only by default, and reads
+verdicts against the case, never a bare exit code. The point is independence from the
+implementation: a suite written from the code asserts what the code does, not what the
+case requires (measured: an implementation-derived suite missed a wrong-agent start
+exiting 0). Read access: as broad as the arch seat's read token — it must see every
+component to test it. A defect it finds travels as an ordinary need to the owning
+component. A project without a `role: test` entry has no test seat.
 
 **The review seat — oversight that only reads** (1.28.10, adopting the estate's
 ADR-0011). An estate may run a standing reviewer: weekly, one project in depth plus one

@@ -317,6 +317,39 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
 
 ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-seat"
 PRODUCT_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "product-seat"
+TEST_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "test-seat"
+
+
+def install_test(vault: Path, launch_dir: Path, force: bool) -> int:
+    """Test-seat mode (1.30.10, §10): the tests/-scoped write guard at the launch dir,
+    plus .atlas-test.conf and the role identity file. Deliberately minimal — a test
+    seat re-orients from the vault it reads; no briefing machinery of its own."""
+    if not (vault / "registry" / "io-graph.yml").exists():
+        print(f"atlas_init --test: {vault} has no registry/io-graph.yml — point --repo "
+              "at the project VAULT checkout", file=sys.stderr)
+        return 2
+    graph_text = read(vault / "registry" / "io-graph.yml")
+    if not re.search(r"^\s*role:\s*test\s*$", graph_text, re.MULTILINE):
+        print("  warn   the io-graph declares no `role: test` entry — ask the arch seat "
+              "to add one (the seat is not yet declared, §10)")
+    dst = launch_dir / "atlas-test-guard.sh"
+    dst.write_text(read(TEST_TEMPLATES / "atlas-test-guard.sh"), encoding="utf-8", newline="\n")
+    dst.chmod(0o755)
+    print(f"  write  {dst}")
+    tdir = vault / "components" / "test"
+    (tdir / "docs").mkdir(parents=True, exist_ok=True)
+    cmd = tdir / "component.md"
+    if not cmd.exists():
+        cmd.write_text(read(TEST_TEMPLATES / "test-component.md"), encoding="utf-8", newline="\n")
+        print(f"  write  {cmd}")
+    conf = launch_dir / ".atlas-test.conf"
+    conf.write_text(f'ATLAS_VAULT="{vault}"\n', encoding="utf-8", newline="\n")
+    print(f"  write  {conf}")
+    tpl = {"hooks": {"PreToolUse": [{"matcher": "Write|Edit|NotebookEdit",
+           "hooks": [{"type": "command", "command": f'sh "{launch_dir}/atlas-test-guard.sh"'}]}]}}
+    merge_settings(launch_dir, tpl, force, [], repo_root=launch_dir)
+    print("atlas_init --test: done — tests/-scoped write guard installed")
+    return 0
 
 
 def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None = None) -> int:
@@ -486,6 +519,9 @@ def main() -> int:
                     help="product seat: path to the project's Nav vault checkout — "
                          "written to .atlas-product.conf as ATLAS_NAV so the guard "
                          "scopes writes there to _gps/ (1.28.10)")
+    ap.add_argument("--test", action="store_true", dest="test_role",
+                    help="install a TEST seat (1.30.10, §10): tests/-scoped write guard "
+                         "at the launch dir; point --repo at the vault checkout")
     ap.add_argument("--product", action="store_true",
                     help="install a PRODUCT seat (1.28.9, §10): reorientation hook, "
                          "product/** write guard and alignment gate at the launch dir; "
@@ -523,6 +559,13 @@ def main() -> int:
     if not repo.is_dir():
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
+    if args.test_role:
+        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
+        if ld == repo:
+            print("atlas_init --test: refusing to install hooks into the vault working "
+                  f"tree - re-run with `--launch-dir {repo.parent}`.", file=sys.stderr)
+            return 2
+        return install_test(repo, ld, args.force)
     if args.product:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
         if ld == repo:
