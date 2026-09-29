@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.32"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.33"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.33.0 (2026-09-29): ESTATE RELEASE — the clean cut of the 1.32 content: contract
+#   addressing (ADR-0014), the test role, ADR-0007 as amended (product writes use
+#   cases, arch where none; test seat runs where declared) + ADR-0008 (the testing
+#   methodology: run rules, unit-test demotion, the gates loop), house style per
+#   briefing and per turn, SS6 body aligned. Estate migrates straight to '1.33.0' by
+#   the runbook — one commit per vault. Supersedes unadopted 1.31.0/1.32.x tags.
 #   1.32.1 (2026-09-29): SS6 body aligned with the ADRs — the release-rule paragraph
 #   still carried 0007's pre-amendment author ordering and did not point at ADR-0008;
 #   doc-only, caught minutes after the tag. Migration pin is '1.32.1'.
