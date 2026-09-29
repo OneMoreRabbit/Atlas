@@ -349,6 +349,9 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.32.1 (2026-09-29): SS6 body aligned with the ADRs — the release-rule paragraph
+#   still carried 0007's pre-amendment author ordering and did not point at ADR-0008;
+#   doc-only, caught minutes after the tag. Migration pin is '1.32.1'.
 # 1.32.0 (2026-09-29): ESTATE RELEASE — 1.31.0 (unadopted; migration had not begun)
 #   plus ADR-0008, THE TESTING METHODOLOGY (operator-adopted from eight AgentEco
 #   campaigns): run rules (far-end evidence, content-hash builds, blocked:<owner>,
@@ -1487,12 +1490,17 @@ nothing to restore them.
 > run against a clean target for ansible. The working tree passing is not the release
 > working. And (ADR-0007, 1.30.11) **only when its use cases pass by observation,
 > against criteria the builder did not write**: use cases live in
-> `components/<name>/tests/`, authored by the test seat (arch where none is declared)
-> or the consuming component, reviewed by the operator before build; the builder runs
+> `components/<name>/tests/`, authored by the PRODUCT seat (arch where none is
+> declared — ADR-0007 as amended; the test seat, where declared, documents and runs
+> the tests, component seats write them otherwise; not-the-builder is the invariant),
+> reviewed by the operator before build; the builder runs
 > one human-readable companion script per case in the real test environment and the
 > verdict is read against the case — never an exit code — by someone who did not
-> build the thing. Unit tests keep the internal invariants; they lose authority over
-> the release verdict.
+> build the thing. The full methodology — run rules (far-end evidence, content-hash
+> builds, blocked:<owner>, cold-start gate, known-issues register), unit-test
+> demotion, and the gates loop (catalogue → twice = write-time gate → lint with
+> exemption markers) — is **ADR-0008**; unit tests keep the internal invariants and
+> lose authority over the release verdict.
 
 > **A seat briefing is not all-or-nothing** (1.27.4, arc-platform finding): a member with
 > no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is
