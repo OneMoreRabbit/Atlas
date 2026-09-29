@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.1 (2026-09-29, orchestrator canary on the new stack): the style hook's
+#   variable was braceless while the installer substitutes only the braced spelling —
+#   launch-dir seats got an unresolved path that BLOCKED every prompt while verify
+#   passed. Braced everywhere (one spelling); the wired command is fail-open
+#   (2>/dev/null || true — a cosmetic hook must never block delivery); --verify now
+#   FIRES the UserPromptSubmit hook as wired and fails on braceless leftovers.
+#   Launch-dir seats take 1.33.1 before first prompt.
 # 1.33.0 (2026-09-29): ESTATE RELEASE — the clean cut of the 1.32 content: contract
 #   addressing (ADR-0014), the test role, ADR-0007 as amended (product writes use
 #   cases, arch where none; test seat runs where declared) + ADR-0008 (the testing

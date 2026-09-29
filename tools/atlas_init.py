@@ -276,6 +276,24 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
                         if "atlas-context.sh" in h.get("command", ""))
         check(ctx_hooks <= 1, "exactly one SessionStart atlas-context hook at the launch dir",
               f"{ctx_hooks} found — each emits the whole seat briefing; re-run atlas_init to prune" if ctx_hooks > 1 else "")
+        # the style hook is EXECUTED, not just counted (1.33.1, orchestrator finding:
+        # a braceless variable shipped a hook that blocked every prompt while verify
+        # said PASS — verify must fire what the harness will fire)
+        for e in hooks.get("UserPromptSubmit", []):
+            for h in e.get("hooks", []):
+                if "atlas-style" not in h.get("command", ""):
+                    continue
+                import subprocess as _sp
+                cmd = h["command"].replace("${CLAUDE_PROJECT_DIR}", str(launch_dir or repo))
+                try:
+                    r = _sp.run(["sh", "-c", cmd], capture_output=True, text=True, timeout=10)
+                    fired = r.returncode == 0 and "HOUSE STYLE" in r.stdout
+                except (OSError, _sp.SubprocessError):
+                    fired = False
+                check(fired, "UserPromptSubmit style hook FIRES and emits the style line",
+                      "" if fired else f"command failed as wired: {cmd[:100]}")
+                check("$CLAUDE_PROJECT_DIR/" not in h["command"].replace("${CLAUDE_PROJECT_DIR}", ""),
+                      "style hook has no unresolved braceless variable")
         wg_hooks = sum(1 for e in hooks.get("PreToolUse", []) for h in e.get("hooks", [])
                        if "atlas-guard-write.sh" in h.get("command", ""))
         check(wg_hooks <= 1, "exactly one write-guard hook at the launch dir",
@@ -400,7 +418,7 @@ def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None 
     for ev in tpl_settings["hooks"].values():
         for entry in ev:
             for h in entry["hooks"]:
-                h["command"] = h["command"].replace("$CLAUDE_PROJECT_DIR", str(launch_dir))
+                h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}", str(launch_dir))
     merge_settings(launch_dir, tpl_settings, force, written, repo_root=launch_dir)
     # prove the reorientation hook FIRES from the launch dir (the 1.28.2 rung)
     try:

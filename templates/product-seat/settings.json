@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-context.sh\""
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/atlas-product-context.sh\""
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-guard.sh\""
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/atlas-product-guard.sh\""
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-product-align.sh\""
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/atlas-product-align.sh\""
           }
         ]
       }
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/atlas-style.sh\""
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/atlas-style.sh\" 2>/dev/null || true"
           }
         ]
       }
