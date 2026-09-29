@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.31"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.32"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,16 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.32.0 (2026-09-29): ESTATE RELEASE — 1.31.0 (unadopted; migration had not begun)
+#   plus ADR-0008, THE TESTING METHODOLOGY (operator-adopted from eight AgentEco
+#   campaigns): run rules (far-end evidence, content-hash builds, blocked:<owner>,
+#   cold-start release gate, known-issues as written decisions); unit tests kept and
+#   demoted (fail-against-old-code, near-miss boundaries, fixtures that can answer
+#   wrong); the gates loop (failure class -> catalogue -> twice = write-time gate ->
+#   mechanisable = lint with exemption markers). ADR-0007 amended: product writes use
+#   cases (arch where none); test seat documents/runs tests where declared, component
+#   seats write them otherwise; not-the-builder is the invariant. Estate migrates
+#   straight to '1.32.0' by the runbook — one commit per vault.
 # 1.31.0 (2026-09-26): ESTATE RELEASE — rolls up 1.30.1-1.30.12. CONTRACT ADDRESSING
 #   complete (ADR-0014: full addresses, role: vocabulary, project: required, root
 #   contracts retired, slug retired from graph AND seat conf, never-resolvable
