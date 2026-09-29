@@ -113,7 +113,7 @@ addr_check() {
   [ -n "$TO" ] || return 0                    # Edit without frontmatter in the diff: CI backstops
   _rc=0
   "$PY" - "$V" "$TO" <<'PYEOF2' || _rc=$?
-import re, sys
+import re, sys, json
 vault, to = sys.argv[1], sys.argv[2]
 try:
     g = open(vault + "/registry/io-graph.yml", encoding="utf-8").read()
@@ -131,6 +131,21 @@ if not comps and not roles:
                      # never a confident no-match - allow, CI refusal backstops
 ok = {"atlas", "method", "arch", "nav"}
 ok |= {n for n, _ in comps} | {n for n, _ in roles}
+# THE address book: the seat-local directory cache (written by the validator on any
+# successful live fetch; operator ruling 1.33.2). Local read only - hooks stay offline.
+try:
+    import os as _os
+    _c = json.load(open(_os.path.expanduser("~/.atlas/directory.json")))
+    for _e in (_c.get("addressable") or []):
+        if isinstance(_e, dict):
+            if _e.get("fqn"):
+                _f = str(_e["fqn"]).lower()
+                ok.add(_f); ok.add(_f.split(".", 1)[1] if "." in _f else _f)
+            for _cm in _e.get("components") or []:
+                if isinstance(_cm, dict) and _cm.get("address"):
+                    ok.add(str(_cm["address"]).lower())
+except Exception:
+    pass
 if pn:
     ok |= {f"{pn}.component.{n}" for n, _ in comps}
     ok |= {f"{pn}.{r}" for _, r in roles} | {f"{pn}.arch", f"{pn}-arch", pn}

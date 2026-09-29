@@ -39,6 +39,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import json
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -290,7 +292,13 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
     Routing by addressee turns a typo into silent non-delivery, so an unroutable
     addressee must be visible. Warn-only, like naming."""
     pn_full = project_name(graph)
-    slugs = [comp_name(c) for c in graph.get("components", [])] + list(WELL_KNOWN_ADDRESSEES)
+    dir_names, dir_src = directory_names()
+    slugs = [comp_name(c) for c in graph.get("components", [])]
+    if dir_names is not None:
+        slugs += list(dir_names)          # THE address book (operator ruling)
+        slugs += [BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, "method", ARCH_ADDRESSEE]  # legacy spellings, warned elsewhere; die with migration
+    else:
+        slugs += list(WELL_KNOWN_ADDRESSEES)   # legacy fallback: no directory, no cache
     # full contract addresses (ADR-0014, 1.30.3): <project>.<role> and
     # <project>.component.<name> — both resolvable here when they name this vault
     if pn_full:
@@ -298,7 +306,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
                   for c in graph.get("components", []) if is_repo_component(c)]
         slugs += [f"{pn_full}.{comp_role(c)}"
                   for c in graph.get("components", []) if not is_repo_component(c)]
-        slugs += [f"{pn_full}.arch", f"{pn_full}.product", "method.arch"]
+        slugs += [f"{pn_full}.arch", f"{pn_full}.product"]   # method.arch RETIRED: not in any directory
     slugs += arch_addressees(graph)[1:]        # <project>-arch: this vault's arch, cross-vault form
     # <project>-product routes ONLY where the seat is declared (product: enabled, 1.28.9)
     if (graph.get("product") or {}).get("enabled"):
@@ -1346,6 +1354,52 @@ def comms_banner(graph) -> list:
             "at it."]
 
 
+DIR_CACHE = Path(os.environ.get("HOME", "~")).expanduser() / ".atlas" / "directory.json"
+
+
+def directory_names():
+    """The estate directory is THE address book (operator ruling, 1.33.2). Live GET
+    /v0/addressable using the seat's ~/.secrets files; on success refresh the local
+    cache (which the write guard also reads); on failure fall back to the cache; with
+    neither, addressing is NOT validated here (CI runners have neither — that is how
+    CI stays out of addressing by design). Returns (set_of_names, source_note)."""
+    sec = Path(os.environ.get("HOME", "~")).expanduser() / ".secrets"
+    names, src = set(), None
+    data = None
+    try:
+        base = (sec / "estate-directory-address").read_text(encoding="utf-8").strip().rstrip("/")
+        tok = (sec / "estate-directory-read").read_text(encoding="utf-8").strip()
+        import urllib.request
+        req = urllib.request.Request(base + "/v0/addressable",
+                                     headers={"Authorization": f"Bearer {tok}"})
+        with urllib.request.urlopen(req, timeout=4) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        if isinstance(data, dict):
+            data = data.get("addressable") or []
+        DIR_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        DIR_CACHE.write_text(json.dumps({"fetched": str(date.today()), "addressable": data}),
+                             encoding="utf-8")
+        src = "live"
+    except Exception:
+        try:
+            c = json.loads(DIR_CACHE.read_text(encoding="utf-8"))
+            data, src = c.get("addressable"), f"cached copy from {c.get('fetched', '?')}"
+        except Exception:
+            return None, None
+    rows = data if isinstance(data, list) else (data or {}).get("addressable", data or [])
+    for e in rows or []:
+        if not isinstance(e, dict):
+            continue
+        if e.get("fqn"):
+            fq = str(e["fqn"]).lower()
+            names.add(fq)
+            names.add(fq.split(".", 1)[1] if "." in fq else fq)   # project-level form
+        for comp in e.get("components") or []:
+            if isinstance(comp, dict) and comp.get("address"):
+                names.add(str(comp["address"]).lower())
+    return (names, src) if names else (None, None)
+
+
 def address_book(graph) -> list[str]:
     """The resolvable set, printed in every briefing (1.30.6, operator): the agent
     addressing a contract copies from this list instead of recalling a name; the write
@@ -1957,9 +2011,16 @@ def main(wiring_flag: bool = False) -> int:
               "addressee (AAC-method §3; warn-only):")
         for w in unroutable:
             print(f"  ⚠ {w}")
-    if refused:
+    _dnames, _dsrc = directory_names()
+    if _dnames is None:
+        if refused:
+            print(f"\n(addressing not validated here: no estate-directory access and no "
+                  f"cache — the write guard and seat-side validation cover it; "
+                  f"{len(refused)} candidate refusal(s) suppressed)")
+        refused = []
+    elif refused:
         print(f"\nADDRESSING REFUSED — {len(refused)} document(s) whose addressing can "
-              "never resolve (ADR-0014, 1.30.3; each needs a human decision):")
+              f"never resolve (checked against the estate directory, {_dsrc}):")
         for w in refused:
             print(f"  ✗ {w}")
         worst = max(worst, 1)

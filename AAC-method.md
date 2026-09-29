@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.2 (2026-09-29, operator ruling on the estate-manage finding): the ESTATE
+#   DIRECTORY IS THE ADDRESS BOOK. The validator resolves to:/from: against
+#   /v0/addressable LIVE (seat secrets: ~/.secrets/estate-directory-address + -read),
+#   refreshing ~/.atlas/directory.json on every successful run; unreachable -> the
+#   cache, with the checked-against date named. CI never validates addressing (no
+#   secrets there, by design). The write guard reads the same cache - hooks stay
+#   offline. method.arch RETIRED; URL-derived arch names gone under any directory
+#   source; own io-graph remains valid for own components (the source the directory
+#   ingests). Legacy bare spellings route with warnings and die with the migration.
 #   1.33.1 (2026-09-29, orchestrator canary on the new stack): the style hook's
 #   variable was braceless while the installer substitutes only the braced spelling —
 #   launch-dir seats got an unresolved path that BLOCKED every prompt while verify
