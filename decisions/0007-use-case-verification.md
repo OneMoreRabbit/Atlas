@@ -22,17 +22,20 @@ one by running it as a person would, and the verdict is read **against the use c
 never against exit codes**. A release does not count until its use cases pass this
 way.
 
-**Who operates the test process:** the project's **test seat** (`role: test`, §10),
-where one is declared; **the arch seat otherwise**. The test role is optional; the
-test process is not.
+**Who does what (amended 1.32.0, operator ruling):** the **product seat writes the
+use cases** (the goal, success, every failure state); **arch where no product seat
+exists** — and arch expands them against the architecture into each component's
+`tests/`. The **test seat, where declared, documents the tests per component or
+project and runs them (or orchestrates the run); component seats write the tests
+otherwise.** The invariant under all orderings: criteria are authored by
+NOT-the-builder. The test role is optional; the test process is not.
 
 ## The three steps (the operator's method)
 
 1. **Define the use cases** — one per file, in `components/<name>/tests/` in the
    vault. Each states: the goal as the user has it, what success looks like, and
    every defined failure state (refusals are first-class, with their own success
-   criteria). Written by the test seat, arch, or the consuming component — **never
-   the builder**.
+   criteria). Written by the product seat (arch where none) — **never the builder**.
 2. **The operator reviews them** before the builder starts.
 3. **The builder writes one companion script per use case** — human-readable, the
    exact commands a person types, runnable as written — **runs it in the real test
