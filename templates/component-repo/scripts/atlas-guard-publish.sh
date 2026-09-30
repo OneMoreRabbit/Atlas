@@ -39,6 +39,32 @@ fi
 # message only when ~/.atlas/needs-open.md changed since last shown — the same exit-2
 # pattern as the alignment gate, because an exit-0 print never reaches the model. Two
 # stats, no network; never wakes a seat (it speaks inside a turn already underway).
+# FRONTMATTER PARSE GATE (1.33.3, AgentEco: unparseable frontmatter fails QUIET —
+# the briefing reads the doc as ABSENT, so an ask goes invisible while looking
+# answered-by-silence; three measured hits). LINT tier, no exemption: broken YAML is
+# never correct work. Checks changed .md files in the VAULT checkout before finish.
+if [ -n "${ATLAS_VAULT:-}" ] && [ -d "$ATLAS_VAULT" ]; then
+  _BAD=$(cd "$ATLAS_VAULT" 2>/dev/null && git status --porcelain -uall 2>/dev/null |     awk '{print $2}' | grep -E '^(components/|needs/|architecture/).*\.md$' | while read -r _f; do
+      [ -f "$_f" ] || continue
+      "$PY" -c '
+import sys, re, yaml
+t = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+m = re.match(r"^---\s*\n(.*?)\n---", t, re.S)
+if not m:
+    sys.exit(0)                       # no frontmatter block: not this gates business
+try:
+    yaml.safe_load(m.group(1))
+except yaml.YAMLError as e:
+    ln = getattr(getattr(e, "problem_mark", None), "line", "?")
+    print(f"{sys.argv[1]}: line {ln}")
+' "$_f" 2>/dev/null
+    done)
+  if [ -n "$_BAD" ]; then
+    echo "Atlas PUBLISH GATE: unparseable frontmatter — the briefing would read these documents as ABSENT (an ask goes invisible). Fix before finishing:" >&2
+    printf '%s\n' "$_BAD" >&2
+    exit 2
+  fi
+fi
 if [ -f "$ATLAS_REPO_ROOT/scripts/atlas-needs.py" ]; then
   PY=$(command -v python3 || command -v python)
   printf '%s' "$PAYLOAD" | "$PY" "$ATLAS_REPO_ROOT/scripts/atlas-needs.py" --show || exit $?

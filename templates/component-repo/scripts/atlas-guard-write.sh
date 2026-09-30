@@ -129,8 +129,8 @@ for m in re.finditer(r"^\s*-\s+(?:component|slug):\s*([\w.-]+)(.*?)(?=^\s*-\s|\Z
 if not comps and not roles:
     sys.exit(0)      # graph parsed to nothing: OUR limitation (flow-style yaml?),
                      # never a confident no-match - allow, CI refusal backstops
-ok = {"atlas", "method", "arch", "nav"}
-ok |= {n for n, _ in comps} | {n for n, _ in roles}
+ok = set()
+have_dir = False
 # THE address book: the seat-local directory cache (written by the validator on any
 # successful live fetch; operator ruling 1.33.2). Local read only - hooks stay offline.
 try:
@@ -144,17 +144,27 @@ try:
             for _cm in _e.get("components") or []:
                 if isinstance(_cm, dict) and _cm.get("address"):
                     ok.add(str(_cm["address"]).lower())
+    have_dir = True
 except Exception:
     pass
-if pn:
-    ok |= {f"{pn}.component.{n}" for n, _ in comps}
-    ok |= {f"{pn}.{r}" for _, r in roles} | {f"{pn}.arch", f"{pn}-arch", pn}
+if have_dir:
+    # FULL forms only (operator ruling 2026-09-28): directory + own full forms
+    if pn:
+        ok |= {f"{pn}.component.{n}" for n, r in comps}
+        ok |= {f"{pn}.{r}" for n, r in roles} | {f"{pn}.arch"}
+else:
+    ok |= {"atlas", "method", "arch", "nav"}
+    ok |= {n for n, _ in comps} | {n for n, _ in roles}
+    if pn:
+        ok |= {f"{pn}.component.{n}" for n, r in comps}
+        ok |= {f"{pn}.{r}" for n, r in roles} | {f"{pn}.arch", f"{pn}-arch", pn}
 ext_pj = set()
-for m in re.finditer(r"provider:\s*([\w.-]+)", g):
-    ok.add(m.group(1).lower())
-for m in re.finditer(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?\s*$", g, re.M):
-    pj = m.group(1).lower(); ext_pj.add(pj)
-    ok |= {pj, f"{pj}-arch", f"{pj}.arch"}
+if not have_dir:
+    for m in re.finditer(r"provider:\s*([\w.-]+)", g):
+        ok.add(m.group(1).lower())
+    for m in re.finditer(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?\s*$", g, re.M):
+        pj = m.group(1).lower(); ext_pj.add(pj)
+        ok |= {pj, f"{pj}-arch", f"{pj}.arch"}
 toks = [x.strip().lower().strip('[]').strip(chr(39)).strip(chr(34)) for x in re.split(r'[,;]', to) if x.strip().strip('[]')]
 bad = [x for x in toks
        if x not in ok and not any(x.startswith(p + ".") for p in ext_pj)]

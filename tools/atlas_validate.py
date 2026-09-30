@@ -293,15 +293,24 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
     addressee must be visible. Warn-only, like naming."""
     pn_full = project_name(graph)
     dir_names, dir_src = directory_names()
-    slugs = [comp_name(c) for c in graph.get("components", [])]
     if dir_names is not None:
-        slugs += list(dir_names)          # THE address book (operator ruling)
-        slugs += [BRIDGE_ADDRESSEE, METHOD_ADDRESSEE, "method", ARCH_ADDRESSEE]  # legacy spellings, warned elsewhere; die with migration
+        # FULL CONTRACT ADDRESSES ONLY (operator ruling 2026-09-28, ADR-0014): the
+        # resolvable set is the directory plus this vault's own full forms. Bare
+        # names, seat names and derived spellings are refused at authoring; the
+        # migration commit rewrites old documents.
+        slugs = list(dir_names)
+        if pn_full:
+            slugs += [f"{pn_full}.component.{comp_name(c)}"
+                      for c in graph.get("components", []) if is_repo_component(c)]
+            slugs += [f"{pn_full}.{comp_role(c)}"
+                      for c in graph.get("components", []) if not is_repo_component(c)]
+            slugs += [f"{pn_full}.arch", f"{pn_full}.product"]
     else:
+        slugs = [comp_name(c) for c in graph.get("components", [])]
         slugs += list(WELL_KNOWN_ADDRESSEES)   # legacy fallback: no directory, no cache
     # full contract addresses (ADR-0014, 1.30.3): <project>.<role> and
     # <project>.component.<name> — both resolvable here when they name this vault
-    if pn_full:
+    if dir_names is None and pn_full:
         slugs += [f"{pn_full}.component.{comp_name(c)}"
                   for c in graph.get("components", []) if is_repo_component(c)]
         slugs += [f"{pn_full}.{comp_role(c)}"
@@ -317,13 +326,14 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
     # Each declared external answers to its provider slug AND its project name derived
     # from the vault URL (Atlas-Orchestrator -> orchestrator): seats think in projects,
     # and requiring the internal component slug of another vault was a quiz (1.25.3).
-    for e in graph.get("external") or []:
-        if e.get("provider"):
-            slugs.append(str(e["provider"]))
-        m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", str(e.get("vault", "")))
-        if m:
-            slugs.append(m.group(1).lower())
-            slugs.append(f"{m.group(1).lower()}-arch")   # that vault's arch seat, cross-vault (1.27.5)
+    if dir_names is None:
+        for e in graph.get("external") or []:
+            if e.get("provider"):
+                slugs.append(str(e["provider"]))
+            m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", str(e.get("vault", "")))
+            if m:
+                slugs.append(m.group(1).lower())
+                slugs.append(f"{m.group(1).lower()}-arch")   # that vault's arch seat, cross-vault (1.27.5)
     warns = []
     refusals = []                        # ADR-0014 (1.30.3): never-resolvable addressing
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
@@ -2012,6 +2022,9 @@ def main(wiring_flag: bool = False) -> int:
         for w in unroutable:
             print(f"  ⚠ {w}")
     _dnames, _dsrc = directory_names()
+    if _dnames is not None:
+        print(f"\naddressing checked against the estate directory ({_dsrc}; "
+              f"{len(_dnames)} names)")
     if _dnames is None:
         if refused:
             print(f"\n(addressing not validated here: no estate-directory access and no "

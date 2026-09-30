@@ -349,6 +349,16 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.3 (2026-09-30, estate-manage residuals + operator full-address ruling +
+#   AgentEco gate): URL-derived names build ONLY on the no-directory legacy path
+#   (agenteco-arch refused under a live directory); the checked-against line prints on
+#   every directory-sourced run (live | cached copy from <date>). FULL CONTRACT
+#   ADDRESSES ONLY under any directory source - bare, seat, legacy and derived
+#   spellings refused at authoring and validation (migration commits rewrite old
+#   docs). Publish guard gains the FRONTMATTER PARSE GATE: changed .md failing YAML
+#   parse blocks finish, naming file and line (unparseable reads as ABSENT in
+#   briefings - three measured invisibility hits). 404-credential response filed
+#   (fix shipped 1.30.11).
 #   1.33.2 (2026-09-29, operator ruling on the estate-manage finding): the ESTATE
 #   DIRECTORY IS THE ADDRESS BOOK. The validator resolves to:/from: against
 #   /v0/addressable LIVE (seat secrets: ~/.secrets/estate-directory-address + -read),
