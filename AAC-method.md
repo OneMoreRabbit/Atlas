@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.4 (2026-10-01, three field bugs): arch-seat.md no longer teaches the
+#   RETIRED from-arch rule (the 1.30.4 revert had missed its housekeeping paragraph);
+#   a missing project: is an ERROR under any directory source - guessed identity must
+#   not pass (derivation wrong for 5 of 9 estate names) - and a loud warning on the
+#   legacy path; check_wiring reads COMPONENT= (SLUG= legacy fallback) so migrated
+#   repos stop reporting unwired (verified live: both Blocks repos 🟢 wired).
 #   1.33.3 (2026-09-30, estate-manage residuals + operator full-address ruling +
 #   AgentEco gate): URL-derived names build ONLY on the no-directory legacy path
 #   (agenteco-arch refused under a live directory); the checked-against line prints on

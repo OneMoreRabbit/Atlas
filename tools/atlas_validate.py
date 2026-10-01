@@ -525,7 +525,7 @@ def component_source(graph, c) -> str:
 def check_wiring(graph) -> dict:
     """slug -> (emoji, label): is the component's code repo actually wired into the
     protocol? (decisions/0001; opt-in via --check-wiring.) A repo is WIRED iff its
-    default branch root has .atlas.conf with SLUG == the component's slug, and a
+    default branch root has .atlas.conf with COMPONENT (or legacy SLUG) == the component's name, and a
     committed AGENTS.md — what a fresh clone anywhere gets, not what a local
     checkout claims. Content fetch is a blobless shallow clone + two blob reads.
     Warn-only, always: a component may be unwired while being brought up; it may
@@ -549,7 +549,8 @@ def check_wiring(graph) -> dict:
         if conf is None and agents is None:
             results[slug] = ("🔴", "unwired — no `.atlas.conf`/`AGENTS.md` on the default branch")
             continue
-        m = re.search(r'^SLUG="?([^"\r\n]*)"?', conf or "", re.MULTILINE)
+        m = (re.search(r'^COMPONENT="?([^"\r\n]*)"?', conf or "", re.MULTILINE)
+             or re.search(r'^SLUG="?([^"\r\n]*)"?', conf or "", re.MULTILINE))
         repo_slug = m.group(1) if m else None
         if conf is None:
             results[slug] = ("🔴", "unwired — `AGENTS.md` present but no `.atlas.conf`")
@@ -977,6 +978,10 @@ def project_name(graph) -> str:
     url = (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip()
     m = re.search(r"(?:Atlas|Nav)-([\w.-]+?)(?:\.git)?$", url)
     return m.group(1).lower() if m else ""
+
+
+def project_declared(graph) -> bool:
+    return bool(str(graph.get("project") or "").strip())
 
 
 def arch_addressees(graph) -> list:
@@ -1944,7 +1949,21 @@ def main(wiring_flag: bool = False) -> int:
 
     # -- ADR-0014 migration report (1.30.3, §6 of the consolidated need) ----------
     mig = []
-    if not str(graph.get("project", "")).strip():
+    if not project_declared(graph):
+        _dn, _ = directory_names()
+        _derived = project_name(graph)
+        if _dn is not None:
+            # Under a directory source the derived guess is load-bearing for this
+            # vault's own full forms — and wrong for every hyphenated name (5 of 9
+            # measured, estate-manage 2026-09-30). ERROR, not a quiet list item.
+            print(f"\n  ✗ `project:` is NOT DECLARED — using the DERIVED guess "
+                  f"'{_derived}', which is wrong for every hyphenated project name. "
+                  "Declare `project:` in registry/io-graph.yml (the directory's "
+                  "spelling). Failing: guessed identity must not pass.")
+            worst = max(worst, 1)
+        else:
+            print(f"\n  ⚠ `project:` not declared — derived '{_derived}' from the "
+                  "vault URL; wrong for hyphenated names. Declare it.")
         mig.append("`project:` not declared (required under contract addressing — the "
                    "derived name is what produced agenteco beside agent-eco)")
     if any(str(c.get("role", "component")).strip().lower() not in ROLE_VOCAB

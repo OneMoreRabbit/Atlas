@@ -292,7 +292,8 @@ REQUIREMENTS section is the audit — read it at review.
 The estate may wake you daily at ~05:00 with `housekeeping-prompt.md` (beside your
 scripts in the method's arch-seat template). Follow it exactly: no releases, no
 merges, no pin changes in that run. Bridge rule regardless of the trigger:
-`_bridge/tasks.md` is the operator's — you append only to `_bridge/from-arch.md`.
+`_bridge/tasks.md` is SHARED (1.30.4) — append short entries, pull before writing;
+`from-arch.md` is retired to `_bridge/archive/`.
 
 ## The development environment is yours to design (1.28.15)
 
