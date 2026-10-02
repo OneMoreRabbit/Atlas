@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.7 (2026-10-02, blocks-service via blocks.arch routing): AGENTS.md CLOBBER
+#   reproduced and fixed - 1.30.9's blanket rename had mangled the template's <slug>
+#   placeholder into a spelling the installer never substitutes (four unresolved
+#   placeholders in every install since; --force clobbered good files with it).
+#   Template placeholder is <component>, resolved by the installer; and AGENTS.md is
+#   NEVER overwritten again - written only when absent, --force keeps a differing
+#   file and says so. Audit row suggested: grep "<component name>" in seats' AGENTS.md.
 #   1.33.6 (2026-10-02, estate PAT matrix, operator-commissioned): any step writing
 #   .github/workflows/ is addressed to the ORCHESTRATOR - no arch PAT holds the
 #   Workflows permission (the 1.33.5 wave stalled estate-wide on the re-copy step

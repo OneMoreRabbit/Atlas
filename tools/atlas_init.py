@@ -686,8 +686,15 @@ def main() -> int:
 
     # AGENTS.md — committed entry hook
     agents = (read(TEMPLATES / "AGENTS.md.template")
+              .replace("<component>", args.slug)
               .replace("<slug>", args.slug).replace("<Project>", project))
-    install(repo / "AGENTS.md", agents, args.force, written)
+    agents_dst = repo / "AGENTS.md"
+    if not agents_dst.exists():
+        install(agents_dst, agents, args.force, written)
+    elif read(agents_dst) != agents:
+        print("  keep   AGENTS.md — exists and differs; seat instructions are never "
+              "overwritten by --force (1.33.7). Diff against the template by hand if "
+              "you want the update.")
 
     # .gitignore / .gitattributes — append each fragment once (marker-guarded)
     for fragment_name, dst_name in (("gitignore.fragment", ".gitignore"),
