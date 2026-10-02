@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.12 (2026-10-03, maths-practise - the estate's second both-hats seat - with
+#   orchestrator corroboration): BOTH-HATS works end to end. (1) the component guard's
+#   both grant is the ARCH union (everything but product/**) - next-steps, roadmap,
+#   meta/ write cleanly; (2) first-briefing bootstrap: a registered component with no
+#   committed manifest gets one computed in memory, loudly - no rule broken on a fresh
+#   vault; (3) seed vaults validate instead of crashing (components tolerant; missing
+#   dashboard seeded with markers); (4) the publish-gate alignment treats a remote head
+#   already contained in any seat checkout as the seat's OWN work - both-hats pushes
+#   stop tripping the gate.
 #   1.33.11 (2026-10-03, four projects' migration findings): the two-component-seat
 #   blind spot closed - the briefing sibling scan reads COMPONENT|SLUG and compares
 #   remotes NORMALISED (.git/case), so a migrated or suffix-mismatched sibling is no

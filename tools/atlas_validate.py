@@ -132,6 +132,12 @@ def drift_state(pinned: str, latest: str | None, repin_class: str | None = None)
 
 
 def replace_block(path: Path, marker: str, body: str) -> bool:
+    if not path.exists():
+        # a seed vault (1.33.12, maths-practise): create the file with its markers
+        # rather than crash — the panel lands on first regen like anywhere else
+        path.write_text(f"# {path.stem}\n\n<!-- atlas:{marker}:begin -->\n"
+                        f"<!-- atlas:{marker}:end -->\n", encoding="utf-8", newline="\n")
+        print(f"  seeded {path.relative_to(ROOT)} with atlas:{marker} markers")
     text = path.read_text(encoding="utf-8")
     pattern = re.compile(
         rf"(<!-- atlas:{marker}:begin[^>]*-->).*?(<!-- atlas:{marker}:end -->)", re.DOTALL
@@ -531,7 +537,7 @@ def check_wiring(graph) -> dict:
     Warn-only, always: a component may be unwired while being brought up; it may
     not be unwired invisibly."""
     results = {}
-    for c in graph["components"]:
+    for c in graph.get("components") or []:
         if not is_repo_component(c):
             continue                     # a role has no repository to wire (1.30.3)
         slug = comp_name(c)
@@ -673,7 +679,7 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
           "|---|---|---|---|---|"]
     console.append(f"  🧭 branching  work {work}" + (f" -> release {release}" if release else ""))
     repos = [("vault", (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip())]
-    repos += [(comp_name(c), component_source(graph, c)) for c in graph["components"]
+    repos += [(comp_name(c), component_source(graph, c)) for c in graph.get("components") or []
               if is_repo_component(c)]
     for name, url in repos:
         if not ("://" in url or url.startswith("git@")):
@@ -700,7 +706,7 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
 
 
 def gen_graph_md(graph, rows) -> str:
-    names = {comp_name(c): c for c in graph["components"]}
+    names = {comp_name(c): c for c in graph.get("components") or []}
     ids = {slug: re.sub(r"[^a-z0-9]", "", slug) for slug in names}
     lines = [
         "---", "title: I/O Graph — rendered view", "type: graph-view", "---", "",
@@ -1479,12 +1485,23 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     skipped = []
     for s in slugs:
         mp = ROOT / "registry" / ".compiled" / s / "io-manifest.yml"
+        if not mp.exists() and s in {comp_name(c) for c in graph.get("components") or []}:
+            # FIRST-BRIEFING BOOTSTRAP (1.33.12, maths-practise): a registered component
+            # on a fresh vault has no committed manifest yet, sessions must not commit
+            # generated views, and only the orchestrator installs the CI that would -
+            # so compute it IN MEMORY for this briefing, loudly, and let CI commit the
+            # real one. Fail-closed stays for a slug the graph does not know.
+            print(f"ATLAS-CONTEXT: WARNING — no committed manifest for `{s}`; computed "
+                  "locally for this briefing only (vault CI commits the real one).",
+                  file=sys.stderr)
+            readings[s] = gen_manifest(s, edge_rows(graph, latest_contract_versions()))
+            continue
         if not mp.exists():
             if not seat:
                 print(f"No {mp.relative_to(ROOT).as_posix()} in the vault — the compiled "
                       "manifests must be committed (AAC-method §5); regenerate with the "
                       "validator (no flags) on the vault's default branch.", file=sys.stderr)
-                return 2                       # a component asking for ITS OWN briefing: fail closed
+                return 2                       # an UNREGISTERED slug asking for its own briefing: fail closed
             # A seat briefing is not all-or-nothing (1.27.4, arc-platform finding): one member
             # not yet registered — or registered but its regen not yet run — must not blind
             # the seat's other components. Skip it, say so, brief the rest.
@@ -1886,7 +1903,7 @@ def main(wiring_flag: bool = False) -> int:
               "or pass the vault path as the first argument.")
         return 2
     graph = load_graph()
-    names = {comp_name(c): c for c in graph["components"]}
+    names = {comp_name(c): c for c in graph.get("components") or []}
 
     # -- referential integrity ------------------------------------------------
     errors = []
@@ -1894,7 +1911,7 @@ def main(wiring_flag: bool = False) -> int:
         for end in ("from", "to"):
             if e[end] not in names:
                 errors.append(f"edge {e['from']}->{e['to']}: unknown component '{e[end]}'")
-    for c in graph["components"]:
+    for c in graph.get("components") or []:
         if not is_repo_component(c):
             continue                     # a role owns no directory (1.30.3, ADR-0014)
         n = comp_name(c)

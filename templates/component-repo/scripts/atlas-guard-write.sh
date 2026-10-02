@@ -195,8 +195,12 @@ case "$REL" in
   registry/io-graph.yml)    exit 0 ;;
 esac
 if [ "${ATLAS_ROLE:-component}" = "both" ]; then
+  # the union is AS ARCH (1.33.12, maths-practise: architecture/* alone blocked
+  # next-steps.md, roadmap.md and meta/ — required every arch session): everything in
+  # the vault except product/**, which belongs to the product seat in every mode.
   case "$REL" in
-    architecture/*) exit 0 ;;
+    product/*) ;;
+    *) exit 0 ;;
   esac
 fi
 
