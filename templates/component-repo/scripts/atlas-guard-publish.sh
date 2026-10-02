@@ -43,6 +43,7 @@ fi
 # the briefing reads the doc as ABSENT, so an ask goes invisible while looking
 # answered-by-silence; three measured hits). LINT tier, no exemption: broken YAML is
 # never correct work. Checks changed .md files in the VAULT checkout before finish.
+PY=${PY:-$(command -v python3 || command -v python)}
 if [ -n "${ATLAS_VAULT:-}" ] && [ -d "$ATLAS_VAULT" ]; then
   _BAD=$(cd "$ATLAS_VAULT" 2>/dev/null && git status --porcelain -uall 2>/dev/null |     awk '{print $2}' | grep -E '^(components/|needs/|architecture/).*\.md$' | while read -r _f; do
       [ -f "$_f" ] || continue

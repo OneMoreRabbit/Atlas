@@ -2,7 +2,7 @@
 # (it does nothing in the method repo; it guards a project vault's PRs).
 #
 # Enforces AAC-method §9's write model: a PR from branch atlas/<slug>/<topic> may touch
-# only that component's outbox paths, and any io-graph.yml edit must concern the slug's
+# only that component's outbox paths, and any io-graph.yml edit must concern that component's
 # own entries. Pair with atlas-regen.yml on the default branch.
 #
 # Merge policy (AAC-method §9, "ceremony follows path"): PRs touching only
@@ -86,7 +86,7 @@ jobs:
               if arch_owned("registry/io-graph.yml", key) != arch_owned("/tmp/base.yml", key):
                   bad.append((key, {"note": f"{key} is architecture-owned; raise via architecture/proposals/"}))
           for key, owns in (("edges", lambda d: slug in (d.get("from"), d.get("to"))),
-                            ("components", lambda d: d.get("slug") == slug)):
+                            ("components", lambda d: (d.get("component") or d.get("slug")) == slug)):
               for e in entries("registry/io-graph.yml", key) ^ entries("/tmp/base.yml", key):
                   d = dict(e)
                   if not owns(d):

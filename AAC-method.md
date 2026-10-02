@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.5 (2026-10-02, blocks.arch via estate-manage routing + labs.arch): the
+#   vault-ci ownership check accepts canonical component: entries (was slug:-only -
+#   a migrated component's own io-graph edit was rejected as not-owned; PR #72's
+#   exact failure); the publish guard's frontmatter gate defines PY before using it
+#   (exited 127 silently in the real hook environment while the test battery's
+#   exported PY masked it - hook tests now run in the hook's environment).
 #   1.33.4 (2026-10-01, three field bugs): arch-seat.md no longer teaches the
 #   RETIRED from-arch rule (the 1.30.4 revert had missed its housekeeping paragraph);
 #   a missing project: is an ERROR under any directory source - guessed identity must
