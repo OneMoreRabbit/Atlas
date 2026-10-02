@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.9 (2026-10-02): the method repo carries its own minimal registry/io-graph.yml
+#   (project: atlas, comms: hub: true, the method component) - the estate's comms
+#   opt-in gate correctly refused a 2.8.1 install because this repo had never declared
+#   hub: true under the method's own rule. The outbox-only source stops being the
+#   exception to one more of its own rules (the 1.30.5 pattern). method.pinned: 'self'
+#   - this repo pins nobody.
 #   1.33.8 (2026-10-02, operator): COMPACTION RE-ORIENTATION baked in - the operator
 #   had been hand-pasting the protocol at every compaction. templates/reorient.md is
 #   the one home (repos re-read, seat state measured, contracts re-OPENED, bridge

@@ -1,0 +1,20 @@
+# The method repo's own declaration (1.33.9). This repo is the outbox-only source —
+# not a project vault — but estate tooling reads vault declarations from this path,
+# and the method does not get to be the exception to its own rules (the 1.30.5
+# lesson). Minimal on purpose: identity + the comms opt-in. No edges; the method's
+# contracts live at components/method/docs/ like anyone's.
+project: atlas
+method:
+  pinned: 'self'               # this REPO is the method; it pins nobody and nothing pins it here
+branching:
+  work: dev
+  release: main
+comms:
+  hub: true                    # opt-in (comms.md): this seat is on the estate mesh as bakehouse.atlas.arch
+  channel: "#atlas"
+components:
+  - component: method
+    role: architect            # owns no repository beside this one; addressed atlas.arch
+    name: The AAC method
+    description: The method itself - its outbox is components/method/docs/
+edges: []
