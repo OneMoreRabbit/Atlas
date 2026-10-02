@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.8 (2026-10-02, operator): COMPACTION RE-ORIENTATION baked in - the operator
+#   had been hand-pasting the protocol at every compaction. templates/reorient.md is
+#   the one home (repos re-read, seat state measured, contracts re-OPENED, bridge
+#   reconciled, evidence outranks memory, say-what-the-summary-had-wrong); every
+#   context hook emits it on compact/resume/clear from the PINNED method copy,
+#   one-line fallback when absent. Startup briefings unchanged.
 #   1.33.7 (2026-10-02, blocks-service via blocks.arch routing): AGENTS.md CLOBBER
 #   reproduced and fixed - 1.30.9's blanket rename had mangled the template's <slug>
 #   placeholder into a spelling the installer never substitutes (four unresolved

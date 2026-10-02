@@ -37,6 +37,13 @@ if [ "$LAUNCH" != "$ATLAS_REPO_ROOT" ] && [ -d "$LAUNCH" ]; then
   done
   [ -n "$SEAT_SLUGS" ] || { SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"; }
 fi
+case "$SRC" in compact|resume|clear)
+  if [ -f "${ATLAS_METHOD:-}/templates/reorient.md" ]; then
+    cat "$ATLAS_METHOD/templates/reorient.md"; echo
+  else
+    echo "> REORIENT — session was $SRC. Re-orient from durable state: repos, bridge, needs, contracts. Read, don't recall."
+  fi ;;
+esac
 rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
 
 sh scripts/atlas-sync.sh >&2

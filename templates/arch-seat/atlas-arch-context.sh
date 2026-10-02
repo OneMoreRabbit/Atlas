@@ -58,9 +58,12 @@ case "$OUT" in
   *) echo "atlas-arch-context: ERROR — no arch briefing produced (method too old for --emit-arch-context?)" >&2; exit 2 ;;
 esac
 
-case "$SRC" in
-  compact|resume|clear)
-    OUT=$(printf '%s\n\n%s' "> ⟳ **REORIENT — session was ${SRC}ed.** Read this arch-seat briefing in full before your next action; confirm your project and in-flight review queue, and resume. Do not ask the operator to re-orient you." "$OUT") ;;
+case "$SRC" in compact|resume|clear)
+  if [ -f "${ATLAS_METHOD:-}/templates/reorient.md" ]; then
+    cat "$ATLAS_METHOD/templates/reorient.md"; echo
+  else
+    echo "> REORIENT — session was $SRC. Re-orient from durable state: repos, bridge, needs, contracts. Read, don't recall."
+  fi ;;
 esac
 
 # Cross-vault needs (1.27.2): needs addressed to this arch seat but filed in OTHER vaults

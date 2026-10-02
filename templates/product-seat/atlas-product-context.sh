@@ -22,7 +22,11 @@ PN=$(sed -n 's/^project:[[:space:]]*\([A-Za-z0-9_-]*\).*/\1/p' "$ATLAS_VAULT/reg
 [ -n "$PN" ] || PN=$(basename "$(git -C "$ATLAS_VAULT" remote get-url origin 2>/dev/null || echo project)" .git | sed 's/^Atlas-//' | tr 'A-Z' 'a-z')
 
 case "$SRC" in compact|resume|clear)
-  echo "> REORIENT — session was compacted. Read this briefing in full and reconcile before continuing." ;;
+  if [ -f "${ATLAS_METHOD:-}/templates/reorient.md" ]; then
+    cat "$ATLAS_METHOD/templates/reorient.md"; echo
+  else
+    echo "> REORIENT — session was $SRC. Re-orient from durable state: repos, bridge, needs, contracts. Read, don't recall."
+  fi ;;
 esac
 cat <<EOF
 # ATLAS-PRODUCT-CONTEXT — product seat ($PN-product)
