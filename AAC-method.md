@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.6 (2026-10-02, estate PAT matrix, operator-commissioned): any step writing
+#   .github/workflows/ is addressed to the ORCHESTRATOR - no arch PAT holds the
+#   Workflows permission (the 1.33.5 wave stalled estate-wide on the re-copy step
+#   until the estate ran it centrally); steps needing wider tokens name the OPERATOR.
+#   Doc-only; the matrix lives in Atlas-Orchestrator (pat-responsibilities-v1_0).
 #   1.33.5 (2026-10-02, blocks.arch via estate-manage routing + labs.arch): the
 #   vault-ci ownership check accepts canonical component: entries (was slug:-only -
 #   a migrated component's own io-graph edit was rejected as not-owned; PR #72's

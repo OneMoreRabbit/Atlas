@@ -69,6 +69,10 @@ implementation of that role, not a dependency.
    which also wires each code repo to resolve the vault via `$ATLAS_VAULT` (a per-session
    clone) and to inject `ATLAS-CONTEXT.md` at session start.
 3. Copy [`templates/vault-ci/`](templates/vault-ci/) into the vault's `.github/workflows/`
+   — **the ORCHESTRATOR does this step, never an arch seat** (1.33.6, PAT matrix: no
+   arch PAT holds the GitHub Workflows permission; measured estate-wide when the
+   1.33.5 wave stalled on exactly this). Any step writing `.github/workflows/` is
+   addressed to the orchestrator; steps needing wider tokens name the OPERATOR.
    — these are **templates**; they run in the vault repo, not here. `atlas-guard.yml`
    enforces the write model on PRs (branch `atlas/<slug>/<topic>` may only touch its own
    outbox paths); `atlas-regen.yml` regenerates and commits the derived views on the
