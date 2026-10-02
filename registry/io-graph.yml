@@ -9,8 +9,9 @@ method:
 branching:
   work: dev
   release: main
+# opt-in (comms.md): this seat is on the estate mesh as bakehouse.atlas.arch
 comms:
-  hub: true                    # opt-in (comms.md): this seat is on the estate mesh as bakehouse.atlas.arch
+  hub: true
   channel: "#atlas"
 components:
   - component: method
