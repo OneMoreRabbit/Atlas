@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """atlas_init — install the Atlas code-repo half into a component repo.
 
-Usage:  python atlas_init.py --slug <slug> --vault-remote <url>
+Usage:  python atlas_init.py --component <name> --vault-remote <url>
                              [--project <name>] [--repo <path>] [--force]
 
 Installs templates/component-repo/ from this method repo into the target code repo
@@ -14,7 +14,7 @@ this way when atlas-sync reports self-drift. Stdlib only — no dependencies.
 
 Bootstrap note: the method repo must be present to run this once —
     git clone --depth 1 <method-remote> .atlas-method
-    python .atlas-method/tools/atlas_init.py --slug <slug> --vault-remote <url>
+    python .atlas-method/tools/atlas_init.py --component <name> --vault-remote <url>
 after which scripts/atlas-sync.sh manages both clones per session.
 """
 from __future__ import annotations
@@ -249,7 +249,16 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
             print("  ◻ migration: .atlas.conf still uses SLUG= — re-run the installer "
                   "to write COMPONENT= (the fallback dies with the estate migration)")
         check("\r" not in text, ".atlas.conf has no CRLF", "add gitattributes.fragment")
-    check((repo / "AGENTS.md").exists(), "AGENTS.md committed at the repo root")
+    def tracked(name: str) -> bool:
+        return subprocess.run(["git", "-C", str(repo), "ls-files", "--error-unmatch", name],
+                              capture_output=True).returncode == 0
+    # committed means TRACKED (1.33.10, estate-monitor): an untracked file passed the
+    # old existence check while git status said '??' — a false PASS on the exact word
+    # the check printed.
+    check(tracked("AGENTS.md"), "AGENTS.md committed (tracked) at the repo root",
+          "" if tracked("AGENTS.md") else "file exists but is NOT tracked — git add + commit it")
+    check(tracked(".atlas.conf"), ".atlas.conf committed (tracked)",
+          "" if tracked(".atlas.conf") else "file exists but is NOT tracked — git add + commit it")
     drifted = []
     for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
                  "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
@@ -608,7 +617,8 @@ def main() -> int:
             return 2
         return install_arch(repo, ld, args.force)
     if not args.slug:
-        ap.error("--slug is required (component mode; use --arch for an arch seat)")
+        ap.error("--component is required (component mode; use --arch/--product/--test "
+                 "for those seats)")
     if args.verify:
         return verify(repo, args.slug,
                       Path(args.launch_dir).resolve() if args.launch_dir else None)
@@ -752,7 +762,7 @@ def main() -> int:
     print("  1. git add + commit these (AGENTS.md and .atlas.conf must be committed)")
     print("  2. sh scripts/atlas-context.sh   # sync + first ATLAS-CONTEXT.md")
     print("  3. register the component in the vault (component-init.md §1–3)")
-    print(f"  4. python {Path(__file__).name} --slug {args.slug} --verify"
+    print(f"  4. python {Path(__file__).name} --component {args.slug} --verify"
           "   # confirm the hooks actually fire")
     return 0
 

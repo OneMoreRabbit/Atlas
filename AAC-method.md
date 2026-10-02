@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.10 (2026-10-03, estate-monitor via estate-manage routing): the installer's
+#   spoken surface says --component everywhere (usage, required-flag error, closing
+#   hint; --slug stays the hidden alias) - the conf it wrote was already correct, only
+#   words lagged. And --verify's "committed" now means TRACKED (git ls-files) for
+#   AGENTS.md and .atlas.conf - an untracked file had passed the existence check while
+#   git status said '??': the check's own word was the spec it violated.
 #   1.33.9 (2026-10-02): the method repo carries its own minimal registry/io-graph.yml
 #   (project: atlas, comms: hub: true, the method component) - the estate's comms
 #   opt-in gate correctly refused a 2.8.1 install because this repo had never declared
