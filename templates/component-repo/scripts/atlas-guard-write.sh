@@ -74,7 +74,9 @@ ${_d%/}"
     [ -f "${_d}.atlas.conf" ] || continue
     _sv=$(sed -n 's/^ATLAS_VAULT_REMOTE="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${_d}.atlas.conf" | tr -d '
 ' | head -1)
-    [ "$_sv" = "$ATLAS_VAULT_REMOTE" ] || continue
+    _svn=$(printf '%s' "$_sv" | sed 's/\.git$//' | tr 'A-Z' 'a-z')
+    _ovn=$(printf '%s' "$ATLAS_VAULT_REMOTE" | sed 's/\.git$//' | tr 'A-Z' 'a-z')
+    [ "$_svn" = "$_ovn" ] || continue
     _ss=$(sed -n 's/^\(COMPONENT\|SLUG\)="\{0,1\}\([^"]*\)"\{0,1\}$/\2/p' "${_d}.atlas.conf" | tr -d '
 ' | head -1)
     [ -n "$_ss" ] && SLUGS="$SLUGS

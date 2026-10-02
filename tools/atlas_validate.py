@@ -1434,8 +1434,10 @@ def address_book(graph) -> list[str]:
     L = ["## Addressable from this vault", "",
          f"this project ({pn}): " + (" · ".join(comps + roles) or "—")]
     if ext:
-        L.append("externals (declared): " + " · ".join(sorted(set(ext))))
-    L += ["method seat: atlas / method",
+        L.append("declared external dependencies (authorization, not addresses): "
+                 + " · ".join(sorted(set(ext)))
+                 + " — address their seats by the directory's full forms")
+    L += ["method seat: atlas.arch",
           "Anything not on this list is refused at write and at validation — declare "
           "a new external via your arch seat before addressing it.", ""]
     return L
@@ -1518,7 +1520,8 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     pn = project_name(graph)
     if pn:
         sections.append(f"> **Project:** `{pn}` — address this vault's architecture seat as "
-                        f"`to: {pn}-arch` (the one form, inside or across vaults).")
+                        f"`{pn}.arch` (full contract address; the old `{pn}-arch` form is "
+                        "refused since 1.33.3).\n")
     if seat:
         sections.append("> One briefing for every component this seat holds: shared "
                         "sections appear once; per-component sections follow (1.21).")
@@ -2092,6 +2095,9 @@ if __name__ == "__main__":
     ap.add_argument("--emit-arch-context", action="store_true",
                     help="emit the ARCH SEAT's reorientation briefing (no slug); for the "
                          "arch seat's own SessionStart hook (method 1.23)")
+    ap.add_argument("--refresh-directory", action="store_true",
+                    help="fetch /v0/addressable and refresh ~/.atlas/directory.json "
+                         "(the write guard's local copy), then exit (1.33.11)")
     ap.add_argument("--check-wiring", action="store_true",
                     help="also check each component repo is wired (fetches .atlas.conf "
                          "and AGENTS.md from its source: remote; warn-only; decisions/0001)")
@@ -2108,6 +2114,11 @@ if __name__ == "__main__":
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.exit(emit_arch_context(args.out, args.arch_only))
+    if args.refresh_directory:
+        n, src = directory_names()
+        print(f"directory: {src or 'UNAVAILABLE (no secrets, no cache)'}"
+              + (f", {len(n)} names cached" if n else ""))
+        sys.exit(0 if n else 1)
     if args.emit_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")

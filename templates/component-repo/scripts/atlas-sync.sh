@@ -148,7 +148,8 @@ if [ -d "$TPL" ]; then
   # command, filled in — so no arch seat ever needs to mint a per-release broadcast
   # (which reliably went stale and then named an OLDER version to install).
   if [ "$_DRIFTED" = 1 ]; then
-    echo "atlas-sync: refresh with: python3 .atlas-method/tools/atlas_init.py --slug $SLUG --force${ATLAS_LAUNCH_DIR:+ --launch-dir \"$ATLAS_LAUNCH_DIR\"} --vault-remote $ATLAS_VAULT_REMOTE   (then re-run with --verify; commit scripts/)" >&2
+    echo "atlas-sync: refresh with: python3 .atlas-method/tools/atlas_init.py --component ${COMPONENT:-$SLUG} --force${ATLAS_LAUNCH_DIR:+ --launch-dir \"$ATLAS_LAUNCH_DIR\"} --vault-remote $ATLAS_VAULT_REMOTE   (then re-run with --verify; commit scripts/)" >&2
+    _SCRIPT_DRIFT=1
   fi
 fi
 
@@ -159,5 +160,13 @@ fi
 # *synced* from *could not sync, your briefing is stale*. Exit 3 says exactly that,
 # after all the work above has still been done: degraded, and declared at the one
 # surface a caller reads. (3, not 1: the script completed; the checkout is stale.)
+# A pin whose changed templates have not reached this seat is NOT adopted (1.33.11,
+# labs: three seats read "pin 1.33.3 -> v1.33.3" as done while the release's
+# enforcement guards were still 1.33.2 bytes). Same rule as a failed pull: continue
+# degraded, never claim fresh - say it in the LAST line and exit 3.
+if [ "${_SCRIPT_DRIFT:-0}" = 1 ]; then
+  echo "atlas-sync: pin FETCHED but NOT ADOPTED on this seat - script(s) above differ from the pinned templates; run the refresh command, then --verify" >&2
+  exit 3
+fi
 [ "$_STALE" = 1 ] && exit 3
 exit 0

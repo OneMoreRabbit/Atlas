@@ -349,6 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.11 (2026-10-03, four projects' migration findings): the two-component-seat
+#   blind spot closed - the briefing sibling scan reads COMPONENT|SLUG and compares
+#   remotes NORMALISED (.git/case), so a migrated or suffix-mismatched sibling is no
+#   longer silently dropped with its needs while verify passes; the context hook
+#   survives sync's declared degradation (exit 3) and carries a SYNC DEGRADED banner
+#   in-briefing (regression caught in test: set -e had killed the whole briefing).
+#   Sync: remedy prints --component; a pin whose templates have not reached the seat
+#   ends "FETCHED but NOT ADOPTED" + remedy, exit 3. Emit: header says <project>.arch
+#   (old form noted as refused); book says method seat: atlas.arch; externals line is
+#   authorization-not-addresses. Verify FAILS on unresolved placeholders in AGENTS.md
+#   CONTENT (the only detector once the diff goes silent). Context refreshes the
+#   directory cache each session. Fresh installs WRITE ATLAS_MODE=supervised.
 #   1.33.10 (2026-10-03, estate-monitor via estate-manage routing): the installer's
 #   spoken surface says --component everywhere (usage, required-flag error, closing
 #   hint; --slug stays the hidden alias) - the conf it wrote was already correct, only

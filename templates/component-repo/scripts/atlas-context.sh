@@ -27,10 +27,17 @@ if [ "$LAUNCH" != "$ATLAS_REPO_ROOT" ] && [ -d "$LAUNCH" ]; then
   SEAT_SLUGS=""; SEAT_ROOTS=""
   for d in "$LAUNCH"/*/; do
     [ -f "${d}.atlas.conf" ] || continue
-    _s=$(sed -n 's/^SLUG="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
+    # COMPONENT first, legacy SLUG second (1.33.11, agent-eco: the guard learned both
+    # keys at 1.30.9, this scan did not - a migrated sibling was silently DROPPED from
+    # the seat briefing, open needs included, while --verify passed).
+    _s=$(sed -n 's/^\(COMPONENT\|SLUG\)="\{0,1\}\([^"]*\)"\{0,1\}$/\2/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
     _v=$(sed -n 's/^ATLAS_VAULT_REMOTE="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "${d}.atlas.conf" | tr -d '\r' | head -1)
     [ -n "$_s" ] || continue
-    [ "$_v" = "$ATLAS_VAULT_REMOTE" ] || continue   # this hook serves this vault's members
+    # remotes compare NORMALISED (1.33.11, dprox: ".git" vs bare - accepted everywhere
+    # else, so an exact-string compare silently skipped the sibling)
+    _vn=$(printf '%s' "$_v" | sed 's/\.git$//' | tr 'A-Z' 'a-z')
+    _on=$(printf '%s' "$ATLAS_VAULT_REMOTE" | sed 's/\.git$//' | tr 'A-Z' 'a-z')
+    [ "$_vn" = "$_on" ] || continue   # this hook serves this vault's members
     SEAT_SLUGS="${SEAT_SLUGS:+$SEAT_SLUGS,}$_s"
     SEAT_ROOTS="${SEAT_ROOTS:+$SEAT_ROOTS }${d%/}"
     rm -f "$(atlas_nag_sentinel "${d%/}")"          # new session: re-arm every member's nag
@@ -46,7 +53,19 @@ case "$SRC" in compact|resume|clear)
 esac
 rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
 
-sh scripts/atlas-sync.sh >&2
+# sync exit 3 = DECLARED degradation (stale pull, or scripts not at pin) — the
+# briefing must still emit, carrying the warning itself; a drifted seat losing its
+# whole briefing is the worst possible reading of "not adopted" (1.33.11 regression,
+# caught in test: set -e killed the hook on the new exit path).
+_SYNC_RC=0
+sh scripts/atlas-sync.sh >&2 || _SYNC_RC=$?
+if [ "$_SYNC_RC" = 3 ]; then
+  echo "> ⚠ **SYNC DEGRADED** — the method pin was fetched but this seat's scripts or checkout are NOT at the pin (see stderr for the exact files and the refresh command). Finish the refresh before relying on guards."
+  echo
+elif [ "$_SYNC_RC" != 0 ]; then
+  echo "> ⚠ sync failed (exit $_SYNC_RC) — briefing compiled from the current checkout; see stderr."
+  echo
+fi
 
 PY=$(command -v python3 || command -v python)
 "$PY" -c "import yaml" 2>/dev/null ||
@@ -94,6 +113,10 @@ fi
 # newer than the vault's pin during an upgrade window, and an unknown flag exits 2 —
 # a failed briefing for a version-skew reason (caught by --verify's new rung).
 HELP=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --help 2>/dev/null || true)
+# keep the write guard's directory cache fresh (1.33.11, agent-eco: a seat had to
+# build ~/.atlas/directory.json by hand before the guard could resolve anything)
+python3 "$ATLAS_METHOD/tools/atlas_validate.py" --refresh-directory >/dev/null 2>&1 || true
+
 EMIT="$SLUG"
 case "$HELP" in *"SLUG[,SLUG"*) EMIT="$SEAT_SLUGS" ;;      # pinned method understands seats
   *) [ "$SEAT_SLUGS" = "$SLUG" ] || echo "atlas-context: pinned method predates seat briefings — emitting per-slug for $SLUG only" >&2 ;;

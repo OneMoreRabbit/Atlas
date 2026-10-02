@@ -259,6 +259,15 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
           "" if tracked("AGENTS.md") else "file exists but is NOT tracked — git add + commit it")
     check(tracked(".atlas.conf"), ".atlas.conf committed (tracked)",
           "" if tracked(".atlas.conf") else "file exists but is NOT tracked — git add + commit it")
+    # content, not presence (1.33.11, agent-eco: --force regressed a FILLED AGENTS.md
+    # back to literal placeholders in the write-scope lines, four seats shipped it, and
+    # presence/tracked checks cannot go red on it; after one unexamined commit the diff
+    # is silent forever — this grep is the only detector)
+    ag = repo / "AGENTS.md"
+    if ag.exists():
+        bad = [w for w in ("<component name>", "<component>", "<slug>") if w in read(ag)]
+        check(not bad, "AGENTS.md carries no unresolved placeholders",
+              "found " + ", ".join(bad) + " — restore the file (git checkout) or delete it and re-run init" if bad else "")
     drifted = []
     for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
                  "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
@@ -671,6 +680,12 @@ def main() -> int:
     if args.needs_register:
         conf = set_key(conf, "ATLAS_NEEDS_REGISTER", args.needs_register,
                        "# Cross-vault needs (1.27.2): the estate needs register, read in place.\n")
+    if not args.mode and not existing.exists():
+        # the value governs behaviour, so it exists where a reader can find it
+        # (1.33.11, ingstr): fresh installs RECORD the default instead of implying it
+        conf = set_key(conf, "ATLAS_MODE", "supervised",
+                       "# Development mode (AAC-method §6): supervised pauses to confirm before\n"
+                       "# publishing/releasing; autonomous runs free.\n")
     if args.mode:
         conf = set_key(conf, "ATLAS_MODE", args.mode,
                        "# Development mode (AAC-method §6): supervised pauses to confirm before\n"

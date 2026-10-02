@@ -66,11 +66,13 @@ def my_slugs(explicit: str | None) -> list[str]:
     slugs = [first] if first else []
     # a seat holding N wired repos answers to all of them (launch-dir siblings, 1.21)
     launch = c.get("ATLAS_LAUNCH_DIR", "").replace("$HOME", str(HOME))
+    def _norm(u): return str(u or "").lower().removesuffix(".git")
+    own_remote = _norm(c.get("ATLAS_VAULT_REMOTE"))
     if launch and Path(launch).is_dir():
         for d in Path(launch).iterdir():
             sc = conf(d / ".atlas.conf")
             s = sc.get("COMPONENT") or sc.get("SLUG")
-            if s and s not in slugs:
+            if s and s not in slugs and (not own_remote or _norm(sc.get("ATLAS_VAULT_REMOTE")) == own_remote):
                 slugs.append(s)
     # a both-hats seat is ALSO its vault's arch: answer to `arch` and `<project>-arch`
     # (1.27.5; ATLAS_PROJECT in .atlas.conf, else nothing project-specific is assumed)
