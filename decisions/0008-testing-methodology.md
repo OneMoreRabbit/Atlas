@@ -69,4 +69,6 @@ that made verdicts trustworthy, the standing of unit tests, and the gates loop.
 ## Per-project artefacts (arch-seat duties)
 
 `components/<name>/tests/` per component; the catalogue; the gates page; the
-known-issues register.
+known-issues register — which since 1.33.13 is the vault's
+`troubleshooting/troubleshooting-log.md` (a tolerated defect is a report with
+`status: tolerated`, grounds and reversal condition), not a separate document.

@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.13 (2026-10-06, operator; shape from AgentEco): TROUBLESHOOTING. Every vault
+#   keeps troubleshooting/ (log + reports/); components may keep the same under
+#   components/<name>/troubleshooting/, collated by arch with one linking row; the log
+#   doubles as ADR-0008's known-issues register (status: tolerated + grounds + reversal).
+#   Template in templates/troubleshooting/; validator warns on uncollated reports;
+#   every briefing points at the log; the publish gate covers troubleshooting/. The
+#   method repo seeds its own log from the 1.27-1.33 field history.
 #   1.33.12 (2026-10-03, maths-practise - the estate's second both-hats seat - with
 #   orchestrator corroboration): BOTH-HATS works end to end. (1) the component guard's
 #   both grant is the ARCH union (everything but product/**) - next-steps, roadmap,
@@ -1596,6 +1603,20 @@ nothing to restore them.
 > demotion, and the gates loop (catalogue → twice = write-time gate → lint with
 > exemption markers) — is **ADR-0008**; unit tests keep the internal invariants and
 > lose authority over the release verdict.
+
+> **Troubleshooting is recorded, so a recurrence is recognised** (1.33.13, operator;
+> shape from AgentEco's working log). Every vault keeps `troubleshooting/`: a
+> `troubleshooting-log.md` — one row per incident, newest first: opened, closed,
+> symptom (exact error text, so a search finds it), cause, status, report link — and
+> `reports/` for any incident that took more than one attempt, one file each
+> (`<YYYY-MM-DD>-<topic>.md`, template `templates/troubleshooting/`): symptom, root
+> cause with its evidence, the exact fix, **every wrong turn**, how to tell if it is
+> back. A component may keep the same structure under `components/<name>/
+> troubleshooting/`; the arch seat COLLATES each component report into the vault log
+> with one row that links it (never a copy — the validator warns on an uncollated
+> report). The log is also ADR-0008's known-issues register: a tolerated defect is a
+> report with `status: tolerated`, its grounds and its reversal condition. Every
+> briefing points at the log; check it first, before forming a theory.
 
 > **A seat briefing is not all-or-nothing** (1.27.4, arc-platform finding): a member with
 > no compiled manifest yet — registration pending, or `atlas-regen` not yet run — is

@@ -301,3 +301,11 @@ Make development and testing happen as close to production as practical — real
 containers, real wiring, test seats over local fixtures — and record in the vault
 what still differs. When a component's bugs only reproduce "in the seat", the
 environment gap IS the finding: close it rather than working around it.
+
+## Troubleshooting (1.33.13)
+
+Keep `troubleshooting/troubleshooting-log.md` and `troubleshooting/reports/` (template:
+`templates/troubleshooting/`). One row per incident; a full report when a fix took more
+than one attempt. Collate component reports: one row in your log linking each
+`components/<name>/troubleshooting/reports/` file. When something breaks, search the log
+before forming a theory.

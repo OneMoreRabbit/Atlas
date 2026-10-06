@@ -55,7 +55,7 @@ fi
 # never correct work. Checks changed .md files in the VAULT checkout before finish.
 PY=${PY:-$(command -v python3 || command -v python)}
 if [ -n "${ATLAS_VAULT:-}" ] && [ -d "$ATLAS_VAULT" ]; then
-  _BAD=$(cd "$ATLAS_VAULT" 2>/dev/null && git status --porcelain -uall 2>/dev/null |     awk '{print $2}' | grep -E '^(components/|needs/|architecture/).*\.md$' | while read -r _f; do
+  _BAD=$(cd "$ATLAS_VAULT" 2>/dev/null && git status --porcelain -uall 2>/dev/null |     awk '{print $2}' | grep -E '^(components/|needs/|architecture/|troubleshooting/).*\.md$' | while read -r _f; do
       [ -f "$_f" ] || continue
       "$PY" -c '
 import sys, re, yaml

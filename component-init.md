@@ -459,3 +459,9 @@ by the test seat / arch / a consumer — never by you. Before release: write one
 companion script per case (the exact commands a person types), run it in the real
 test environment, report commands + actual output + verdict against the case. A
 release counts only when its cases pass this way AND it was consumed from the tag.
+
+## Troubleshooting (1.33.13)
+
+When something breaks: search the vault's `troubleshooting/troubleshooting-log.md` first.
+Record your own incidents in `components/<you>/troubleshooting/` (log + `reports/`, same
+template); your arch seat links them into the vault log.
