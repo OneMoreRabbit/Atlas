@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.14 (2026-10-07, operator): RELEASE NOTES - every repo that cuts releases
+#   keeps release-notes.md at its top level, one entry per tag in the tagging commit
+#   (TL;DR, a few plain bullets, an Action line). Template templates/release-notes/;
+#   validator warns when the newest tag has no entry. The method repo starts its own.
 #   1.33.13 (2026-10-06, operator; shape from AgentEco): TROUBLESHOOTING. Every vault
 #   keeps troubleshooting/ (log + reports/); components may keep the same under
 #   components/<name>/troubleshooting/, collated by arch with one linking row; the log
@@ -1603,6 +1607,16 @@ nothing to restore them.
 > demotion, and the gates loop (catalogue → twice = write-time gate → lint with
 > exemption markers) — is **ADR-0008**; unit tests keep the internal invariants and
 > lose authority over the release verdict.
+
+> **Every release gets a release note** (1.33.14, operator). Any repo that cuts
+> releases — a project vault, a component code repo, the method — keeps
+> `release-notes.md` at its top level: newest first, one entry per tag, written in the
+> SAME commit that cuts the tag. Each entry: version and date, a one-line TL;DR, three
+> to six plain bullets, and an **Action** line (what consumers or seats must do, or
+> "none"). It sits beside the dashboard, next-steps and roadmap as a human working
+> surface. Detail stays in commits, contracts and troubleshooting reports — linked, not
+> repeated. Template: `templates/release-notes/`; the validator warns when the newest
+> tag has no entry.
 
 > **Troubleshooting is recorded, so a recurrence is recognised** (1.33.13, operator;
 > shape from AgentEco's working log). Every vault keeps `troubleshooting/`: a

@@ -465,3 +465,9 @@ release counts only when its cases pass this way AND it was consumed from the ta
 When something breaks: search the vault's `troubleshooting/troubleshooting-log.md` first.
 Record your own incidents in `components/<you>/troubleshooting/` (log + `reports/`, same
 template); your arch seat links them into the vault log.
+
+## Release notes (1.33.14)
+
+Every release tag of your code repo gets an entry at the top of the repo's
+`release-notes.md` (top level; template `templates/release-notes/`), in the same commit
+as the tag: TL;DR line, three to six plain bullets, an Action line for consumers.

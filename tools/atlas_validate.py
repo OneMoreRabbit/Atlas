@@ -1117,6 +1117,23 @@ def troubleshooting_warnings() -> list[str]:
     return warns
 
 
+def release_notes_warnings() -> list[str]:
+    """Warn-only (1.33.14): a repo that cuts releases keeps release-notes.md at the top
+    level, one entry per tag, written in the tagging commit. Warn when the newest tag
+    has no entry (or the file is missing while tags exist)."""
+    tag = (run_git(["-C", str(ROOT), "describe", "--tags", "--abbrev=0"]) or "").strip()
+    if not tag:
+        return []
+    rn = ROOT / "release-notes.md"
+    if not rn.exists():
+        return [f"release-notes.md missing at the top level, but this repo is tagged "
+                f"({tag}) — add it from templates/release-notes/ with an entry per release"]
+    if tag not in rn.read_text(encoding="utf-8", errors="replace"):
+        return [f"release-notes.md has no entry for the newest tag {tag} — write it in "
+                "the tagging commit (TL;DR line, a few plain bullets, an Action line)"]
+    return []
+
+
 def troubleshooting_pointer() -> list[str]:
     """One line in every briefing (1.33.13): where to look first when something breaks."""
     vlog = ROOT / "troubleshooting" / "troubleshooting-log.md"
@@ -2051,6 +2068,8 @@ def main(wiring_flag: bool = False) -> int:
     for w in answered_open_need_warnings():
         print(f"  ⚠ {w}")
     for w in troubleshooting_warnings():
+        print(f"  ⚠ {w}")
+    for w in release_notes_warnings():
         print(f"  ⚠ {w}")
     _alw = archived_link_warnings()
     for w in _alw[:20]:

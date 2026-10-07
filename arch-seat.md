@@ -309,3 +309,9 @@ Keep `troubleshooting/troubleshooting-log.md` and `troubleshooting/reports/` (te
 than one attempt. Collate component reports: one row in your log linking each
 `components/<name>/troubleshooting/reports/` file. When something breaks, search the log
 before forming a theory.
+
+## Release notes (1.33.14)
+
+Every time you merge dev to main and tag the vault, add an entry at the top of
+`release-notes.md` (top level; template `templates/release-notes/`) in the same commit:
+TL;DR line, three to six plain bullets, an Action line.
