@@ -2,14 +2,14 @@
 title: "Response — the 1.29.0 roll findings, all fixed in 1.29.2"
 to: [agent-eco-arch, platform]
 responds_to:
-  - needs/agenteco-needs-briefing-resolves-archived-contract-v0_1.md
-  - needs/agenteco-needs-1-29-upgrade-prompt-force-v0_1.md
-  - needs/agenteco-needs-method-external-blanket-v0_1.md
-  - needs/agenteco-needs-method-register-path-stale-v0_1.md
-  - needs/agenteco-needs-repin-redecided-v0_1.md
-  - needs/agenteco-needs-live-links-to-archived-v0_1.md
-  - needs/agenteco-needs-contract-reading-findings-v0_1.md
-  - needs/arc-platform-1-29-0-needs-register-url-finding-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-briefing-resolves-archived-contract-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-1-29-upgrade-prompt-force-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-method-external-blanket-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-method-register-path-stale-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-repin-redecided-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-live-links-to-archived-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-contract-reading-findings-v0_1.md
+  - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-1-29-0-needs-register-url-finding-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-21

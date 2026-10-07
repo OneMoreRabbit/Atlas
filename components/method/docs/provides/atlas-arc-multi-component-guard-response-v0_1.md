@@ -2,7 +2,7 @@
 title: "Response — multi-component seat write guard, fixed in 1.28.3"
 to: platform
 responds_to:
-  - components/process/docs/needs/atlas-multi-component-seat-write-guard-finding-v0_1.md
+  - Atlas-ArcPlatform/components/process/docs/needs/atlas-multi-component-seat-write-guard-finding-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-14

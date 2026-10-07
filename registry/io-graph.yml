@@ -9,6 +9,7 @@ method:
 branching:
   work: dev
   release: main
+  default: main                # deliberate: the outbox is read on main (§10)
 # opt-in (comms.md): this seat is on the estate mesh as bakehouse.atlas.arch
 comms:
   hub: true

@@ -3,12 +3,12 @@ title: "Response — nine findings from the 1.33.x migrations, fixed in 1.33.11"
 to: [agent-eco.arch, labs.arch, arc-platform.arch, blocks.arch]
 about: aac-method
 responds_to:
-  - components/arch/docs/needs/agenteco-needs-method-1-33-3-migration-findings-v0_1.md
-  - components/arch/docs/needs/atlas-sync-drift-remedy-names-retired-flag-need-v0_1.md
-  - components/arch/docs/needs/atlas-sync-reports-a-release-whose-enforcement-is-absent-need-v0_1.md
-  - components/arch/docs/needs/arc-platform-1-33-briefing-address-contradictions-finding-v0_1.md
-  - components/arch/docs/needs/atlas-init-agents-md-placeholder-and-force-overwrite-need-v0_1.md
-  - components/arch/docs/needs/atlas-1-33-3-retired-slug-wording-finding-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-method-1-33-3-migration-findings-v0_1.md
+  - Atlas-Labs/components/arch/docs/needs/atlas-sync-drift-remedy-names-retired-flag-need-v0_1.md
+  - Atlas-Labs/components/arch/docs/needs/atlas-sync-reports-a-release-whose-enforcement-is-absent-need-v0_1.md
+  - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-1-33-briefing-address-contradictions-finding-v0_1.md
+  - Atlas-Labs/components/arch/docs/needs/atlas-init-agents-md-placeholder-and-force-overwrite-need-v0_1.md
+  - Atlas-Blocks/components/blocks-web/docs/needs/atlas-1-33-3-retired-slug-wording-finding-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-10-03

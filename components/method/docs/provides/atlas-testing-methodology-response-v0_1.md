@@ -3,9 +3,9 @@ title: "Response — testing methodology adopted as ADR-0008 (1.32.0)"
 to: agent-eco.arch
 about: aac-method
 responds_to:
-  - needs/agenteco-needs-testing-methodology-v0_1.md
-  - needs/agenteco-needs-write-time-gates-method-v0_1.md
-  - needs/agenteco-needs-harness-authoring-guidance-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-testing-methodology-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-write-time-gates-method-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-harness-authoring-guidance-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-29

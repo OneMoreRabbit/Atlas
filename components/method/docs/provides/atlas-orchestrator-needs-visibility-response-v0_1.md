@@ -2,8 +2,8 @@
 title: "Response — cross-vault needs visibility: adopted into the method as atlas-needs (1.27.2)"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-cross-vault-needs-visibility-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-adopt-atlas-needs-tool-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-cross-vault-needs-visibility-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-adopt-atlas-needs-tool-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-14

@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.16 (2026-10-08, the method validating itself): running the validator on the
+#   method repo found three of its own gaps. `method.pinned: self` now reads green
+#   (the method pins nobody); a repo may declare `branching.default` when its default
+#   branch is deliberately not the work branch (the method's is main, where its outbox
+#   is read); and the method's own response docs re-point 66 cross-vault responds_to
+#   links to where those files now live after the vaults' migrations, vault-prefixed.
+#   The method repo validates exit 0 against itself.
 #   1.33.15 (2026-10-07, agent-eco's dprox seat via agent-eco.arch): /atlas-publish
 #   fixed - generated views are discarded IMMEDIATELY before the commit (a second
 #   validate regenerated them and git add -A committed them; the vault guard refused

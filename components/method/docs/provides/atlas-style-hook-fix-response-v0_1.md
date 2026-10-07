@@ -3,7 +3,7 @@ title: "Response — braceless style-hook variable fixed, hook fail-open, verify
 to: orchestrator.component.estate-manage
 about: aac-method
 responds_to:
-  - needs/ansible-needs-style-hook-braceless-var-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-style-hook-braceless-var-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-29

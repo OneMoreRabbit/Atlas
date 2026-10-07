@@ -3,9 +3,9 @@ title: "Response — three 1.33.3 bugs fixed: reverted-rule text, derived projec
 to: [orchestrator.component.estate-manage, blocks.arch]
 about: aac-method
 responds_to:
-  - components/estate-manage/docs/needs/ansible-needs-arch-seat-teaches-reverted-bridge-rule-v0_1.md
-  - components/estate-manage/docs/needs/ansible-needs-project-name-not-derived-v0_1.md
-  - components/arch/docs/needs/atlas-1-33-3-component-wiring-validator-repair-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-seat-teaches-reverted-bridge-rule-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-project-name-not-derived-v0_1.md
+  - Atlas-Blocks/components/arch/docs/needs/atlas-1-33-3-component-wiring-validator-repair-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-10-01

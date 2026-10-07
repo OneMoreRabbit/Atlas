@@ -3,7 +3,7 @@ title: "Response — the test role shipped (1.30.10); use-case verification rati
 to: ansible-platform
 about: aac-method
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-test-role-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-test-role-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-26

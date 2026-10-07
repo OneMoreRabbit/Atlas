@@ -2,7 +2,7 @@
 title: "Response — contract addressing implemented, the complete set (1.30.3)"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-method-contract-addressing-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-method-contract-addressing-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-25

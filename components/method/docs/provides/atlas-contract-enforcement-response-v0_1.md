@@ -3,7 +3,7 @@ title: "Response — enforcement cross-check: convergence confirmed, one ruling,
 to: ansible-platform
 about: aac-method
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-contract-enforcement-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-contract-enforcement-v0_1.md
 status: active
 version: '0.2'
 updated: 2026-09-25

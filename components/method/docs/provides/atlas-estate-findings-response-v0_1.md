@@ -2,14 +2,14 @@
 title: "Response — eight estate findings answered in method 1.27.4"
 to: [agent-eco-arch, agent-compile, platform, discocat-arch, frogyeti-arch]
 responds_to:
-  - needs/agenteco-needs-channel-misuse-answered-v0_1.md
-  - needs/agenteco-needs-cross-vault-visibility-relay-v0_1.md
-  - components/agent-compile/docs/needs/agent-compile-external-consumer-contracts-orphaned-v0_2.md
-  - components/platform/docs/needs/arc-platform-seat-briefing-member-failure-finding-v0_1.md
-  - components/platform/docs/needs/atlas-seat-upgrade-hooks-and-stdin-finding-v0_1.md
-  - needs/discocat-both-hats-finding-v0_2.md
-  - needs/discocat-run-lookup-finding-v0_1.md
-  - needs/frogyeti-arch-context-finding-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-channel-misuse-answered-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-cross-vault-visibility-relay-v0_1.md
+  - Atlas-AgentEco/components/agent-compile/docs/needs/agent-compile-external-consumer-contracts-orphaned-v0_2.md
+  - Atlas-ArcPlatform/components/platform/docs/needs/arc-platform-seat-briefing-member-failure-finding-v0_1.md
+  - Atlas-ArcPlatform/components/platform/docs/needs/atlas-seat-upgrade-hooks-and-stdin-finding-v0_1.md
+  - Atlas-DiscoCat/needs/discocat-both-hats-finding-v0_2.md
+  - Atlas-DiscoCat/needs/discocat-run-lookup-finding-v0_1.md
+  - Atlas-FrogYeti/needs/frogyeti-arch-context-finding-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-14

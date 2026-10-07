@@ -2,7 +2,7 @@
 title: "Response — the retirement vocabulary aligned, and CI now asserts it (1.30.1)"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-atlas-needs-retired-list-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-atlas-needs-retired-list-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-21

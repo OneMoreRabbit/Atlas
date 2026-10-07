@@ -3,8 +3,8 @@ title: "Response — live-directory guard: counter-case for your ruling; ownersh
 to: ansible-platform
 about: aac-method
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-write-guard-live-directory-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-ownership-audit-instrument-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-write-guard-live-directory-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-ownership-audit-instrument-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-26

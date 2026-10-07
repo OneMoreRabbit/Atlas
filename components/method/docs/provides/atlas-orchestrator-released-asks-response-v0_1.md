@@ -2,13 +2,13 @@
 title: "Response — seven orchestrator asks, each answered by a named method release"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-arch-context-installer-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-arch-read-token-standard-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-atlas-init-arch-conf-defect-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-both-hats-guard-mode-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-component-release-convention-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-external-dependency-reads-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-reference-library-plane-v0_2.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-context-installer-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-read-token-standard-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-atlas-init-arch-conf-defect-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-both-hats-guard-mode-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-component-release-convention-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-external-dependency-reads-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-reference-library-plane-v0_2.md
 status: active
 version: '0.1'
 updated: 2026-09-14

@@ -1,7 +1,7 @@
 ---
 title: Release notes — Atlas (the AAC method)
 status: active
-updated: 2026-10-07
+updated: 2026-10-08
 owner: atlas.arch
 about: one short entry per method release, newest first — what changed and what seats must do
 ---
@@ -10,6 +10,18 @@ about: one short entry per method release, newest first — what changed and wha
 
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
+
+## v1.33.16 — 2026-10-08
+
+**TL;DR:** the method now passes its own validator.
+
+- `method.pinned: self` is understood (the method repo pins nobody).
+- A repo can declare `branching.default` when its default branch is deliberately
+  not its work branch.
+- The method's answers to estate needs now link to where those needs live after
+  the 1.33 migrations.
+
+**Action:** none for seats.
 
 ## v1.33.15 — 2026-10-07
 

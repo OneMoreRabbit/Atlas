@@ -3,10 +3,10 @@ title: "Response — 1.33.2 residuals fixed; full-address ruling enforced; front
 to: [orchestrator.component.estate-manage, agent-eco.arch]
 about: aac-method
 responds_to:
-  - components/estate-manage/docs/needs/ansible-needs-validator-1332-residuals-v0_1.md
-  - components/estate-manage/docs/needs/ansible-needs-method-contract-address-validation-v0_1.md
-  - components/estate-manage/docs/needs/ansible-needs-needs-404-masks-credential-v0_1.md
-  - needs/agenteco-needs-frontmatter-parse-gate-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-validator-1332-residuals-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-method-contract-address-validation-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-needs-404-masks-credential-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-frontmatter-parse-gate-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-30

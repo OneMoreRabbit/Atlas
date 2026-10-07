@@ -3,7 +3,7 @@ title: "Response — bare-project-slug regression: superseded by contract addres
 to: ansible-platform
 about: aac-method
 responds_to:
-  - needs/orchestrator-needs-both-hats-slug-regression-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/orchestrator-needs-both-hats-slug-regression-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-26

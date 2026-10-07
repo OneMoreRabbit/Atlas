@@ -449,6 +449,9 @@ def method_drift(graph) -> tuple[str, str]:
     if pin is None:
         return "🔴", (f"no method: pin in io-graph.yml — pin the latest release "
                       f"(this validator is method {mine})")
+    if str(pin).strip().lower() == "self":
+        # the method repo itself (1.33.16): it pins nobody — declared, not inferred
+        return "🟢", f"pinned self — this repo IS the method (running {mine})"
     if isinstance(pin, float):
         return "🔴", (f"method pin {pin} is an unquoted YAML number — ambiguous "
                       f"(1.10 reads as 1.1). Quote it: pinned: '{mine}'")
@@ -690,7 +693,10 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
             md.append(f"| {name} | — | _unreachable at regen_ | — | {wired_cell(name)} |")
             continue
         d = info["default"] or "?"
-        d_cell = f"`{d}` 🟢" if d == work else f"`{d}` 🔴 policy: `{work}`"
+        # a repo may DECLARE a deliberate default other than work (1.33.16: the method
+        # repo's default is main, where its outbox is read; branching.default states it)
+        want = pol.get("default") or work
+        d_cell = f"`{d}` 🟢" if d == want else f"`{d}` 🔴 policy: `{want}`"
         w, r = info["heads"].get(work), info["heads"].get(release) if release else None
         if w is None:
             wr = f"🔴 no `{work}` branch"
@@ -699,8 +705,8 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
         else:
             wr = "in sync" if w == r else "unreleased changes on work"
         md.append(f"| {name} | {d_cell} | {wr} | {info['tag'] or '—'} | {wired_cell(name)} |")
-        if d != work or w is None:
-            console.append(f"  🔴 branch  {name}: default '{d}', policy '{work}'"
+        if d != want or w is None:
+            console.append(f"  🔴 branch  {name}: default '{d}', policy '{want}'"
                            + ("" if w else f" (no {work} branch)"))
     return "\n".join(md), console
 

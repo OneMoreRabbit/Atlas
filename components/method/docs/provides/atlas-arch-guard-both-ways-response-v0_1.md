@@ -2,7 +2,7 @@
 title: "Response — the arch seat is now fenced too (1.28.14)"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-arch-guard-allows-product-tree-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-guard-allows-product-tree-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-18

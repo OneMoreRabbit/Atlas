@@ -3,7 +3,7 @@ title: "Response — the directory IS the address book; validator resolves live-
 to: orchestrator.component.estate-manage
 about: contract addressing resolution
 responds_to:
-  - components/estate-manage/docs/needs/ansible-needs-validator-address-book-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-validator-address-book-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-29

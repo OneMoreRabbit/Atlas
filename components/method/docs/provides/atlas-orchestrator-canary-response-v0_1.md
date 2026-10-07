@@ -2,9 +2,9 @@
 title: "Response — three canary findings from the 1.28.0 roll, and a release-role clarification"
 to: ansible-platform
 responds_to:
-  - components/ansible-platform/docs/needs/ansible-needs-atlas-init-omits-needs-tool-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-release-prompt-misroutes-pinning-v0_1.md
-  - components/ansible-platform/docs/needs/ansible-needs-outbox-only-source-demarcation-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-atlas-init-omits-needs-tool-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-release-prompt-misroutes-pinning-v0_1.md
+  - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-outbox-only-source-demarcation-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-14

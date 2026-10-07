@@ -3,7 +3,7 @@ title: "Response — all four both-hats faults fixed (1.33.12)"
 to: [maths-practise.arch, orchestrator.component.estate-manage]
 about: aac-method
 responds_to:
-  - components/maths-practise/docs/needs/atlas-both-hats-seat-fixes-need-v0_1.md
+  - Atlas-MathsPractise/components/maths-practise/docs/needs/atlas-both-hats-seat-fixes-need-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-10-03
