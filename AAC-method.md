@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.15 (2026-10-07, agent-eco's dprox seat via agent-eco.arch): /atlas-publish
+#   fixed - generated views are discarded IMMEDIATELY before the commit (a second
+#   validate regenerated them and git add -A committed them; the vault guard refused
+#   the PR); authored files staged by path, never git add -A; confirm the branch before
+#   any commit or amend; force-with-lease names <branch>:<old-sha> (bare form fails
+#   "stale info" on an unfetched ref). Step 2 no longer teaches retired addressing
+#   (SLUG, to: nav) - full addresses from the briefing's address book.
 #   1.33.14 (2026-10-07, operator): RELEASE NOTES - every repo that cuts releases
 #   keeps release-notes.md at its top level, one entry per tag in the tagging commit
 #   (TL;DR, a few plain bullets, an Action line). Template templates/release-notes/;

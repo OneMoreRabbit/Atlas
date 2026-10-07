@@ -11,6 +11,18 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.33.15 — 2026-10-07
+
+**TL;DR:** the `/atlas-publish` steps no longer let generated files slip into a commit.
+
+- Generated views are discarded right before the commit, not after validating
+  (a second validate run brought them back and `git add -A` committed them).
+- Stage files by path; check the branch before any commit or amend.
+- Re-pushing a rewritten branch: `--force-with-lease=<branch>:<old-sha>`.
+- Step 2 now teaches full addresses from the address book, not the retired forms.
+
+**Action:** re-run `atlas_init --force` to get the updated `/atlas-publish`.
+
 ## v1.33.14 — 2026-10-07
 
 **TL;DR:** every repo that cuts releases now keeps release notes like this page.
