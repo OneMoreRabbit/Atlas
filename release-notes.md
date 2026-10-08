@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.2 — 2026-10-08
+
+**TL;DR:** the validator now warns when a response names someone the directory doesn't
+know.
+
+- `to:` and `from:` on provides/ documents are checked against the directory (warning
+  only). Retired names and prose like "dprox workstream" now show up.
+
+**Action:** arch seats: work the warnings down at your next housekeeping pass.
+
 ## v1.34.1 — 2026-10-08
 
 **TL;DR:** `--verify` no longer passes when your atlas files have uncommitted changes.

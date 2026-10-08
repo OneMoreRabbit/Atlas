@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.2 (2026-10-08, agent-eco's dprox): to:/from: on provides/ docs are checked
+#   against the directory, WARN only (they tell a reader who was answered; retired
+#   names and prose survived sweeps unflagged). Needs and provides now share one
+#   resolvable-address helper. Needs behaviour unchanged.
 #   1.34.1 (2026-10-08, agent-eco's ingstr seat): --verify's "committed" now means
 #   tracked AND no uncommitted changes (git diff --quiet HEAD) for AGENTS.md,
 #   .atlas.conf and the atlas scripts - a seat with every file modified and unstaged

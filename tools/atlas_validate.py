@@ -292,11 +292,9 @@ def responds_to_warnings(graph) -> list[str]:
     return warns
 
 
-def addressee_warnings(graph) -> tuple[list[str], list[str]]:
-    """needs/ documents whose addressee matches no component (decisions/0003 §4).
-
-    Routing by addressee turns a typo into silent non-delivery, so an unroutable
-    addressee must be visible. Warn-only, like naming."""
+def resolvable_addresses(graph):
+    """The addresses this vault can resolve: (list, dir_names). Shared by the needs
+    refusals and the provides/ warnings (1.34.2) so the two never disagree."""
     pn_full = project_name(graph)
     dir_names, dir_src = directory_names()
     if dir_names is not None:
@@ -340,6 +338,15 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
             if m:
                 slugs.append(m.group(1).lower())
                 slugs.append(f"{m.group(1).lower()}-arch")   # that vault's arch seat, cross-vault (1.27.5)
+    return slugs, dir_names
+
+
+def addressee_warnings(graph) -> tuple[list[str], list[str]]:
+    """needs/ documents whose addressee matches no component (decisions/0003 §4).
+
+    Routing by addressee turns a typo into silent non-delivery, so an unroutable
+    addressee must be visible. Warn-only, like naming."""
+    slugs, dir_names = resolvable_addresses(graph)
     warns = []
     refusals = []                        # ADR-0014 (1.30.3): never-resolvable addressing
     for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
@@ -1150,6 +1157,33 @@ def troubleshooting_pointer() -> list[str]:
     open_n = sum(1 for l in rows if re.search(r"\|\s*(open|recurred)\s*\|", l, re.I))
     return [f"> **Something broke?** Search `troubleshooting/troubleshooting-log.md` for "
             f"the error text first ({len(rows)} incident(s) logged, {open_n} open).", ""]
+
+
+def provides_address_warnings(graph) -> list[str]:
+    """Warn-only (1.34.2, agent-eco's dprox): to:/from: on a provides/ doc tells a reader
+    who was answered and who answered. Nothing checked them, so a response could name a
+    retired component ('ansible-platform') or prose ('dprox workstream') forever. Same
+    resolvable set as the needs check; runs only with a directory source (live or
+    cache) - without one there is nothing true to compare against."""
+    slugs, dir_names = resolvable_addresses(graph)
+    if dir_names is None:
+        return []
+    warns = []
+    for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
+        fm = parse_frontmatter(p)
+        for key in ("to", "from"):
+            val = fm.get(key)
+            if val is None:
+                continue
+            for v in (val if isinstance(val, list) else [val]):
+                v = str(v).strip()
+                if not v or is_broadcast(v):
+                    continue
+                if not any(names_slug(v, s) for s in slugs):
+                    warns.append(f"{p.relative_to(ROOT).as_posix()} — {key}: '{v}' is not an "
+                                 "address the directory knows; write the full form from "
+                                 "the address book (readers use it to see who was answered)")
+    return warns
 
 
 PROPOSAL_TERMINAL = ("accepted", "rejected", "implemented", "superseded", "withdrawn",
@@ -2076,6 +2110,8 @@ def main(wiring_flag: bool = False) -> int:
     for w in troubleshooting_warnings():
         print(f"  ⚠ {w}")
     for w in release_notes_warnings():
+        print(f"  ⚠ {w}")
+    for w in provides_address_warnings(graph):
         print(f"  ⚠ {w}")
     _alw = archived_link_warnings()
     for w in _alw[:20]:
