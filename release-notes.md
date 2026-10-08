@@ -11,6 +11,21 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.3 — 2026-10-08
+
+**TL;DR:** four fixes from the 1.34.0 rollout; the biggest is that the arch briefing
+now shows needs addressed to the arch seat.
+
+- The arch briefing lists "Needs addressed to you". Before, it listed none.
+- Product seats can write needs in their own outbox (`components/<name>/docs/`),
+  where they get routed.
+- `--force` fills leftover `<component name>` placeholders in AGENTS.md.
+- The drift summary counts contracts it couldn't read, instead of leaving them out.
+- Seats holding several repos get one style hook, not one per repo.
+
+**Action:** re-run `atlas_init --force` (component and product seats); commit
+AGENTS.md if it changed.
+
 ## v1.34.2 — 2026-10-08
 
 **TL;DR:** the validator now warns when a response names someone the directory doesn't

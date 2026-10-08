@@ -1933,9 +1933,9 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
         f"> Work branch: `{pol.get('work', '?')}`"
         + (f"; release `{pol.get('release')}` (you merge it at periodic review)." if pol.get('release') else "."),
         "",
-        "## Every session, before acting: sync; sweep components' `docs/needs/nav-*.md` "
-        "and mirror genuine human asks to the bridge; answer every `@atlas` bridge item; "
-        "act on dashboard reds; clear the review queue. (arch-seat.md §Every session.)",
+        "## Every session, before acting: sync; answer the needs addressed to you (listed "
+        "below); carry genuine human asks to the bridge (`_bridge/tasks.md`); act on "
+        "dashboard reds; clear the review queue. (arch-seat.md §Every session.)",
         f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel),
     ]
     if arch_only:
@@ -1967,6 +1967,33 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
         sections.append("\n**Contract drift needing attention:**")
         sections += [f"- {r['emoji']} {r['from']} → {r['to']} `{r['interface']}` "
                      f"pinned {r['pinned']} ({r['label']})" for r in hot]
+    # needs addressed to THIS arch seat (1.34.3, labs: the arch briefing listed none, so a
+    # correctly addressed need from a product or component seat reached nobody; the
+    # briefing still pointed at the retired nav-*.md convention)
+    _pn = project_name(graph)
+    _me = [f"{_pn}.arch", f"{_pn}-arch", "arch"] if _pn else ["arch"]
+    _answered = decisions_responds_index()
+    for _p in ROOT.glob("components/*/docs/provides/**/*.md"):
+        _v = parse_frontmatter(_p)
+        _r = _v.get("responds_to") or _v.get("responds-to") or _v.get("addresses") or _v.get("answers")
+        for _ref in (_r if isinstance(_r, list) else [_r] if _r else []):
+            _s = ref_stem(_ref)
+            if _s:
+                _answered.setdefault(_s, _p)
+    _mine = []
+    for _p in sorted(list(ROOT.glob("components/*/docs/needs/*.md")) + list(ROOT.glob("needs/*.md"))):
+        _f = parse_frontmatter(_p)
+        _to = addressee(_f)
+        if _to is None or is_retired(_f) or is_broadcast(_to):
+            continue
+        if any(names_slug(_to, s) for s in _me):
+            _mine.append((_p, _f, _p.stem in _answered))
+    sections.append("\n---\n\n## Needs addressed to you (" + (f"{_pn}.arch" if _pn else "arch") + ")\n")
+    if not _mine:
+        sections.append("_none open._")
+    for _p, _f, _ans in _mine:
+        sections.append(f"- {'ANSWERED — raiser to retire' if _ans else '**OPEN**'}: "
+                        f"`{_p.relative_to(ROOT).as_posix()}` — {_f.get('title', '')}")
     # in-flight proposals — the arch seat's review queue
     proposals_dir = ROOT / "architecture" / "proposals"
     props = [p for p in sorted(proposals_dir.glob("*.md"))
@@ -2143,10 +2170,17 @@ def main(wiring_flag: bool = False) -> int:
         print(f"  {r['emoji']} {r['from']} → {r['to']}  {r['interface']}  pinned {r['pinned']}  ({r['label']})")
         if r["emoji"] == "🔴":
             worst = 1
+    # a clean summary must mean every contract was READ (1.34.3, arc-platform: an
+    # unparseable contract fell out of the counts, so the summary read clean on the very
+    # run that printed it red). Count unreadable contracts as their own category.
+    _unread = len({str(src) for src, _ in FRONTMATTER_ERRORS
+                   if "/docs/provides/" in str(src).replace("\\", "/")})
     print(f"\n{sum(r['emoji'] == '🟢' for r in rows)} aligned, "
           f"{sum(r['emoji'] == '🟠' for r in rows)} minor drift, "
           f"{sum(r['emoji'] == '🔴' for r in rows)} breaking, "
-          f"{sum(r['emoji'] == '⚪' for r in rows)} unpublished")
+          f"{sum(r['emoji'] == '⚪' for r in rows)} unpublished"
+          + (f", {_unread} UNREADABLE (frontmatter will not parse — counts above "
+             "exclude them)" if _unread else ""))
 
     # -- frontmatter that will not parse — NOT warn-only (see parse_frontmatter_text) --
     if FRONTMATTER_ERRORS:

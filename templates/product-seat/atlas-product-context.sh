@@ -1,5 +1,5 @@
 #!/bin/sh
-# atlas-product-context — SessionStart hook for a PRODUCT seat (method 1.28.9, §10).
+# atlas-product-context — SessionStart hook for a PRODUCT seat (method §10).
 # Emits the seat's reorientation briefing: remit, requirements state, asks addressed to
 # this seat, bridge pointer. Simple by design: shell + grep, no validator dependency.
 set -e

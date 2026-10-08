@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.3 (2026-10-08, arc-platform + labs): --force fills leftover AGENTS.md
+#   placeholders in place (repos had COMMITTED the broken template, so "restore from
+#   git" restored it); a second repo on a seat no longer adds a second style hook; the
+#   drift summary counts UNREADABLE contracts instead of omitting them; the product
+#   guard allows the product role's own outbox components/<name>/docs/ and its refusal
+#   names it; the ARCH BRIEFING lists needs addressed to the arch seat (it listed none -
+#   a correctly addressed need reached nobody) and drops the retired nav-*.md sweep.
 #   1.34.2 (2026-10-08, agent-eco's dprox): to:/from: on provides/ docs are checked
 #   against the directory, WARN only (they tell a reader who was answered; retired
 #   names and prose survived sweeps unflagged). Needs and provides now share one

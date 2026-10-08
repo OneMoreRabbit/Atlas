@@ -1,4 +1,4 @@
-# Product seat template (method 1.28.9)
+# Product seat template
 
 Installed by `python <method>/tools/atlas_init.py --product --repo <vault> --launch-dir <dir>`.
 Manual: `product-init.md` at the method root. The seat writes `product/**` only; the

@@ -286,7 +286,8 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     if ag.exists():
         bad = [w for w in ("<component name>", "<component>", "<slug>") if w in read(ag)]
         check(not bad, "AGENTS.md carries no unresolved placeholders",
-              "found " + ", ".join(bad) + " — restore the file (git checkout) or delete it and re-run init" if bad else "")
+              "found " + ", ".join(bad) + " — re-run atlas_init --force (it fills them in "
+              "place), then commit" if bad else "")
     drifted = []
     for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
                  "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
@@ -733,6 +734,18 @@ def main() -> int:
               .replace("<component>", args.slug)
               .replace("<slug>", args.slug).replace("<Project>", project))
     agents_dst = repo / "AGENTS.md"
+    if agents_dst.exists():
+        # fill leftover placeholders in place (1.34.3, arc-platform: six repos COMMITTED
+        # the unsubstituted template, so "restore from git" restored the broken copy).
+        # Only the literal tokens are replaced, so local edits can never be lost.
+        _cur = read(agents_dst)
+        _fixed = (_cur.replace("<component name>", args.slug)
+                      .replace("<component>", args.slug).replace("<slug>", args.slug))
+        if _fixed != _cur:
+            agents_dst.write_text(_fixed, encoding="utf-8", newline="\n")
+            written.append(agents_dst)
+            print("  fix    AGENTS.md — filled leftover <component name> placeholders "
+                  "(nothing else touched); commit it")
     if not agents_dst.exists():
         install(agents_dst, agents, args.force, written)
     elif read(agents_dst) != agents:
@@ -783,8 +796,9 @@ def main() -> int:
             # whole seat, the write guard allows the slug UNION. A second repo's hooks would
             # only double-inject the briefing or, for the write guard, deny this repo's
             # outbox. So add none of them; the existing member's cover this repo too.
-            for _ev in ("SessionStart", "PreToolUse", "Stop"):
-                tpl["hooks"].pop(_ev, None)
+            for _ev in ("SessionStart", "PreToolUse", "Stop", "UserPromptSubmit"):
+                tpl["hooks"].pop(_ev, None)   # UserPromptSubmit added 1.34.3 (arc-platform,
+                                              # third report: style line fired twice)
             print(f"  skip   launch-dir hooks at {launch_dir} — the seat's are already "
                   f"installed from {other} and discover '{args.slug}' automatically")
         merge_settings(launch_dir, tpl, args.force, written, repo_root=repo)
