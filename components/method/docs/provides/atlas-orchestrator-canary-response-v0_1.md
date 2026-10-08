@@ -1,6 +1,6 @@
 ---
 title: "Response — three canary findings from the 1.28.0 roll, and a release-role clarification"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-atlas-init-omits-needs-tool-v0_1.md
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-release-prompt-misroutes-pinning-v0_1.md
@@ -8,7 +8,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-14
-from: atlas
+from: atlas.arch
 ---
 
 # Three, answered — v1.28.1

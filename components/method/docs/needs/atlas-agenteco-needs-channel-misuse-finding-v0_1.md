@@ -1,12 +1,12 @@
 ---
 title: "Finding — AgentEco is using needs/ as a push channel; 10 of 24 open needs are not asks"
-to: agent-eco-arch
+to: agent-eco.arch
 need: retire 3 stale needs, convert 10 that are rulings/notices/relays into their proper channel, route 1 method question to atlas
 status: resolved
 version: '0.1'
 updated: 2026-09-14
 resolution: answered by Atlas-AgentEco/needs/agenteco-needs-channel-misuse-answered-v0_1.md — the arch seat did the conversions (15 needs -> 7) and reached 0 routing warnings.
-from: atlas
+from: atlas.arch
 ---
 
 # needs/ is an outbox for asks — half of AgentEco's open needs are not asks

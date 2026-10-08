@@ -1,12 +1,12 @@
 ---
 title: "Response — the arch seat is now fenced too (1.28.14)"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-guard-allows-product-tree-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-18
-from: atlas
+from: atlas.arch
 ---
 
 # Fixed — the boundary holds both ways

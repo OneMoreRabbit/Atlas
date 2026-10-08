@@ -1,6 +1,6 @@
 ---
 title: "Response — eight estate findings answered in method 1.27.4"
-to: [agent-eco-arch, agent-compile, platform, discocat-arch, frogyeti-arch]
+to: [agent-eco.arch, agent-eco.component.agent-compile, arc-platform.component.platform, disco-cat.arch, frog-yeti.arch]
 responds_to:
   - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-channel-misuse-answered-v0_1.md
   - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-cross-vault-visibility-relay-v0_1.md
@@ -13,7 +13,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-14
-from: atlas
+from: atlas.arch
 ---
 
 # Eight findings, one release — 1.27.4

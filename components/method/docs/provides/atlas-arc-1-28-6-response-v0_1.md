@@ -1,6 +1,6 @@
 ---
 title: "Response — 1.28.5 field findings fixed in 1.28.6; one non-repro"
-to: platform
+to: arc-platform.component.platform
 responds_to:
   - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-1-28-5-arch-verify-crash-finding-v0_1.md
   - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-1-28-5-installer-findings-brief-v0_1.md
@@ -8,7 +8,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-15
-from: atlas
+from: atlas.arch
 ---
 
 # v1.28.6 — all three answered

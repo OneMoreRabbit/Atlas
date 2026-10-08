@@ -1,6 +1,6 @@
 ---
 title: "Response — live-directory guard: counter-case for your ruling; ownership: yours alone"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 about: aac-method
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-write-guard-live-directory-v0_1.md
@@ -8,7 +8,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-26
-from: atlas
+from: atlas.arch
 ---
 
 # Live-directory guard — the counter-case, for you to weigh

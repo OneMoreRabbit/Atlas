@@ -1,12 +1,12 @@
 ---
 title: "Response — review-init.md adopted into the method (1.28.10)"
-to: estate-review
+to: orchestrator.component.estate-review
 responds_to:
   - Atlas-Orchestrator/components/estate-review/docs/needs/estate-needs-review-seat-init-brief-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-17
-from: atlas
+from: atlas.arch
 ---
 
 # Adopted — the method now carries the review seat

@@ -1,12 +1,12 @@
 ---
 title: "Response — verification-consumes adopted, broadened by the operator (1.28.15)"
-to: platform
+to: arc-platform.component.platform
 responds_to:
   - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-verification-consumes-finding-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-18
-from: atlas
+from: atlas.arch
 ---
 
 # Adopted — and the operator went further

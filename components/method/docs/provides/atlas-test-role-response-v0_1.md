@@ -1,13 +1,13 @@
 ---
 title: "Response — the test role shipped (1.30.10); use-case verification ratified (1.30.11)"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 about: aac-method
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-test-role-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-26
-from: atlas
+from: atlas.arch
 ---
 
 # Shipped as asked — v1.30.10, completed by ADR-0007 in v1.30.11

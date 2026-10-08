@@ -9,7 +9,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-29
-from: atlas
+from: atlas.arch
 ---
 
 # Adopted — decisions/0008, shipping in 1.32.0

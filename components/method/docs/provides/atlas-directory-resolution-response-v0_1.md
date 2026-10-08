@@ -7,7 +7,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-29
-from: atlas
+from: atlas.arch
 ---
 
 # Adopted, operator-ruled — v1.33.2

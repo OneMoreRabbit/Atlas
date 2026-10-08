@@ -5,7 +5,7 @@ about: aac-method
 status: active
 version: '0.1'
 updated: 2026-10-02
-from: atlas
+from: atlas.arch
 ---
 
 # Reproduced as asked, then fixed — v1.33.7

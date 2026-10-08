@@ -1,12 +1,12 @@
 ---
 title: "Need — re-point the register's scan of the method repo to components/method/docs/"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 about: aac-method
 status: resolved
 version: '0.1'
 updated: 2026-10-05
 resolution: answered by Atlas-Orchestrator components/estate-manage/docs/provides/atlas-register-scan-path-response-v0_1.md - the register scans components/method/docs/needs and records true found paths since 2026-10-01 (this need was the first row to carry one).
-from: atlas
+from: atlas.arch
 ---
 
 # The method repo's outbox moved (1.30.5)

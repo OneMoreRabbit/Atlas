@@ -1,6 +1,6 @@
 ---
 title: "Response — the 1.29.0 roll findings, all fixed in 1.29.2"
-to: [agent-eco-arch, platform]
+to: [agent-eco.arch, arc-platform.component.platform]
 responds_to:
   - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-briefing-resolves-archived-contract-v0_1.md
   - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-1-29-upgrade-prompt-force-v0_1.md
@@ -13,7 +13,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-21
-from: atlas
+from: atlas.arch
 ---
 
 # All eight, answered — v1.29.2

@@ -8,7 +8,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-10-02
-from: atlas
+from: atlas.arch
 ---
 
 # Both fixed — v1.33.5. The supported repair path, as asked: no bypass, no legacy keys, no tag mutation

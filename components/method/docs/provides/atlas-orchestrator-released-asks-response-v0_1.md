@@ -1,6 +1,6 @@
 ---
 title: "Response — seven orchestrator asks, each answered by a named method release"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-context-installer-v0_1.md
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-arch-read-token-standard-v0_1.md
@@ -12,7 +12,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-14
-from: atlas
+from: atlas.arch
 ---
 
 # Seven asks, answered by releases — the bookkeeping the register needs

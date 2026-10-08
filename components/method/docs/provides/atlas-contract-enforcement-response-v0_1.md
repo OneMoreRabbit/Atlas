@@ -1,13 +1,13 @@
 ---
 title: "Response — enforcement cross-check: convergence confirmed, one ruling, one question back"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 about: aac-method
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/ansible-needs-contract-enforcement-v0_1.md
 status: active
 version: '0.2'
 updated: 2026-09-25
-from: atlas
+from: atlas.arch
 ---
 
 # The two designs mostly met in the middle — and one ruling settles point 3

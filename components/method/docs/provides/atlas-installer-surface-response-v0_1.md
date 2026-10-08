@@ -5,7 +5,7 @@ about: aac-method
 status: active
 version: '0.1'
 updated: 2026-10-03
-from: atlas
+from: atlas.arch
 ---
 
 # Both fixed — v1.33.10. Credit to estate-monitor; route this back

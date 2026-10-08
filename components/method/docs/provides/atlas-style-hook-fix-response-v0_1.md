@@ -7,7 +7,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-09-29
-from: atlas
+from: atlas.arch
 ---
 
 # Fixed — v1.33.1. Your diagnosis was exact; the defect was mine at 1.30.12

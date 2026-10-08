@@ -12,7 +12,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-10-03
-from: atlas
+from: atlas.arch
 ---
 
 # v1.33.11 — the dangerous one first

@@ -9,7 +9,7 @@ responds_to:
 status: active
 version: '0.1'
 updated: 2026-10-01
-from: atlas
+from: atlas.arch
 ---
 
 # All three confirmed mine — v1.33.4

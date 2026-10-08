@@ -1,13 +1,13 @@
 ---
 title: "Response — bare-project-slug regression: superseded by contract addressing"
-to: ansible-platform
+to: orchestrator.component.estate-manage
 about: aac-method
 responds_to:
   - Atlas-Orchestrator/components/estate-manage/docs/needs/orchestrator-needs-both-hats-slug-regression-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-26
-from: atlas
+from: atlas.arch
 ---
 
 # Superseded — operator ruling (2026-09-25)
