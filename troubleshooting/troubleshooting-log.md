@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting log — the method's own tools
 status: active
-updated: 2026-10-06
+updated: 2026-10-08
 owner: atlas.arch
 about: one row per incident in the method's tooling (installer, validator, hooks, guards), newest first; the known-issues library for every seat that runs them
 ---
@@ -14,7 +14,7 @@ issue: if you see the symptom, check your pin is at or past it.
 
 | Opened | Closed | Symptom (exact text where there is one) | Cause | Status | Report |
 |---|---|---|---|---|---|
-| 2026-10-06 | — | method-ci red: `FAIL AGENTS.md committed (tracked)` in the CI smoke job | CI fixture runs --verify before committing AGENTS.md/.atlas.conf; the 1.33.10 tracked check is correct | open — fixture needs one `git commit` line; needs operator workflow-scope grant | — |
+| 2026-10-06 | 2026-10-08 | method-ci red: `FAIL AGENTS.md committed (tracked)` in the CI smoke job | CI fixture ran --verify before committing AGENTS.md/.atlas.conf; the 1.33.10 tracked check was correct | fixed d145bdd — the orchestrator pushed the workflow edit (only its token holds Workflows) | — |
 | 2026-10-03 | 2026-10-03 | two-component seat: briefing covers ONE component, other's needs missing; `--verify` passes | sibling scan read `SLUG=` only, and compared vault remotes by exact string (`.git` vs bare) | fixed 1.33.11 | [report](reports/2026-10-03-two-component-briefing-drops-sibling.md) |
 | 2026-10-03 | 2026-10-03 | both-hats seat: Stop gate says `VAULT UPDATED` after your OWN push | alignment gate compared the remote to the briefing sha only | fixed 1.33.12 | — |
 | 2026-10-03 | 2026-10-03 | both-hats seat: `Refused: roadmap.md` / `next-steps.md` | component guard granted `both` only `architecture/*` | fixed 1.33.12 | — |
