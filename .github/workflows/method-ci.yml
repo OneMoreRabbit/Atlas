@@ -44,7 +44,7 @@ jobs:
           set -e
           mkdir -p /tmp/ci/repo /tmp/ci/L && cd /tmp/ci/repo
           git init -q . && echo x > f && git add -A && git commit -qm c
-          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --component demo \
             --vault-remote /tmp/ci/vault.git --launch-dir /tmp/ci/L
           test -f scripts/atlas-needs.py
           git add -A && git commit -qm wired    # verify requires AGENTS.md + .atlas.conf TRACKED (1.33.10)
