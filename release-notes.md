@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.1 — 2026-10-08
+
+**TL;DR:** `--verify` no longer passes when your atlas files have uncommitted changes.
+
+- "Committed" now means tracked AND unchanged since the last commit, for AGENTS.md,
+  `.atlas.conf` and the atlas scripts.
+- Commits not yet pushed draw a warning.
+
+**Action:** none beyond your next `atlas_init --force`; commit before you verify.
+
 ## v1.34.0 — 2026-10-08 (estate release)
 
 **TL;DR:** everything fixed and added during the 1.33 migration, rolled up for the

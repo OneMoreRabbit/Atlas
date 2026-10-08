@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.1 (2026-10-08, agent-eco's ingstr seat): --verify's "committed" now means
+#   tracked AND no uncommitted changes (git diff --quiet HEAD) for AGENTS.md,
+#   .atlas.conf and the atlas scripts - a seat with every file modified and unstaged
+#   got ALL PASS from the tracked-only check. Unpushed commits draw a WARN (local
+#   upstream ref, no network).
 # 1.34.0 (2026-10-08): ESTATE RELEASE — rolls up 1.33.1-1.33.17, the fixes and
 #   additions from the 1.33 migration wave. Addresses resolve against the estate
 #   directory (full forms only); both-hats seats work end to end; the two-component

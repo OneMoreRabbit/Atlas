@@ -14,6 +14,7 @@ issue: if you see the symptom, check your pin is at or past it.
 
 | Opened | Closed | Symptom (exact text where there is one) | Cause | Status | Report |
 |---|---|---|---|---|---|
+| 2026-10-08 | 2026-10-08 | `--verify` ALL PASS with every atlas file modified and unstaged | "committed" was checked as TRACKED only (git ls-files), not clean | fixed 1.34.1 (git diff --quiet HEAD) | — |
 | 2026-10-02 | 2026-10-08 | comms install refused: "has not declared `comms: hub: true`" though the declaration is on main | the estate gate derived the vault name as Atlas-<Project>; for the method that is Atlas-Atlas (no such repo), and its 404 read as "not declared" | fixed estate-side: method vault resolves to `Atlas`; the gate now reports UNREADABLE and NOT-DECLARED separately | — |
 | 2026-10-08 | 2026-10-08 | write guard lets an unknown `to:` address through, no error | guard parsed the io-graph with a regex that only knew block-style YAML; flow-style entries parsed to nothing and the check turned itself off | fixed 1.33.17 (YAML parser, regex fallback) | — |
 | 2026-10-06 | 2026-10-08 | method-ci red: `FAIL AGENTS.md committed (tracked)` in the CI smoke job | CI fixture ran --verify before committing AGENTS.md/.atlas.conf; the 1.33.10 tracked check was correct | fixed d145bdd — the orchestrator pushed the workflow edit (only its token holds Workflows) | — |

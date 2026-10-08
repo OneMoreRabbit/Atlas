@@ -255,10 +255,29 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     # committed means TRACKED (1.33.10, estate-monitor): an untracked file passed the
     # old existence check while git status said '??' — a false PASS on the exact word
     # the check printed.
-    check(tracked("AGENTS.md"), "AGENTS.md committed (tracked) at the repo root",
-          "" if tracked("AGENTS.md") else "file exists but is NOT tracked — git add + commit it")
-    check(tracked(".atlas.conf"), ".atlas.conf committed (tracked)",
-          "" if tracked(".atlas.conf") else "file exists but is NOT tracked — git add + commit it")
+    def clean(paths) -> bool:
+        return subprocess.run(["git", "-C", str(repo), "diff", "--quiet", "HEAD", "--"] + paths,
+                              capture_output=True).returncode == 0
+    # COMMITTED means tracked AND no uncommitted changes (1.34.1, agent-eco/ingstr: a
+    # tracked file with every line modified and unstaged passed "committed"; on a seat
+    # that never commits, the check could not fail - the checks-that-pass shape again).
+    for _f in ("AGENTS.md", ".atlas.conf"):
+        _ok = tracked(_f) and clean([_f])
+        check(_ok, f"{_f} committed (tracked, no uncommitted changes)",
+              "" if _ok else ("NOT tracked" if not tracked(_f) else "has UNCOMMITTED changes")
+              + " — git add + commit it")
+    _sc = [f"scripts/{n}" for n in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
+           "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py")
+           if (repo / "scripts" / n).exists()]
+    _sok = all(tracked(s) for s in _sc) and clean(_sc)
+    check(_sok, "scripts/ committed (tracked, no uncommitted changes)",
+          "" if _sok else "one or more atlas scripts are untracked or modified — git add + commit")
+    # pushed: local-only check against the upstream tracking ref (no network); a WARN,
+    # not a FAIL, because verify may legitimately run between commit and push
+    _ab = subprocess.run(["git", "-C", str(repo), "rev-list", "--count", "@{u}..HEAD"],
+                         capture_output=True, text=True)
+    if _ab.returncode == 0 and _ab.stdout.strip() not in ("", "0"):
+        print(f"  WARN  {_ab.stdout.strip()} commit(s) not pushed to the upstream branch — push them")
     # content, not presence (1.33.11, agent-eco: --force regressed a FILLED AGENTS.md
     # back to literal placeholders in the write-scope lines, four seats shipped it, and
     # presence/tracked checks cannot go red on it; after one unexamined commit the diff
