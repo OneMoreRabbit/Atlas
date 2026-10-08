@@ -1017,7 +1017,8 @@ def repin_redecided_warnings() -> list[str]:
     silently survives into the next real change. When a live contract carries the same
     `repin:` as its newest archive/ predecessor AND its `updated:` differs (i.e. the file
     moved without the field being re-decided), warn. Escape: re-date `updated:` after
-    deciding, or set `repin-decided: <date>` equal to `updated:`."""
+    deciding, or set `repin-decided: <date>` (equal to `updated:`, or any date after
+    the predecessor's `updated:`)."""
     warns = []
     for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
         fm = parse_frontmatter(p)
@@ -1037,11 +1038,20 @@ def repin_redecided_warnings() -> list[str]:
         if not preds:
             continue
         prev = max(preds)[1]
+        # a re-decision recorded as repin-decided: <date> NEWER than the predecessor's
+        # updated: counts (1.34.4, agent-eco's agent-compile: a class re-decided on a
+        # later PR and landing on the same value still warned, and the only silence was
+        # editing repin: itself). Dates compare as ISO strings.
+        _rd = str(fm.get("repin-decided", "")).strip()[:10]
+        _pu = str(prev.get("updated", "")).strip()[:10]
+        if _rd and _pu and _rd > _pu:
+            continue
         if str(prev.get("repin")) == str(rp) and str(prev.get("version")) != str(fm.get("version")):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — `repin: {rp}` unchanged from "
                          f"predecessor v{prev.get('version')}: re-decide it — the class "
                          "belongs to the transition, not the document (set "
-                         "`repin-decided:` equal to `updated:` when the sameness is deliberate)")
+                         "`repin-decided: <date>` — the day you re-decided it, after the predecessor — "
+                         "when the sameness is deliberate)")
     return warns
 
 

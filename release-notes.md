@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.4 — 2026-10-08
+
+**TL;DR:** a contract whose re-pin class was re-decided and came out the same can say
+so without editing the class.
+
+- Add `repin-decided: <date>` (the day you re-decided it). Any date after the previous
+  version's `updated:` silences the "unchanged from predecessor" warning.
+
+**Action:** none; use the field where the warning fires on a deliberate decision.
+
 ## v1.34.3 — 2026-10-08
 
 **TL;DR:** four fixes from the 1.34.0 rollout; the biggest is that the arch briefing

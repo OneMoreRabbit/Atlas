@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.4 (2026-10-08, agent-eco's agent-compile): the repin rung honours
+#   `repin-decided: <date>` later than the predecessor's `updated:` - a class re-decided
+#   on a later PR and landing on the same value no longer warns. Equal-to-updated still
+#   works; an older date still warns.
 #   1.34.3 (2026-10-08, arc-platform + labs): --force fills leftover AGENTS.md
 #   placeholders in place (repos had COMMITTED the broken template, so "restore from
 #   git" restored it); a second repo on a seat no longer adds a second style hook; the
