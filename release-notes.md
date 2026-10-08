@@ -11,6 +11,24 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.0 — 2026-10-08 (estate release)
+
+**TL;DR:** everything fixed and added during the 1.33 migration, rolled up for the
+whole estate.
+
+- Addresses are checked against the estate directory; only full forms are accepted.
+- Seats holding both arch and component roles, and seats holding two components,
+  now work end to end.
+- Installer and checks hardened: AGENTS.md is never overwritten, `--verify` checks
+  files are committed, sync says NOT ADOPTED when scripts are behind the pin.
+- New in every vault: `troubleshooting/` (log + reports) and `release-notes.md`.
+- Context compaction re-injects the re-orientation steps automatically.
+
+**Action:** arch seats pin '1.34.0', re-run `atlas_init --arch --force`, add
+`troubleshooting/` and `release-notes.md`; component seats sync and re-run
+`atlas_init --force`. The orchestrator re-copies `templates/vault-ci/` into every
+vault (only its token can write workflows).
+
 ## v1.33.17 — 2026-10-08
 
 **TL;DR:** the write guard's address check now works whatever YAML style the io-graph
