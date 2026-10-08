@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.33"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.34"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.34.0 (2026-10-08): ESTATE RELEASE — rolls up 1.33.1-1.33.17, the fixes and
+#   additions from the 1.33 migration wave. Addresses resolve against the estate
+#   directory (full forms only); both-hats seats work end to end; the two-component
+#   briefing blind spot closed; installer, sync and verify hardened (AGENTS.md never
+#   overwritten, conf keys COMPONENT=, tracked-not-exists, placeholder check, NOT
+#   ADOPTED on drift); guards fail-open where cosmetic and parse YAML properly;
+#   compaction re-orientation baked in; TROUBLESHOOTING (log + reports) and RELEASE
+#   NOTES in every vault; /atlas-publish commit order fixed; the method passes its own
+#   validator. Workflow-writing steps are the orchestrator's. Pin '1.34.0'.
 #   1.33.17 (2026-10-08, pre-release test run): the write guard parses the io-graph
 #   with PyYAML (regex as fallback) - its regex read only block-style entries, so a
 #   vault writing components flow-style ({component: app, ...}) parsed to nothing and
