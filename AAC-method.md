@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.5 (2026-10-08, agent-eco's dprox): `to:` is the one address key. The validator
+#   warns on addressed-to/addressed_to/recipient/addressee (not target:, which the
+#   estate uses for a release target) and the provides check reads them meanwhile, so
+#   a variant no longer reports clean; the write guard reads addressed_to too.
 #   1.34.4 (2026-10-08, agent-eco's agent-compile): the repin rung honours
 #   `repin-decided: <date>` later than the predecessor's `updated:` - a class re-decided
 #   on a later PR and landing on the same value no longer warns. Equal-to-updated still

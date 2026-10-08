@@ -23,7 +23,7 @@ ti = d.get("tool_input") or {}
 print(ti.get("file_path") or ti.get("notebook_path") or "")
 body = (ti.get("content") or ti.get("new_string") or "").replace("\r", "")
 import re
-m = re.search(r"^(?:to|addressed-to):\s*(.+)$", body, re.M)
+m = re.search(r"^(?:to|addressed-to|addressed_to):\s*(.+)$", body, re.M)
 print(m.group(1).strip() if m else "")
 ')
 P=$(printf '%s\n' "$_PL" | sed -n 1p)

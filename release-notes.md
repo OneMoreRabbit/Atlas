@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.5 — 2026-10-08
+
+**TL;DR:** `to:` is the only address key; the validator now flags the variants.
+
+- `addressed-to:`, `addressed_to:`, `recipient:` and `addressee:` draw a warning
+  asking for `to:`. `target:` is left alone (it means a release target).
+- Until renamed, those variants are still checked against the directory.
+
+**Action:** rename any flagged key to `to:`.
+
 ## v1.34.4 — 2026-10-08
 
 **TL;DR:** a contract whose re-pin class was re-decided and came out the same can say

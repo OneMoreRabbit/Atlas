@@ -1181,7 +1181,7 @@ def provides_address_warnings(graph) -> list[str]:
     warns = []
     for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
         fm = parse_frontmatter(p)
-        for key in ("to", "from"):
+        for key in ("to", "from", "addressed-to", "addressed_to"):
             val = fm.get(key)
             if val is None:
                 continue
@@ -1193,6 +1193,26 @@ def provides_address_warnings(graph) -> list[str]:
                     warns.append(f"{p.relative_to(ROOT).as_posix()} — {key}: '{v}' is not an "
                                  "address the directory knows; write the full form from "
                                  "the address book (readers use it to see who was answered)")
+    return warns
+
+
+ADDRESS_KEY_VARIANTS = ("addressed-to", "addressed_to", "recipient", "addressee")
+
+
+def address_key_warnings() -> list[str]:
+    """Warn-only (1.34.5, agent-eco's dprox): the canonical address key is `to:`.
+    Variants are still read where the method reads addresses, but tools elsewhere read
+    only `to:`, so a variant can route nowhere or report clean. `target:` is NOT an
+    address key - the estate uses it for a release target."""
+    warns = []
+    for p in sorted(list(ROOT.glob("components/*/docs/needs/*.md"))
+                    + list(ROOT.glob("components/*/docs/provides/*.md"))
+                    + list(ROOT.glob("needs/*.md"))):
+        fm = parse_frontmatter(p)
+        for k in ADDRESS_KEY_VARIANTS:
+            if k in fm:
+                warns.append(f"{p.relative_to(ROOT).as_posix()} — `{k}:` is not the address "
+                             f"key; rename it to `to:` (the only key every tool reads)")
     return warns
 
 
@@ -2149,6 +2169,8 @@ def main(wiring_flag: bool = False) -> int:
     for w in release_notes_warnings():
         print(f"  ⚠ {w}")
     for w in provides_address_warnings(graph):
+        print(f"  ⚠ {w}")
+    for w in address_key_warnings():
         print(f"  ⚠ {w}")
     _alw = archived_link_warnings()
     for w in _alw[:20]:
