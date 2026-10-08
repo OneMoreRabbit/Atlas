@@ -47,7 +47,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo \
             --vault-remote /tmp/ci/vault.git --launch-dir /tmp/ci/L
           test -f scripts/atlas-needs.py
-          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --slug demo --verify --launch-dir /tmp/ci/L
+          git add -A && git commit -qm wired    # verify requires AGENTS.md + .atlas.conf TRACKED (1.33.10)
+          python3 "$GITHUB_WORKSPACE/tools/atlas_init.py" --component demo --verify --launch-dir /tmp/ci/L
 
       - name: Conf values survive a --force re-run with flags omitted
         run: |
