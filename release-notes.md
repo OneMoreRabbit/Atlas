@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.33.17 — 2026-10-08
+
+**TL;DR:** the write guard's address check now works whatever YAML style the io-graph
+uses.
+
+- The guard only understood one YAML layout; a vault listing components as
+  `- {component: app, ...}` got no address checking at write time. Fixed.
+
+**Action:** re-run `atlas_init --force` to get the updated guard.
+
 ## v1.33.16 — 2026-10-08
 
 **TL;DR:** the method now passes its own validator.

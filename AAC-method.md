@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.33.17 (2026-10-08, pre-release test run): the write guard parses the io-graph
+#   with PyYAML (regex as fallback) - its regex read only block-style entries, so a
+#   vault writing components flow-style ({component: app, ...}) parsed to nothing and
+#   the address check switched itself OFF. Found by the release test battery.
 #   1.33.16 (2026-10-08, the method validating itself): running the validator on the
 #   method repo found three of its own gaps. `method.pinned: self` now reads green
 #   (the method pins nobody); a repo may declare `branching.default` when its default
