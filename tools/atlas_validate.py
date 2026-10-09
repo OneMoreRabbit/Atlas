@@ -320,7 +320,12 @@ def resolvable_addresses(graph):
         slugs += [f"{pn_full}.{comp_role(c)}"
                   for c in graph.get("components", []) if not is_repo_component(c)]
         slugs += [f"{pn_full}.arch", f"{pn_full}.product"]   # method.arch RETIRED: not in any directory
-    slugs += arch_addressees(graph)[1:]        # <project>-arch: this vault's arch, cross-vault form
+    if dir_names is not None:
+        # FULL CONTRACT ADDRESSES ONLY (1.34.6, orchestrator): the directory's contract
+        # addresses + this vault's own full forms. No <project>-arch, no bare names, no
+        # derived spellings - those are what let 90 short forms through.
+        return slugs, dir_names
+    slugs += arch_addressees(graph)[1:]        # <project>-arch: legacy path only
     # <project>-product routes ONLY where the seat is declared (product: enabled, 1.28.9)
     if (graph.get("product") or {}).get("enabled"):
         pn = project_name(graph)
@@ -383,7 +388,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
         if BRIDGE_ADDRESSEE in addressee_tokens(named):
             pn = project_name(graph)
             warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: nav` is deprecated; a human "
-                         f"question is addressed to your arch seat (`to: {pn + '-arch' if pn else '<project>-arch'}`), "
+                         f"question is addressed to your arch seat (`to: {pn + '.arch' if pn else '<project>.arch'}`), "
                          "which carries it to the bridge. Human work does not live in a need.")
         # ONE rule for the arch address (1.27.6): `<project>-arch` everywhere. A bare `arch`
         # only means something to a reader who already knows the vault — the register,
@@ -391,7 +396,7 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
         if addressee_head(named).strip().lower() == ARCH_ADDRESSEE:
             pn = project_name(graph)
             warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: arch` is context-dependent; "
-                         f"write `to: {pn + '-arch' if pn else '<project>-arch'}` (one rule, in and "
+                         f"write `to: {pn + '.arch' if pn else '<project>.arch'}` (one rule, in and "
                          "across vaults)")
         # canonical form is a slug or a YAML list of slugs; `a; b` and `agent-comms;` route
         # here (token-aware) but a naive sweep elsewhere mis-reads them — warn so authors
@@ -404,7 +409,10 @@ def addressee_warnings(graph) -> tuple[list[str], list[str]]:
         elif isinstance(raw, str) and re.search(r"[,/]|[;,.]\s*$", raw):
             warns.append(f"{p.relative_to(ROOT).as_posix()} — `to: {raw}` is not canonical; "
                          "write one address or a YAML list (`to: [a, b]`)")
-        if not any(names_slug(named, s) for s in slugs):
+        _match = names_slug_exactly if dir_names is not None else names_slug
+        if BRIDGE_ADDRESSEE in addressee_tokens(named):
+            continue      # to: nav - deprecated (warned above), not refused: operator's call
+        if not any(_match(named, s) for s in slugs):
             refusals.append(f"{p.relative_to(ROOT).as_posix()} — addressee '{named}' "
                             "matches no component, role, or declared external in this "
                             "vault: it will reach nobody (ADR-0014 refuses at "
@@ -1170,30 +1178,38 @@ def troubleshooting_pointer() -> list[str]:
 
 
 def provides_address_warnings(graph) -> list[str]:
-    """Warn-only (1.34.2, agent-eco's dprox): to:/from: on a provides/ doc tells a reader
-    who was answered and who answered. Nothing checked them, so a response could name a
-    retired component ('ansible-platform') or prose ('dprox workstream') forever. Same
-    resolvable set as the needs check; runs only with a directory source (live or
-    cache) - without one there is nothing true to compare against."""
+    """Contract-address REFUSALS beyond needs' to: (1.34.2 warn -> 1.34.6 refuse,
+    orchestrator: 80 of 90 short addresses sat in fields nothing read). Checks to:,
+    from: and owner: on provides/ documents, and from: and owner: on needs (needs' to:
+    is the addressee check above). Exact match against the contract-address set; runs
+    only with a directory source - without one there is nothing true to compare."""
     slugs, dir_names = resolvable_addresses(graph)
     if dir_names is None:
         return []
-    warns = []
-    for p in sorted(ROOT.glob("components/*/docs/provides/*.md")):
-        fm = parse_frontmatter(p)
-        for key in ("to", "from", "addressed-to", "addressed_to"):
-            val = fm.get(key)
-            if val is None:
+    out = []
+    sets = [(sorted(ROOT.glob("components/*/docs/provides/*.md")),
+             ("to", "from", "owner", "addressed-to", "addressed_to")),
+            (sorted(list(ROOT.glob("components/*/docs/needs/*.md")) + list(ROOT.glob("needs/*.md"))),
+             ("from", "owner"))]
+    for files, keys in sets:
+        for p in files:
+            fm = parse_frontmatter(p)
+            if "/needs/" in p.as_posix() and is_retired(fm):
                 continue
-            for v in (val if isinstance(val, list) else [val]):
-                v = str(v).strip()
-                if not v or is_broadcast(v):
+            for key in keys:
+                val = fm.get(key)
+                if val is None:
                     continue
-                if not any(names_slug(v, s) for s in slugs):
-                    warns.append(f"{p.relative_to(ROOT).as_posix()} — {key}: '{v}' is not an "
-                                 "address the directory knows; write the full form from "
-                                 "the address book (readers use it to see who was answered)")
-    return warns
+                for v in (val if isinstance(val, list) else [val]):
+                    v = str(v).strip()
+                    if not v or is_broadcast(v):
+                        continue
+                    if not any(names_slug_exactly(v, s) for s in slugs):
+                        out.append(f"{p.relative_to(ROOT).as_posix()} — {key}: '{v}' is not a "
+                                   "contract address (<project>.<role> or "
+                                   "<project>.component.<name>); copy the full form from the "
+                                   "address book")
+    return out
 
 
 ADDRESS_KEY_VARIANTS = ("addressed-to", "addressed_to", "recipient", "addressee")
@@ -1516,7 +1532,12 @@ def directory_names():
     data = None
     try:
         base = (sec / "estate-directory-address").read_text(encoding="utf-8").strip().rstrip("/")
-        tok = (sec / "estate-directory-read").read_text(encoding="utf-8").strip()
+        # either credential the estate issues (1.34.6, maths-practise: a seat holding only
+        # estate-directory-seat fell back to legacy mode silently)
+        _tf = sec / "estate-directory-read"
+        if not _tf.exists():
+            _tf = sec / "estate-directory-seat"
+        tok = _tf.read_text(encoding="utf-8").strip()
         import urllib.request
         req = urllib.request.Request(base + "/v0/addressable",
                                      headers={"Authorization": f"Bearer {tok}"})
@@ -1538,13 +1559,16 @@ def directory_names():
     for e in rows or []:
         if not isinstance(e, dict):
             continue
-        if e.get("fqn"):
-            fq = str(e["fqn"]).lower()
-            names.add(fq)
-            names.add(fq.split(".", 1)[1] if "." in fq else fq)   # project-level form
+        # CONTRACT addresses only (1.34.6, orchestrator): an FQN is a comms address and a
+        # bot name is a hub handle; neither is a contract address. The one bridge: an arch
+        # seat with no component rows (the method seat) - its FQN minus the estate prefix
+        # IS its contract address (bakehouse.atlas.arch -> atlas.arch).
         for comp in e.get("components") or []:
             if isinstance(comp, dict) and comp.get("address"):
                 names.add(str(comp["address"]).lower())
+        fq = str(e.get("fqn") or "").lower()
+        if fq.endswith(".arch") and not (e.get("components") or []) and "." in fq:
+            names.add(fq.split(".", 1)[1])
     return (names, src) if names else (None, None)
 
 
@@ -2168,8 +2192,7 @@ def main(wiring_flag: bool = False) -> int:
         print(f"  ⚠ {w}")
     for w in release_notes_warnings():
         print(f"  ⚠ {w}")
-    for w in provides_address_warnings(graph):
-        print(f"  ⚠ {w}")
+
     for w in address_key_warnings():
         print(f"  ⚠ {w}")
     _alw = archived_link_warnings()
@@ -2226,6 +2249,7 @@ def main(wiring_flag: bool = False) -> int:
 
     # -- naming canon (AAC-method §4) — warn-only, never affects the exit code --
     unroutable, refused = addressee_warnings(graph)
+    refused = refused + provides_address_warnings(graph)
     if unroutable:
         print(f"\nROUTING — {len(unroutable)} needs document(s) with an unroutable "
               "addressee (AAC-method §3; warn-only):")

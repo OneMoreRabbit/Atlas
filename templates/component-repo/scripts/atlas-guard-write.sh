@@ -161,12 +161,14 @@ try:
     _c = json.load(open(_os.path.expanduser("~/.atlas/directory.json")))
     for _e in (_c.get("addressable") or []):
         if isinstance(_e, dict):
-            if _e.get("fqn"):
-                _f = str(_e["fqn"]).lower()
-                ok.add(_f); ok.add(_f.split(".", 1)[1] if "." in _f else _f)
+            # contract addresses only (1.34.6) - FQNs and bot names are not; an arch seat
+            # with no component rows (the method seat) contributes its <project>.arch
             for _cm in _e.get("components") or []:
                 if isinstance(_cm, dict) and _cm.get("address"):
                     ok.add(str(_cm["address"]).lower())
+            _f = str(_e.get("fqn") or "").lower()
+            if _f.endswith(".arch") and not (_e.get("components") or []) and "." in _f:
+                ok.add(_f.split(".", 1)[1])
     have_dir = True
 except Exception:
     pass

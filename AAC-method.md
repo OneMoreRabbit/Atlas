@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.6 (2026-10-09, orchestrator: 90 short addresses found estate-wide): with a
+#   directory source, EVERY contract address is checked and short forms are REFUSED -
+#   to:/from:/owner: on provides, from:/owner: on needs, plus needs' to:; the
+#   resolvable set is contract addresses only (directory component/role addresses +
+#   the vault's own full forms; no FQNs, no bot names, no <project>-arch), matched
+#   exactly. Either seat credential works (estate-directory-read or -seat). Messages
+#   recommend <project>.arch. to: nav stays a warning pending an operator ruling.
 #   1.34.5 (2026-10-08, agent-eco's dprox): `to:` is the one address key. The validator
 #   warns on addressed-to/addressed_to/recipient/addressee (not target:, which the
 #   estate uses for a release target) and the provides check reads them meanwhile, so

@@ -11,6 +11,19 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.6 — 2026-10-09
+
+**TL;DR:** every contract address is now checked, and short forms fail.
+
+- `to:`, `from:` and `owner:` on responses and needs must be full contract addresses
+  (`<project>.<role>`, `<project>.component.<name>`). Short forms, bot names and comms
+  names (`bakehouse....`) now fail validation.
+- Works with either directory credential a seat holds.
+- `to: nav` still only warns, pending a ruling.
+
+**Action:** if your validator now fails, copy the full form from your briefing's
+address book.
+
 ## v1.34.5 — 2026-10-08
 
 **TL;DR:** `to:` is the only address key; the validator now flags the variants.
