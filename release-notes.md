@@ -11,6 +11,17 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.8 — 2026-10-11
+
+**TL;DR:** fixes from the Idea and Orient projects.
+
+- The needs helper finds your full address from the vault even without `ATLAS_PROJECT`,
+  and says INCOMPLETE when it can't.
+- `atlas_init --arch --verify` no longer writes anything.
+- `--help` no longer says SLUG.
+
+**Action:** component seats re-run `atlas_init --force` to get the new needs helper.
+
 ## v1.34.7 — 2026-10-11
 
 **TL;DR:** a Nav vault may hold `_bridge/inbox/`, where a product delivers items for the

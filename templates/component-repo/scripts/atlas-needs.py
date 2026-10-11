@@ -58,6 +58,9 @@ def conf(path: Path) -> dict:
     return d
 
 
+PROJECT_KNOWN = True
+
+
 def my_slugs(explicit: str | None) -> list[str]:
     if explicit:
         return [s.strip() for s in explicit.split(",") if s.strip()]
@@ -77,6 +80,19 @@ def my_slugs(explicit: str | None) -> list[str]:
     # a both-hats seat is ALSO its vault's arch: answer to `arch` and `<project>-arch`
     # (1.27.5; ATLAS_PROJECT in .atlas.conf, else nothing project-specific is assumed)
     pj = c.get("ATLAS_PROJECT", "").strip().lower()
+    if not pj:
+        # the vault declares the project (1.34.8, orient.arch: without ATLAS_PROJECT the
+        # helper never built <project>.component.<name> and reported zero open)
+        try:
+            for line in (REPO / ".atlas" / "registry" / "io-graph.yml").read_text(
+                    encoding="utf-8").splitlines():
+                if line.startswith("project:"):
+                    pj = line.split(":", 1)[1].split("#")[0].strip().strip("'\"").lower()
+                    break
+        except OSError:
+            pass
+    global PROJECT_KNOWN
+    PROJECT_KNOWN = bool(pj)
     # full contract addresses (ADR-0014, 1.30.3): <project>.component.<name> for each
     # held component; the older bare and qualified forms stay accepted through the
     # migration (the register carries both estates for a while).
@@ -201,6 +217,10 @@ def refresh(explicit_slugs: str | None) -> int:
     desc += (f"{inv} in YOUR vault: for those the briefing is the closer view — if it "
              "disagrees with this register, believe the briefing and report the disagreement."
              if inv else "none in this vault.")
+    if not PROJECT_KNOWN:
+        desc = ("**INCOMPLETE — project unknown** (no ATLAS_PROJECT in .atlas.conf and no "
+                "project: in the vault clone), so needs addressed to your full address "
+                "<project>.component.<name> are NOT matched. " + desc)
     L = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
          f"_Estate register dated {reg_date}. {desc} Answer in your own provides/ with "
          "`responds_to:`._", ""]

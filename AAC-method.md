@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.8 (2026-10-11, idea.arch + orient.arch): --help says NAME not SLUG; --arch
+#   --verify only reads (it re-installed before); arch-seat.md explains a missing first
+#   briefing; atlas-needs.py reads project: from the vault clone when ATLAS_PROJECT is
+#   absent, and says INCOMPLETE when it still cannot know. Idea's stale-manifest item
+#   declined per the operator's 2026-09-16 ruling on the regen window.
 #   1.34.7 (2026-10-11, operator via orchestrator; Atlas-Idea ADR-0004): bridge-init
 #   states the _bridge/inbox/ rule - a product delivers new files only, one item each,
 #   author <product>-bot; arch turns each into a task or thread, never edits, may

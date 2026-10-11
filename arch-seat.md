@@ -315,3 +315,8 @@ before forming a theory.
 Every time you merge dev to main and tag the vault, add an entry at the top of
 `release-notes.md` (top level; template `templates/release-notes/`) in the same commit:
 TL;DR line, three to six plain bullets, an Action line.
+
+## No briefing at session start?
+
+Your session is older than the hook. Run `sh atlas-arch-context.sh` from your launch
+dir once, by hand; new sessions get it automatically.

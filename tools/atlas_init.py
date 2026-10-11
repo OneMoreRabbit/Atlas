@@ -556,7 +556,7 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--component", dest="slug",
+    ap.add_argument("--component", dest="slug", metavar="NAME",
                     help="this seat's component name (matches the io-graph entry)")
     ap.add_argument("--slug", dest="slug",
                     help=argparse.SUPPRESS)   # retired spelling (1.30.9); same dest
@@ -636,6 +636,21 @@ def main() -> int:
                   file=sys.stderr)
             return 2
         return install_product(repo, ld, args.force, args.nav)
+    if args.arch and args.verify:
+        # verify READS (1.34.8, idea.arch: --arch --verify re-installed hooks and
+        # rewrote .atlas-arch.conf). Fire the installed hook from the launch dir; write
+        # nothing.
+        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
+        ctx = ld / "atlas-arch-context.sh"
+        if not ctx.exists():
+            print(f"  FAIL  no {ctx} — install with atlas_init --arch first")
+            return 1
+        r = subprocess.run(["sh", str(ctx)], cwd=str(ld), stdin=subprocess.DEVNULL,
+                           capture_output=True, text=True, timeout=120)
+        ok = r.returncode == 0 and "ATLAS-CONTEXT" in r.stdout
+        print("  " + ("PASS" if ok else "FAIL") + "  the arch reorientation hook fires from "
+              f"the launch dir (exit {r.returncode})")
+        return 0 if ok else 1
     if args.arch:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
         if ld == repo:
