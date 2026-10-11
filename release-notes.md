@@ -11,6 +11,15 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.9 — 2026-10-11
+
+**TL;DR:** a project declares its inbox setting in the io-graph.
+
+- `inbox: {enabled: true, auto_approve: false}` in `registry/io-graph.yml` (both
+  optional; those are the defaults). The validator checks they are true/false.
+
+**Action:** only projects opting out add `inbox: {enabled: false}`.
+
 ## v1.34.8 — 2026-10-11
 
 **TL;DR:** fixes from the Idea and Orient projects.

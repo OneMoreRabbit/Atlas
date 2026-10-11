@@ -1148,6 +1148,24 @@ def troubleshooting_warnings() -> list[str]:
     return warns
 
 
+def inbox_key_warnings(graph) -> list[str]:
+    """Warn-only (1.34.9, estate ADR-0015): `inbox:` holds two true/false keys."""
+    ib = graph.get("inbox")
+    if ib is None:
+        return []
+    if not isinstance(ib, dict):
+        return ["registry/io-graph.yml — `inbox:` must be a block with `enabled:` and "
+                "`auto_approve:` (true/false)"]
+    out = []
+    for k in ib:
+        if k not in ("enabled", "auto_approve"):
+            out.append(f"registry/io-graph.yml — `inbox.{k}` is not a known key "
+                       "(enabled, auto_approve)")
+        elif not isinstance(ib[k], bool):
+            out.append(f"registry/io-graph.yml — `inbox.{k}` must be true or false")
+    return out
+
+
 def release_notes_warnings() -> list[str]:
     """Warn-only (1.33.14): a repo that cuts releases keeps release-notes.md at the top
     level, one entry per tag, written in the tagging commit. Warn when the newest tag
@@ -2191,6 +2209,8 @@ def main(wiring_flag: bool = False) -> int:
     for w in troubleshooting_warnings():
         print(f"  ⚠ {w}")
     for w in release_notes_warnings():
+        print(f"  ⚠ {w}")
+    for w in inbox_key_warnings(graph):
         print(f"  ⚠ {w}")
 
     for w in address_key_warnings():

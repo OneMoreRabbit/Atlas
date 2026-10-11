@@ -164,4 +164,5 @@ A Nav vault may hold `_bridge/inbox/`. A product writes into it through the esta
 new files only, one item per file, author `<product>-bot`. The project's arch seat
 reads each item and turns it into a task or a thread; it never edits an item in place,
 and may archive one. No other seat writes there. The folder appears with the first
-delivery; nothing creates it in advance.
+delivery; nothing creates it in advance. A project opts out with `inbox: {enabled: false}` in
+`registry/io-graph.yml` (1.34.9).
