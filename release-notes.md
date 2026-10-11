@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.7 — 2026-10-11
+
+**TL;DR:** a Nav vault may hold `_bridge/inbox/`, where a product delivers items for the
+arch seat.
+
+- One item per file, written by the product's bot; the arch seat turns each into a
+  task or thread and never edits it.
+
+**Action:** none until a product starts delivering.
+
 ## v1.34.6 — 2026-10-09
 
 **TL;DR:** every contract address is now checked, and short forms fail.

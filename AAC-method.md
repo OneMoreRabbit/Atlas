@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.7 (2026-10-11, operator via orchestrator; Atlas-Idea ADR-0004): bridge-init
+#   states the _bridge/inbox/ rule - a product delivers new files only, one item each,
+#   author <product>-bot; arch turns each into a task or thread, never edits, may
+#   archive; no other seat writes there. Doc-only.
 #   1.34.6 (2026-10-09, orchestrator: 90 short addresses found estate-wide): with a
 #   directory source, EVERY contract address is checked and short forms are REFUSED -
 #   to:/from:/owner: on provides, from:/owner: on needs, plus needs' to:; the

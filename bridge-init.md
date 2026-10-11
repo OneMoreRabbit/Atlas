@@ -157,3 +157,11 @@ fixed sync conflicts by making the seat's updates a second file the operator had
 cross-reference, which defeated the point of a task list. Occasional git conflicts on
 tasks.md are accepted; pull before editing, keep entries short. `from-arch.md` files
 are retired to `_bridge/archive/`.
+
+## `_bridge/inbox/` — items delivered by a product (1.34.7, Atlas-Idea ADR-0004)
+
+A Nav vault may hold `_bridge/inbox/`. A product writes into it through the estate:
+new files only, one item per file, author `<product>-bot`. The project's arch seat
+reads each item and turns it into a task or a thread; it never edits an item in place,
+and may archive one. No other seat writes there. The folder appears with the first
+delivery; nothing creates it in advance.
