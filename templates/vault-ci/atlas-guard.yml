@@ -51,14 +51,30 @@ jobs:
           esac
           echo "COMPONENT=$COMPONENT" >> "$GITHUB_ENV"
           git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed.txt
+          # Extra outboxes DECLARED for this component (1.34.10, estate ADR-0011: the
+          # review seat writes top-level review/). Read from the BASE branch's io-graph,
+          # never the PR's, so a branch cannot grant itself a path.
+          pip install -q PyYAML >/dev/null 2>&1 || true
+          git show "origin/${{ github.base_ref }}:registry/io-graph.yml" 2>/dev/null | python3 -c '
+          import sys, yaml
+          g = yaml.safe_load(sys.stdin) or {}
+          for p in ((g.get("outboxes") or {}).get(sys.argv[1]) or []):
+              p = str(p).strip().lstrip("/")
+              if p and ".." not in p:
+                  print(p if p.endswith("/") else p + "/")
+          ' "$COMPONENT" > /tmp/outboxes.txt || : > /tmp/outboxes.txt
           FAIL=0
           while IFS= read -r f; do
             case "$f" in
-              "components/$COMPONENT"/*) ;;                # own subtree — the outbox
-              architecture/proposals/*) ;;            # additive ADRs, status: proposed
-              registry/io-graph.yml) ;;               # ownership checked below
-              *) echo "::error file=$f::$COMPONENT may not write $f"; FAIL=1 ;;
+              "components/$COMPONENT"/*) continue ;;       # own subtree — the outbox
+              architecture/proposals/*) continue ;;   # additive ADRs, status: proposed
+              registry/io-graph.yml) continue ;;      # ownership checked below
             esac
+            OK=0
+            while IFS= read -r ob; do
+              case "$f" in "$ob"*) OK=1 ;; esac
+            done < /tmp/outboxes.txt
+            [ "$OK" = 1 ] || { echo "::error file=$f::$COMPONENT may not write $f"; FAIL=1; }
           done < /tmp/changed.txt                     # redirect, not a pipe: FAIL survives
           exit $FAIL
 
@@ -82,7 +98,7 @@ jobs:
           # because it only diffed `edges` and `components`.
           def arch_owned(path, key):
               return (yaml.safe_load(open(path)) or {}).get(key)
-          for key in ("method", "external"):
+          for key in ("method", "external", "outboxes"):
               if arch_owned("registry/io-graph.yml", key) != arch_owned("/tmp/base.yml", key):
                   bad.append((key, {"note": f"{key} is architecture-owned; raise via architecture/proposals/"}))
           for key, owns in (("edges", lambda d: slug in (d.get("from"), d.get("to"))),

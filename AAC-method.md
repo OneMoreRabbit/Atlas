@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.10 (2026-10-13, orchestrator: every estate-review PR failed the guard): a
+#   vault may declare extra outboxes per component (outboxes: {name: [prefix/]}); the
+#   CI guard and the local write guard honour them. The CI guard reads the declaration
+#   from the BASE branch and treats outboxes: as architecture-owned, so a branch cannot
+#   grant itself a path.
 #   1.34.9 (2026-10-11, orchestrator; estate ADR-0015): the io-graph declares the
 #   project inbox - inbox.enabled (default true) and inbox.auto_approve (default false),
 #   beside comms. The validator checks both are true/false.
@@ -1429,6 +1434,9 @@ branching:                     # this project's branch policy (§9) — declared
   release: main                # merged by the architecture session at periodic review
 product:                       # OPTIONAL (1.28.9): this project runs a product seat (§10)
   enabled: true                # omit the block entirely for no product seat — most projects
+outboxes:                      # OPTIONAL (1.34.10): extra write paths per component, beyond
+  estate-review: [review/]     # components/<name>/. Architecture-owned: the CI guard reads
+                               # them from the BASE branch, so a PR cannot grant itself one.
 inbox:                         # OPTIONAL (1.34.9, estate ADR-0015): the _bridge/inbox/ lane
   enabled: true                # default true; false = no product may deliver to this project
   auto_approve: false          # default false; true = a product delivers without operator review

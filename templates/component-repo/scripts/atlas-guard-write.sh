@@ -217,6 +217,22 @@ case "$REL" in
   architecture/proposals/*) exit 0 ;;
   registry/io-graph.yml)    exit 0 ;;
 esac
+# extra outboxes declared for this seat's components (1.34.10; same rule as the CI guard)
+for _s in $(printf '%s\n' "$SLUGS" | sort -u); do
+  "$PY" - "$V/registry/io-graph.yml" "$_s" "$REL" <<'PYOB' && exit 0
+import sys
+try:
+    import yaml
+    g = yaml.safe_load(open(sys.argv[1])) or {}
+except Exception:
+    sys.exit(1)
+for p in ((g.get("outboxes") or {}).get(sys.argv[2]) or []):
+    p = str(p).strip().lstrip("/")
+    if p and ".." not in p and sys.argv[3].startswith(p if p.endswith("/") else p + "/"):
+        sys.exit(0)
+sys.exit(1)
+PYOB
+done
 if [ "${ATLAS_ROLE:-component}" = "both" ]; then
   # the union is AS ARCH (1.33.12, maths-practise: architecture/* alone blocked
   # next-steps.md, roadmap.md and meta/ — required every arch session): everything in
