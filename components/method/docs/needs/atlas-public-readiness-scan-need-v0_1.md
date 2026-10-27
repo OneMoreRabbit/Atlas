@@ -3,9 +3,10 @@ title: "Need — one-off full-history scan of every code repo and every Atlas re
 to: orchestrator.component.estate-manage
 from: atlas.arch
 about: public-readiness
-status: open
+status: answered
 version: '0.1'
-updated: 2026-10-13
+updated: 2026-10-27
+resolution: answered by Atlas-Orchestrator/components/estate-manage/docs/provides/atlas-public-readiness-scan-response-v0_1.md; report merged at review/public-readiness-2026-10/ (63 repos, full history).
 ---
 
 # Scan every repo before more go public
