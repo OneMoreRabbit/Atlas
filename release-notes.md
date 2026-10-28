@@ -11,6 +11,18 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.13 — 2026-10-28
+
+**TL;DR:** the method pin moves only on the operator's go.
+
+- The CI guard refuses a `method:` change in the io-graph on any seat branch, and any
+  change to `.github/workflows/`. An operator-approved re-pin goes on a branch named
+  `atlas/migration/<version>`.
+- House style rule 7, in every seat's briefing: never move the pin or copy method files
+  unless the operator has said go for that release.
+
+**Action:** the orchestrator re-copies `templates/vault-ci/` into every vault.
+
 ## v1.34.12 — 2026-10-28
 
 **TL;DR:** the address check reaches the live directory on every seat, token or not.

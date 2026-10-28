@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.13 (2026-10-28, operator: "projects don't start moving their Atlas version
+#   without being told to"): on arch branches the CI guard refuses any change to the
+#   method: key ("the method pin moves only on the operator go (release schedule)") and
+#   any .github/workflows/** file (the orchestrator re-copies those). The pin moves on a
+#   branch named atlas/migration/<version>, which gets the arch set plus that key; the
+#   operator's go is the PR. House style rule 7 carries the rule to every seat.
 #   1.34.12 (2026-10-28, idea.arch): GET /v0/addressable is tokenless by design; the
 #   validator now calls it whenever the address file exists and sends a credential only
 #   if one is present. A seat with neither secret never called it and fell back to the

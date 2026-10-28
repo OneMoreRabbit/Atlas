@@ -12,6 +12,9 @@
    repo, on the rbac-compile seat" is.
 5. Lead with the answer. Detail after, and only what the reader needs.
 6. If a sentence can be deleted without losing meaning, delete it.
+7. **Never move the Atlas method pin, or copy method files into your vault, unless the
+   operator has said go for that release.** Releases run to a schedule and a go/no-go
+   from the operator (2026-10-28).
 
 This is the estate-wide usability statement, injected into every seat's briefing. To
 change it: edit this file in the Atlas method repo, cut a patch release; every seat

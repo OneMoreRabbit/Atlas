@@ -6,8 +6,8 @@ updated: 2026-10-28
 
 # Next steps
 
-**TL;DR:** estate is pinned at **1.34.0** (operator hold). Twelve patches since
-(1.34.1 to 1.34.12) sit on `main`, all tested, CI green. Three needs and three hub asks
+**TL;DR:** estate is pinned at **1.34.0** (operator hold). Thirteen patches since
+(1.34.1 to 1.34.13) sit on `main`, all tested, CI green. Three needs and three hub asks
 are owed; two more asks need an operator ruling. The seat was signed out 13 to 27
 October; nothing was lost.
 
@@ -27,6 +27,7 @@ October; nothing was lost.
 | 1.34.10 | `outboxes:` lets a vault grant a component extra write paths; both guards honour it, arch-owned |
 | 1.34.11 | CI guard gives `atlas/arch/<topic>` branches the arch write set (all but `product/**`, `_bridge/**`) |
 | 1.34.12 | validator reaches the live directory without a token (seats without one fell back to cache silently) |
+| 1.34.13 | pin moves only on the operator go: guard refuses `method:` and workflow changes on seat branches; `atlas/migration/<version>` is the route; house style rule 7 |
 
 Also: the public-readiness scan (estate review, 63 repos, full history) is merged — no
 credentials in any public repo; three live credentials in private Nav-AgentEco await the

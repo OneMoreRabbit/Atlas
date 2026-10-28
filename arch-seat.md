@@ -140,7 +140,8 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    Anything that changes **direction, cost, or scope** goes to the bridge for `@nav` —
    stated in plain words, not as a diff — and waits. Escalating a naming or
    folder-placement question is a defect; so is deciding a scope question alone.
-3. Re-pin deliberately — **and only here, or on the operator's instruction**: method
+3. Re-pin deliberately — **only on the operator's go for that release** (the CI guard
+   refuses a `method:` change on any branch but `atlas/migration/<version>`): method
    version, contract versions flagged as drift. When re-pinning the method, take the
    templates and any new standard artefact in the same act, and say what you did on
    the bridge.

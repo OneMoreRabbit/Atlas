@@ -55,13 +55,35 @@ jobs:
           # seat and own the atlas vault"). Branch atlas/arch/<topic> gets the arch write
           # set - everything EXCEPT product/** (the product seat's) and _bridge/** (the
           # Nav vault's lane) - the same union the both-hats local guard grants (1.33.12).
-          if [ "$COMPONENT" = arch ]; then
+          # Two holds on top (1.34.13, operator 2026-10-28: "projects don't start moving
+          # their Atlas version without being told to"): .github/workflows/** is the
+          # orchestrator's (PAT matrix), and the method: key moves ONLY on the operator's
+          # go - on a branch named atlas/migration/<version>, which gets the arch set plus
+          # that key. Everything else in the arch set stays.
+          if [ "$COMPONENT" = arch ] || [ "$COMPONENT" = migration ]; then
             FAIL=0
             while IFS= read -r f; do
               case "$f" in
-                product/*|_bridge/*) echo "::error file=$f::arch may not write $f (product/** is the product seat's; _bridge/** lives in the Nav vault)"; FAIL=1 ;;
+                product/*|_bridge/*) echo "::error file=$f::$COMPONENT may not write $f (product/** is the product seat's; _bridge/** lives in the Nav vault)"; FAIL=1 ;;
+                .github/workflows/*) echo "::error file=$f::vault CI files are re-copied by the orchestrator, never edited on a seat branch"; FAIL=1 ;;
               esac
             done < /tmp/changed.txt
+            if [ "$COMPONENT" = arch ] && ! git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- registry/io-graph.yml; then
+              pip install -q PyYAML >/dev/null 2>&1 || true
+              git show "origin/${{ github.base_ref }}:registry/io-graph.yml" > /tmp/base.yml
+              python3 - <<'PYPIN'
+          import sys, yaml
+          try:
+              m = lambda p: (yaml.safe_load(open(p)) or {}).get("method")
+              sys.exit(0 if m("registry/io-graph.yml") == m("/tmp/base.yml") else 1)
+          except Exception as e:
+              print(f"::error file=registry/io-graph.yml::io-graph does not parse: {e}"); sys.exit(2)
+          PYPIN
+              case $? in
+                1) echo "::error file=registry/io-graph.yml::the method pin moves only on the operator go (release schedule) - use a branch named atlas/migration/<version>"; FAIL=1 ;;
+                2) FAIL=1 ;;
+              esac
+            fi
             exit $FAIL
           fi
           # Extra outboxes DECLARED for this component (1.34.10, estate ADR-0011: the
@@ -94,7 +116,7 @@ jobs:
       - name: Edge ownership — io-graph.yml edits must name the slug
         run: |
           [ "$RELEASE_MERGE" = "1" ] && { echo "release merge — skipping edge ownership"; exit 0; }
-          [ "$COMPONENT" = arch ] && { echo "arch branch — the io-graph is the arch seat's (1.34.11)"; exit 0; }
+          case "$COMPONENT" in arch|migration) echo "$COMPONENT branch — the io-graph is the arch seat's (1.34.11); the method: key is checked in the scope step"; exit 0 ;; esac
           git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- registry/io-graph.yml && exit 0
           pip install -q PyYAML
           git show "origin/${{ github.base_ref }}:registry/io-graph.yml" > /tmp/base.yml
