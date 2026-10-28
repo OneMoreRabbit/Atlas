@@ -1,6 +1,6 @@
 ---
 title: Next steps
-owner: architecture (@atlas method seat)
+owner: atlas.arch
 updated: 2026-10-28
 ---
 

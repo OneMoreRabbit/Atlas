@@ -1,10 +1,11 @@
 ---
-title: ADR-0006 (Atlas) — Depending across vaults; the orchestration scope
+title: "ADR-0006 (Atlas) — Depending across vaults; the orchestration scope"
 interface: atlas-adr-0006
 version: 1.0
 status: accepted
 date: 2026-08-28
-origin: Atlas-AgentEco ADR-0008 (operator decision to promote ansible-platform to its own
+origin: >-
+  Atlas-AgentEco ADR-0008 (operator decision to promote ansible-platform to its own
   vault) via Atlas PRs #2/#3 from its arch seat, plus the operator's Architecture Note
   (Nav-Atlas, 2026-08-28) defining the scope model
 affects: [aac-method, atlas_validate]

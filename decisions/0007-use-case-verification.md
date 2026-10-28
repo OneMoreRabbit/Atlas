@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-26
 decided_by: operator (method stated 2026-09-25; ratified into the method 2026-09-26)
 responds_to:
-  - needs/agenteco-needs-use-case-verification-adr-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/archive/agenteco-needs-use-case-verification-adr-v0_1.md
 relates: >
   Atlas-AgentEco architecture/proposals/use-case-verification-proposal-v0_1.md (the
   written form, running there first); AAC-method §6 (the development cycle: read don't

@@ -2,9 +2,9 @@
 title: "Response — arc-platform + AgentEco field findings, fixed in 1.28.2"
 to: [arc-platform.component.platform, agent-eco.arch]
 responds_to:
-  - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-arch-installer-launch-dir-finding-v0_1.md
-  - Atlas-ArcPlatform/components/arch/docs/needs/arc-platform-arch-gate-regen-noise-finding-v0_1.md
-  - Atlas-AgentEco/components/arch/docs/needs/agenteco-needs-method-feedback-2026-09-14-v0_1.md
+  - Atlas-ArcPlatform/components/arch/docs/needs/archive/arc-platform-arch-installer-launch-dir-finding-v0_1.md
+  - Atlas-ArcPlatform/components/arch/docs/needs/archive/arc-platform-arch-gate-regen-noise-finding-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/archive/agenteco-needs-method-feedback-2026-09-14-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-09-14

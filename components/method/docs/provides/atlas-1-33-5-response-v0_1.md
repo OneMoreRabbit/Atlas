@@ -4,7 +4,7 @@ to: [blocks.arch, labs.arch, orchestrator.component.estate-manage]
 about: aac-method
 responds_to:
   - Atlas-Blocks/components/arch/docs/needs/atlas-1-33-3-component-wiring-validator-repair-v0_1.md
-  - Atlas-Labs/components/labs-nursery/docs/needs/atlas-publish-guard-frontmatter-parse-need-v0_1.md
+  - Atlas-Labs/components/labs-nursery/docs/needs/archive/atlas-publish-guard-frontmatter-parse-need-v0_1.md
 status: active
 version: '0.1'
 updated: 2026-10-02

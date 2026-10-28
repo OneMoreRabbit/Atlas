@@ -4,9 +4,9 @@ status: accepted
 date: 2026-09-29
 decided_by: operator (proven across eight AgentEco campaigns; adopted on instruction)
 responds_to:
-  - needs/agenteco-needs-testing-methodology-v0_1.md
-  - needs/agenteco-needs-write-time-gates-method-v0_1.md
-  - needs/agenteco-needs-harness-authoring-guidance-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/archive/agenteco-needs-testing-methodology-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/archive/agenteco-needs-write-time-gates-method-v0_1.md
+  - Atlas-AgentEco/components/arch/docs/needs/archive/agenteco-needs-harness-authoring-guidance-v0_1.md
 relates: >
   decisions/0007-use-case-verification.md (the UAT half — amended by this ADR's
   release with the author ordering); Atlas-AgentEco architecture/
