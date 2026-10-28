@@ -67,6 +67,20 @@ elif [ "$_SYNC_RC" != 0 ]; then
   echo
 fi
 
+# Release notes in THIS code repo (1.34.14): one entry per tag, headed "## <tag> — <date>",
+# in the tagging commit. The estate release log reads that heading. No network.
+for _r in $SEAT_ROOTS; do
+  _t=$(git -C "$_r" describe --tags --abbrev=0 2>/dev/null || true)
+  [ -n "$_t" ] || continue
+  if [ ! -f "$_r/release-notes.md" ]; then
+    echo "> ⚠ **release-notes.md missing** in $(basename "$_r") though it is tagged ($_t) — copy .atlas-method/templates/release-notes/release-notes.md to its top level, one entry per tag."
+    echo
+  elif ! grep -qE "^## $_t[[:space:]]+—" "$_r/release-notes.md"; then
+    echo "> ⚠ **release-notes.md in $(basename "$_r") has no entry headed \`## $_t — <date>\`** — write it in the tagging commit; the estate release log reads that heading."
+    echo
+  fi
+done
+
 PY=$(command -v python3 || command -v python)
 "$PY" -c "import yaml" 2>/dev/null ||
   "$PY" -m pip install -q -r "$ATLAS_METHOD/tools/requirements.txt"

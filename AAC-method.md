@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.14 (2026-10-28, operator: "a per release tag list of what's gone into each
+#   release across all projects"): release-notes entries are headed exactly
+#   "## <tag> — <date>"; the validator requires that heading for the vault's newest tag,
+#   and the component briefing warns the same for each code repo the seat holds. The
+#   estate release log (orchestrator, registry/release-log.md) reads the heading.
 #   1.34.13 (2026-10-28, operator: "projects don't start moving their Atlas version
 #   without being told to"): on arch branches the CI guard refuses any change to the
 #   method: key ("the method pin moves only on the operator go (release schedule)") and

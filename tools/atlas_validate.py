@@ -1177,9 +1177,13 @@ def release_notes_warnings() -> list[str]:
     if not rn.exists():
         return [f"release-notes.md missing at the top level, but this repo is tagged "
                 f"({tag}) — add it from templates/release-notes/ with an entry per release"]
-    if tag not in rn.read_text(encoding="utf-8", errors="replace"):
-        return [f"release-notes.md has no entry for the newest tag {tag} — write it in "
-                "the tagging commit (TL;DR line, a few plain bullets, an Action line)"]
+    # the heading carries the EXACT tag (1.34.14, operator: a per-tag list across all
+    # projects): "## <tag> — <date>". A mention in prose is not an entry.
+    body = rn.read_text(encoding="utf-8", errors="replace")
+    if not re.search(r"^## " + re.escape(tag) + r"\s+—", body, re.M):
+        return [f"release-notes.md has no entry headed `## {tag} — <date>` — write it in "
+                "the tagging commit (TL;DR line, a few plain bullets, an Action line); the "
+                "estate release log reads that heading"]
     return []
 
 

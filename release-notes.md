@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.14 — 2026-10-28
+
+**TL;DR:** release-notes entries must be headed with the exact tag, so the estate can
+list every release across all projects.
+
+- Heading pattern: `## <tag> — <date>`. The validator checks the vault's newest tag; the
+  component briefing checks each code repo the seat holds.
+
+**Action:** component seats: add `release-notes.md` to code repos that cut tags.
+
 ## v1.34.13 — 2026-10-28
 
 **TL;DR:** the method pin moves only on the operator's go.
