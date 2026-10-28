@@ -1550,15 +1550,17 @@ def directory_names():
     data = None
     try:
         base = (sec / "estate-directory-address").read_text(encoding="utf-8").strip().rstrip("/")
-        # either credential the estate issues (1.34.6, maths-practise: a seat holding only
-        # estate-directory-seat fell back to legacy mode silently)
-        _tf = sec / "estate-directory-read"
-        if not _tf.exists():
-            _tf = sec / "estate-directory-seat"
-        tok = _tf.read_text(encoding="utf-8").strip()
+        # GET /v0/addressable is TOKENLESS by design (1.34.12, idea.arch: a seat holding
+        # neither estate-directory-read nor -seat never called it and fell back to the
+        # cache silently). Send a credential only if one is present; never require it.
+        hdrs = {}
+        for _n in ("estate-directory-read", "estate-directory-seat"):
+            _tf = sec / _n
+            if _tf.exists():
+                hdrs["Authorization"] = f"Bearer {_tf.read_text(encoding='utf-8').strip()}"
+                break
         import urllib.request
-        req = urllib.request.Request(base + "/v0/addressable",
-                                     headers={"Authorization": f"Bearer {tok}"})
+        req = urllib.request.Request(base + "/v0/addressable", headers=hdrs)
         with urllib.request.urlopen(req, timeout=4) as r:
             data = json.loads(r.read().decode("utf-8"))
         if isinstance(data, dict):

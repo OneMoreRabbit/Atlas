@@ -11,6 +11,15 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.12 — 2026-10-28
+
+**TL;DR:** the address check reaches the live directory on every seat, token or not.
+
+- The directory's address list needs no credential. The validator no longer requires one,
+  so seats without a read token stop falling back to a stale cache.
+
+**Action:** none; picked up at the next pin.
+
 ## v1.34.11 — 2026-10-28
 
 **TL;DR:** an arch seat's PR can change anything in its own vault except `product/**`.

@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.12 (2026-10-28, idea.arch): GET /v0/addressable is tokenless by design; the
+#   validator now calls it whenever the address file exists and sends a credential only
+#   if one is present. A seat with neither secret never called it and fell back to the
+#   cache silently. The output already names the source (live / cached copy from <date>).
 #   1.34.11 (2026-10-28, operator via idea.arch: "you are the arch seat and own the atlas
 #   vault"): the vault CI guard gives branch atlas/arch/<topic> the ARCH write set -
 #   everything except product/** and _bridge/** (the both-hats union, 1.33.12) - and skips
