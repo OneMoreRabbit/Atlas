@@ -1,13 +1,13 @@
 ---
 title: Next steps
 owner: architecture (@atlas method seat)
-updated: 2026-10-27
+updated: 2026-10-28
 ---
 
 # Next steps
 
-**TL;DR:** estate is pinned at **1.34.0** (operator hold). Ten patches since
-(1.34.1 to 1.34.10) sit on `main`, all tested, CI green. Three needs and three hub asks
+**TL;DR:** estate is pinned at **1.34.0** (operator hold). Eleven patches since
+(1.34.1 to 1.34.11) sit on `main`, all tested, CI green. Three needs and three hub asks
 are owed; two more asks need an operator ruling. The seat was signed out 13 to 27
 October; nothing was lost.
 
@@ -25,6 +25,7 @@ October; nothing was lost.
 | 1.34.8 | needs helper derives the project from the vault clone; `--arch --verify` reads only; `--help` says NAME |
 | 1.34.9 | `inbox:` key in the io-graph (enabled, auto_approve) |
 | 1.34.10 | `outboxes:` lets a vault grant a component extra write paths; both guards honour it, arch-owned |
+| 1.34.11 | CI guard gives `atlas/arch/<topic>` branches the arch write set (all but `product/**`, `_bridge/**`) |
 
 Also: the public-readiness scan (estate review, 63 repos, full history) is merged — no
 credentials in any public repo; three live credentials in private Nav-AgentEco await the

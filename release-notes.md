@@ -11,6 +11,15 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.11 — 2026-10-28
+
+**TL;DR:** an arch seat's PR can change anything in its own vault except `product/**`.
+
+- Branches named `atlas/arch/<topic>` pass the CI guard for root files, `architecture/`,
+  `registry/` and `meta/`. Component branches are unchanged.
+
+**Action:** the orchestrator re-copies `templates/vault-ci/` into every vault.
+
 ## v1.34.10 — 2026-10-13
 
 **TL;DR:** a vault can let a component write somewhere besides its own folder.

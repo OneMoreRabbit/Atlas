@@ -349,6 +349,10 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.11 (2026-10-28, operator via idea.arch: "you are the arch seat and own the atlas
+#   vault"): the vault CI guard gives branch atlas/arch/<topic> the ARCH write set -
+#   everything except product/** and _bridge/** (the both-hats union, 1.33.12) - and skips
+#   edge ownership for it (the io-graph is the arch seat's). Every other slug unchanged.
 #   1.34.10 (2026-10-13, orchestrator: every estate-review PR failed the guard): a
 #   vault may declare extra outboxes per component (outboxes: {name: [prefix/]}); the
 #   CI guard and the local write guard honour them. The CI guard reads the declaration
