@@ -273,6 +273,92 @@ dropped a component.
 
 **Action:** re-pin to the latest 1.33.x; re-run `atlas_init --force`.
 
+## v1.33.10 — 2026-10-02
+
+**TL;DR:** the installer says `--component` everywhere, and `--verify` checks files are tracked by git.
+
+- Usage text, errors and hints no longer say slug (`--slug` stays as a hidden alias).
+- `--verify` fails on an AGENTS.md or `.atlas.conf` that exists but is not in git.
+
+**Action:** re-run `--verify` after committing.
+
+## v1.33.9 — 2026-10-02
+
+**TL;DR:** the method repo carries its own io-graph, so the estate's comms gate can read it.
+
+- `registry/io-graph.yml` in the method repo: `project: atlas`, `comms: hub: true`, the method component.
+
+**Action:** none.
+
+## v1.33.8 — 2026-10-02
+
+**TL;DR:** compaction re-orientation is built in; no more hand-pasting the protocol.
+
+- `templates/reorient.md` is the one home; every context hook emits it after a compaction, resume or clear.
+
+**Action:** none.
+
+## v1.33.7 — 2026-10-02
+
+**TL;DR:** AGENTS.md is no longer overwritten by `--force`, and its placeholder is fixed.
+
+- A 1.30.9 rename had mangled the template placeholder; every install since carried unresolved text.
+- `--force` never overwrites an existing AGENTS.md.
+
+**Action:** delete a broken AGENTS.md and re-run `--force`.
+
+## v1.33.6 — 2026-10-02
+
+**TL;DR:** any step that writes `.github/workflows/` is the orchestrator's.
+
+- No arch token holds the Workflows permission; migration steps name the orchestrator for the CI re-copy and the operator for wider tokens.
+
+**Action:** none; doc-only.
+
+## v1.33.5 — 2026-10-02
+
+**TL;DR:** two field bugs from Blocks and Labs.
+
+- Vault CI ownership check accepts `component:` entries (was `slug:`-only).
+- The publish guard's frontmatter gate no longer exits silently.
+
+**Action:** orchestrator re-copies vault CI.
+
+## v1.33.4 — 2026-10-01
+
+**TL;DR:** three field bugs.
+
+- arch-seat.md no longer teaches the retired from-arch rule.
+- A missing `project:` is an error under any directory source.
+- A loud warning on the legacy no-directory path.
+
+**Action:** declare `project:` in the io-graph.
+
+## v1.33.3 — 2026-09-30
+
+**TL;DR:** full contract addresses only under a directory.
+
+- URL-derived short names resolve only on the no-directory legacy path.
+- Every directory-sourced run prints what it checked against (live or cached copy).
+
+**Action:** write full addresses from the address book.
+
+## v1.33.2 — 2026-09-29
+
+**TL;DR:** the estate directory is the address book.
+
+- The validator resolves `to:`/`from:` against the live directory, caching to `~/.atlas/directory.json`; unreachable falls back to the cache.
+
+**Action:** seats place the directory address and read token in `~/.secrets/`.
+
+## v1.33.1 — 2026-09-29
+
+**TL;DR:** the style hook no longer blocks every prompt on launch-dir seats.
+
+- A braceless variable the installer never substituted left an unresolved path; braced everywhere and fail-open.
+
+**Action:** re-run `atlas_init --force`.
+
 ## v1.33.0 — 2026-09-29 (estate release)
 
 **TL;DR:** contract addressing, the test role, and a testing method for every project.
