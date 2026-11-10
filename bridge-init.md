@@ -1,7 +1,7 @@
 ---
 title: "Bridge init — the human/AI interface of a project"
 interface: bridge-init
-version: 1.4
+version: 1.5
 status: active
 updated: 2026-11-10
 supersedes: 1.0
@@ -10,8 +10,9 @@ supersedes: 1.0
 # 1.2: tasks.md write-loss under syncing clients acknowledged and deferred; threads are
 #   the record, tasks.md an index.
 # 1.3: agent-to-agent notices go via the hub or a delivered doc, never a bridge ([[comms]]).
-# 1.4: the inbox is _inbox/ at the vault ROOT (was _bridge/inbox/); _bridge/ defined for
-#   any vault, development project or not (operator, 2026-11-10).
+# 1.4: the inbox is _inbox/ at the vault ROOT (was _bridge/inbox/).
+# 1.5: the operator's three rules for inboxes and task lists in ANY vault; nothing else
+#   enforced outside development projects (operator, 2026-11-10).
 ---
 
 # Bridge Init
@@ -169,20 +170,14 @@ task or a thread; it never edits an item in place, and may move one to
 `_inbox/archive/`. No other seat writes there. A project opts out with
 `inbox: {enabled: false}` in `registry/io-graph.yml` (1.34.9).
 
-## `_bridge/` in a vault that is not a development project (1.34.15)
+## Inboxes and task lists in any vault — the three rules (1.34.16, operator 2026-11-10)
 
-The same interface, the same three rules, in any vault the operator pairs with an AI
-seat (a personal, library or client vault as much as a `Nav-<Project>`):
+1. Every vault has `_inbox/` at the top level, development project or not.
+2. A task list is optional, and is whatever file the configuration names
+   (`_main/TODO <name>.md`, `_bridge/tasks.md`, anything).
+3. A vault with a task list must have an `_inbox/`, for linked tasks and notes.
 
-```
-<vault>/_inbox/        # delivered items, root level (above)
-<vault>/_bridge/
-  tasks.md             # the SHARED list: AI and human both write; owner-tagged lines
-  threads/             # one topic per file, append-only
-  archive/             # resolved threads
-```
-
-The operator's own list (for example `_main/TODO <name>.md`) stays theirs alone: the
-AI never writes it. `_bridge/tasks.md` is where the two sides meet; an item the
-operator wants on their own list, they copy. The AI writes `_bridge/**` and
-`_inbox/archive/` moves, nothing else in the vault.
+Nothing else is enforced outside a development project: no `_bridge/`, `threads/` or
+`archive/` required there, and no `_main/TODO` created in Nav vaults for now. The one
+settings file is the estate's `router-endpoints.yml`. "This is supposed to be a flexible
+and adaptable system — don't over-enforce."

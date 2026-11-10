@@ -11,6 +11,17 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.16 — 2026-11-10
+
+**TL;DR:** the operator's three rules for inboxes and task lists, and nothing more
+enforced outside development projects.
+
+- Every vault has `_inbox/` at the top level. A task list is optional and is whatever
+  file the configuration names. A vault with a task list has an `_inbox/`.
+- Withdrawn from 1.34.15: the `_bridge/` layout for non-development vaults.
+
+**Action:** none.
+
 ## v1.34.15 — 2026-11-10
 
 **TL;DR:** the inbox moves to `_inbox/` at every vault root, and `_bridge/` works in any

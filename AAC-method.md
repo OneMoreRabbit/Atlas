@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.16 (2026-11-10, operator ruling): bridge-init 1.5 carries the three rules for
+#   any vault - top-level _inbox/ everywhere; a task list is optional and is whatever the
+#   configuration names; a vault with a task list has an _inbox/ - and nothing else is
+#   enforced outside development projects. 1.34.15's "_bridge in any vault" proposal and
+#   its "the AI never writes _main/TODO" line are withdrawn (the Router writes there).
 #   1.34.15 (2026-11-10, operator): the inbox is _inbox/ at every vault ROOT (was
 #   _bridge/inbox/), kept with a .gitkeep; _bridge/ is defined for any vault, development
 #   project or not - tasks.md shared, the operator's own TODO list never written by the
