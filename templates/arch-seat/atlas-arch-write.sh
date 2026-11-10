@@ -46,16 +46,20 @@ if [ -n "$V" ]; then
   esac
 fi
 
-# The Nav vault (a launch-dir sibling with _bridge/ and no io-graph): _bridge/** only,
-# and never the operator's tasks.md.
+# The Nav vault (a launch-dir sibling with _bridge/ or _inbox/ and no io-graph):
+# _bridge/** and _inbox/archive/** (archiving a delivered item, 1.34.15) only. Items in
+# _inbox/ itself are never edited in place.
 for _d in "$LD"/*/; do
-  [ -d "${_d}_bridge" ] || continue
+  [ -d "${_d}_bridge" ] || [ -d "${_d}_inbox" ] || continue
   [ -f "${_d}registry/io-graph.yml" ] && continue
   N=${_d%/}
   case "$P" in
     "$N"/_bridge/*|*"/$N/_bridge/"*) exit 0 ;;
+    "$N"/_inbox/archive/*|*"/$N/_inbox/archive/"*) exit 0 ;;
+    "$N"/_inbox/*|*"/$N/_inbox/"*)
+      deny "Atlas: _inbox/ items are delivered, never edited in place (method 1.34.15) - turn it into a task or thread in _bridge/, or move it to _inbox/archive/. Refused: ${P#*"$N"/}." ;;
     "$N"/*|*"/$N/"*)
-      deny "Atlas: in the Nav vault the arch seat writes _bridge/** only (method 1.28.11). Refused: ${P#*"$N"/}." ;;
+      deny "Atlas: in the Nav vault the arch seat writes _bridge/** and _inbox/archive/** only (method 1.34.15). Refused: ${P#*"$N"/}." ;;
   esac
 done
 exit 0

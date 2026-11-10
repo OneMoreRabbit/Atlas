@@ -1,15 +1,17 @@
 ---
 title: "Bridge init — the human/AI interface of a project"
 interface: bridge-init
-version: 1.3
+version: 1.4
 status: active
-updated: 2026-09-08
+updated: 2026-11-10
 supersedes: 1.0
 # 1.1: component asks route via their own needs/ outbox (nav- prefix), mirrored to the
 #   bridge by the arch seat — no component seat needs Nav-vault credentials.
 # 1.2: tasks.md write-loss under syncing clients acknowledged and deferred; threads are
 #   the record, tasks.md an index.
 # 1.3: agent-to-agent notices go via the hub or a delivered doc, never a bridge ([[comms]]).
+# 1.4: the inbox is _inbox/ at the vault ROOT (was _bridge/inbox/); _bridge/ defined for
+#   any vault, development project or not (operator, 2026-11-10).
 ---
 
 # Bridge Init
@@ -158,11 +160,29 @@ cross-reference, which defeated the point of a task list. Occasional git conflic
 tasks.md are accepted; pull before editing, keep entries short. `from-arch.md` files
 are retired to `_bridge/archive/`.
 
-## `_bridge/inbox/` — items delivered by a product (1.34.7, Atlas-Idea ADR-0004)
+## `_inbox/` — items delivered to the vault (1.34.15; was `_bridge/inbox/`, 1.34.7)
 
-A Nav vault may hold `_bridge/inbox/`. A product writes into it through the estate:
-new files only, one item per file, author `<product>-bot`. The project's arch seat
-reads each item and turns it into a task or a thread; it never edits an item in place,
-and may archive one. No other seat writes there. The folder appears with the first
-delivery; nothing creates it in advance. A project opts out with `inbox: {enabled: false}` in
-`registry/io-graph.yml` (1.34.9).
+Every vault has one inbox, at its ROOT: `_inbox/`. It exists even when empty (a
+`.gitkeep`). A product writes into it through the estate: new files only, one item per
+file, author `<product>-bot`. The vault's arch seat reads each item and turns it into a
+task or a thread; it never edits an item in place, and may move one to
+`_inbox/archive/`. No other seat writes there. A project opts out with
+`inbox: {enabled: false}` in `registry/io-graph.yml` (1.34.9).
+
+## `_bridge/` in a vault that is not a development project (1.34.15)
+
+The same interface, the same three rules, in any vault the operator pairs with an AI
+seat (a personal, library or client vault as much as a `Nav-<Project>`):
+
+```
+<vault>/_inbox/        # delivered items, root level (above)
+<vault>/_bridge/
+  tasks.md             # the SHARED list: AI and human both write; owner-tagged lines
+  threads/             # one topic per file, append-only
+  archive/             # resolved threads
+```
+
+The operator's own list (for example `_main/TODO <name>.md`) stays theirs alone: the
+AI never writes it. `_bridge/tasks.md` is where the two sides meet; an item the
+operator wants on their own list, they copy. The AI writes `_bridge/**` and
+`_inbox/archive/` moves, nothing else in the vault.

@@ -349,6 +349,11 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.34.15 (2026-11-10, operator): the inbox is _inbox/ at every vault ROOT (was
+#   _bridge/inbox/), kept with a .gitkeep; _bridge/ is defined for any vault, development
+#   project or not - tasks.md shared, the operator's own TODO list never written by the
+#   AI. The arch write guard allows _inbox/archive/ moves and refuses in-place edits of
+#   delivered items. Switch-over is one estate moment on the operator go.
 #   1.34.14 (2026-10-28, operator: "a per release tag list of what's gone into each
 #   release across all projects"): release-notes entries are headed exactly
 #   "## <tag> — <date>"; the validator requires that heading for the vault's newest tag,
@@ -1456,7 +1461,7 @@ product:                       # OPTIONAL (1.28.9): this project runs a product 
 outboxes:                      # OPTIONAL (1.34.10): extra write paths per component, beyond
   estate-review: [review/]     # components/<name>/. Architecture-owned: the CI guard reads
                                # them from the BASE branch, so a PR cannot grant itself one.
-inbox:                         # OPTIONAL (1.34.9, estate ADR-0015): the _bridge/inbox/ lane
+inbox:                         # OPTIONAL (1.34.9, estate ADR-0015): the _inbox/ lane (vault root, 1.34.15)
   enabled: true                # default true; false = no product may deliver to this project
   auto_approve: false          # default false; true = a product delivers without operator review
                                # (read by the product's review, not the estate). Absent = defaults.

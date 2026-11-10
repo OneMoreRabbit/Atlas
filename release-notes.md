@@ -11,6 +11,19 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.34.15 — 2026-11-10
+
+**TL;DR:** the inbox moves to `_inbox/` at every vault root, and `_bridge/` works in any
+vault, not only development projects.
+
+- `_bridge/inbox/` becomes `_inbox/` (kept with a `.gitkeep`). Same rules: products
+  deliver, the arch seat turns items into tasks or threads, may archive, never edits.
+- `_bridge/tasks.md` is the shared list in any vault; the operator's own TODO list is
+  never written by the AI.
+
+**Action:** none until the operator calls the switch-over; the estate moves the folders
+in one pass.
+
 ## v1.34.14 — 2026-10-28
 
 **TL;DR:** release-notes entries must be headed with the exact tag, so the estate can
