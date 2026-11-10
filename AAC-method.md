@@ -1,7 +1,7 @@
 ---
 title: "Architecture-Above-Code (AAC) — the method"
 interface: aac-method
-version: "1.34"       # quoted: unquoted 1.10 would be the YAML float 1.1
+version: "1.35"       # quoted: unquoted 1.10 would be the YAML float 1.1
 status: active
 updated: 2026-09-13
 # 2026-07-03 pre-release amendments (v1.0 was never committed/adopted, so amended in place):
@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.35.0 (2026-11-10): ESTATE RELEASE — rolls up 1.34.1-1.34.16. Every contract address
+#   checked against the directory, short forms refused; the arch briefing lists needs
+#   addressed to the arch seat; product outbox routed; verify means committed; declared
+#   outboxes; arch PRs own the vault bar product/**; the method pin moves only on the
+#   operator go (atlas/migration/<version>; house style rule 7); _inbox/ at every vault
+#   root with the operator's three rules; per-tag release-notes headings feeding the
+#   estate release log; needs helper and installer fixes. Pin '1.35.0'.
 #   1.34.16 (2026-11-10, operator ruling): bridge-init 1.5 carries the three rules for
 #   any vault - top-level _inbox/ everywhere; a task list is optional and is whatever the
 #   configuration names; a vault with a task list has an _inbox/ - and nothing else is

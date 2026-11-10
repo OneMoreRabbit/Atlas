@@ -1,13 +1,13 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-10-28
+updated: 2026-11-10
 ---
 
 # Next steps
 
-**TL;DR:** estate is pinned at **1.34.0** (operator hold). Sixteen patches since
-(1.34.1 to 1.34.16) sit on `main`, all tested, CI green. Three needs and three hub asks
+**TL;DR:** **v1.35.0 released 2026-11-10** on the operator's instruction, rolling up
+1.34.1 to 1.34.16; cascade brief sent to the orchestrator. Estate migrates on its word. Three needs and three hub asks
 are owed; two more asks need an operator ruling. The seat was signed out 13 to 27
 October; nothing was lost.
 
