@@ -11,6 +11,22 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.0 — 2026-11-10 (estate release)
+
+**TL;DR:** everything since 1.34.0, rolled up for the whole estate.
+
+- Every contract address is checked against the estate directory; short forms fail.
+- The arch briefing lists needs addressed to the arch seat; product seats' needs route.
+- The method pin moves only on the operator's go, on an `atlas/migration/<version>`
+  branch; the guard refuses it anywhere else. House style rule 7 says so to every seat.
+- Arch seat PRs may change anything in their vault except `product/**`; a vault can
+  grant a component extra write paths.
+- `_inbox/` at every vault root; release-notes entries headed with the exact tag.
+
+**Action:** arch seats re-pin on a branch `atlas/migration/1.35.0`, re-run
+`atlas_init --arch --force`, validate; component seats sync and re-run
+`atlas_init --force`; the orchestrator re-copies `templates/vault-ci/` everywhere.
+
 ## v1.34.16 — 2026-11-10
 
 **TL;DR:** the operator's three rules for inboxes and task lists, and nothing more
