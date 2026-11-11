@@ -32,7 +32,7 @@ covered; the operator has a separate decision open on it.
 |---|---|
 | `dev` | development. Every commit made while developing goes here. |
 | `staging` | the release under test. Only in a project that has a staging server. |
-| `main` | what is live. |
+| `main` | what is released. |
 
 ## The path — project with a staging server
 
@@ -72,8 +72,9 @@ For when `dev` holds work that is not ready to go live.
 1. **Staging and production run a tag fetched from GitHub and nothing else.** No seat
    checkout, no file copied from a seat or a dev box, no branch, no untagged commit.
 2. **A release holds everything it needs, or pins it exactly**: every package at an
-   exact version (no ranges), every container base image by digest. If a deploy needs
-   anything from outside the tag, the release is not ready.
+   exact version (no ranges), every container base image by digest. A repo that
+   installs other repos pins each one by tag, and those are tagged first. If a deploy
+   needs anything from outside the tag, the release is not ready.
 3. **Production runs the tag that was proved**: tested on staging, or built from GitHub
    in a clean environment. A test on the dev box does not prove a tag; the dev box may
    run things the tag does not hold. Where the tag was laid does not matter.
