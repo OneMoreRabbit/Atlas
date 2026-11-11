@@ -1,7 +1,7 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Next steps
@@ -60,6 +60,16 @@ operator's rotation.
 - **Next estate push**: 1.34.x accumulates on `main` until called (likely 1.35.0).
 - **This seat's `gh` sign-in** lapsed with the 13 October sign-out; git transport works,
   the GitHub API and `gh` do not.
+
+## Backlog (ideas raised, not yet scheduled)
+
+- **Nav vault as a deployable template** + inbox lifecycle + bridge/inbox generic
+  definitions (operator, 2026-11-10; assessed, awaiting go; would be 1.35.1).
+- **Ideas-to-work cascade** (operator voice note 2026-10-24, via orchestrator 2026-11-11):
+  compare Jira's product idea → epic → task → one-developer work item with Atlas's
+  roadmap → contracts → needs → bridge tasks; how a business idea enters the product
+  cycle, keeps its context and links, and cascades into bite-size work. Note in
+  Nav-Orchestrator `_bridge/archive/inbox-2026-11-11/`. No action asked yet.
 
 ## Housekeeping, theirs
 
