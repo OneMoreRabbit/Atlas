@@ -156,7 +156,8 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    policy, then cut the release as its own deliberate act: tag the shipped commit
    `vX.Y.Z` (annotated). The merge alone is not a release, and nothing deploys
    until a consumer moves its pin; a trunk-only project just tags (§9). Replace
-   `next-steps.md` at every cut.
+   `next-steps.md` at every cut. For code that is deployed, the branches, the tag and
+   what staging and production run are one page: `development-and-release.md`.
 
    **No broadcast to component seats on adopting a release** (1.26.3, from an AgentEco
    finding). Do not mint a per-release "re-copy your scripts" need: the self-drift

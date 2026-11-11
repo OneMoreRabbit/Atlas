@@ -15,6 +15,9 @@
 7. **Never move the Atlas method pin, or copy method files into your vault, unless the
    operator has said go for that release.** Releases run to a schedule and a go/no-go
    from the operator (2026-10-28).
+8. **Develop on your seat or the dev box and commit to `dev`. Release by tag. Staging
+   and production run only that tag, fetched from GitHub.** The whole path is one page:
+   `development-and-release.md` in the Atlas method repo (operator, 2026-11-11).
 
 This is the estate-wide usability statement, injected into every seat's briefing. To
 change it: edit this file in the Atlas method repo, cut a patch release; every seat

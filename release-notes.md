@@ -1,7 +1,7 @@
 ---
 title: Release notes — Atlas (the AAC method)
 status: active
-updated: 2026-10-08
+updated: 2026-11-11
 owner: atlas.arch
 about: one short entry per method release, newest first — what changed and what seats must do
 ---
@@ -10,6 +10,25 @@ about: one short entry per method release, newest first — what changed and wha
 
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
+
+## v1.35.3 — 2026-11-11
+
+**TL;DR:** one page now holds the path from development to production:
+`development-and-release.md`. Everything else refers to it.
+
+- Develop on your seat or the dev box. Commit to `dev`. Release by annotated tag.
+- With a staging server: `dev` to `staging`, tag, test on staging, then `staging` to
+  `main`. Without one: `dev` to `main`, tag.
+- Staging and production run only the tag, fetched from GitHub. Production runs the tag
+  that was tested.
+- House style rule 8 states it in every briefing. The specification, `component-init.md`
+  and `arch-seat.md` no longer restate the path.
+- The needs helper (`scripts/atlas-needs.py`) now reads the estate register on seats that
+  use the estate's GitHub App.
+
+**Action:** read `development-and-release.md`. If your project's branches or deploys
+differ from it, tell your arch seat. Do not move your method pin for this; wait for the
+operator's go.
 
 ## v1.35.2 — 2026-11-11
 

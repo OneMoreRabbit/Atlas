@@ -6,10 +6,12 @@ updated: 2026-11-11
 
 # Next steps
 
-**TL;DR:** v1.35.1 (verify covers `.claude/`) on `main`; **v1.35.0 released 2026-11-10** on the operator's instruction, rolling up
-1.34.1 to 1.34.16; cascade brief sent to the orchestrator. Estate migrates on its word. Three needs and three hub asks
-are owed; two more asks need an operator ruling. The seat was signed out 13 to 27
-October; nothing was lost.
+**TL;DR:** 1.35.3 is prepared on `dev` and NOT released (operator, 2026-11-11: the orchestrator
+reviews it first): `development-and-release.md`, the one page for the path from development to
+production, text approved by the operator; needs helper works on GitHub-App seats. `main` is at v1.35.2. **v1.35.0 released 2026-11-10** (estate release, rolled up 1.34.1 to
+1.34.16); the estate is migrating to it. Since then: 1.35.1 (verify covers `.claude/`), 1.35.2
+(tagged releases only, now superseded by the page). Three needs and two hub asks are owed; two
+more asks need an operator ruling.
 
 ## Since the last estate release (1.34.0, 2026-10-08)
 
@@ -40,8 +42,8 @@ operator's rotation.
 
 1. **Briefing needs count/list mismatch** (arc-platform): count and list from one query,
    scoped to the briefed component's address.
-2. **Needs helper fails on GitHub-App seats** (orchestrator): use the estate token broker
-   when present; match the `<project>.<seat>` form.
+2. ~~Needs helper fails on GitHub-App seats~~ done in 1.35.3 (asks git with the repository
+   path). The `<project>.<seat>` form is not matched: the validator refuses it at write.
 3. **Card stamp on needs-only publishes** (arc-platform): stamp `component.md` only when
    the component itself changes.
 4. **Backlog template** beside `roadmap.md` (Idea; operator ask 2026-10-17).
@@ -58,8 +60,9 @@ operator's rotation.
   an exact-file grant, and who owns Nav vault roots (arch writes `_bridge/` only).
 - **Nav-AgentEco credentials**: rotate the three the scan found.
 - **Next estate push**: 1.34.x accumulates on `main` until called (likely 1.35.0).
-- **This seat's `gh` sign-in** lapsed with the 13 October sign-out; git transport works,
-  the GitHub API and `gh` do not.
+- **Version numbering protocol**: the method says patch numbers are untagged development
+  states; ArcPlatform tags fix releases and uses candidates. One rule needed (operator,
+  2026-11-11: keep it a separate protocol from the path).
 
 ## Backlog (ideas raised, not yet scheduled)
 

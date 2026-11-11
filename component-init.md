@@ -161,8 +161,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    release surface is your own code repo — method re-pins, vault merges and estate
    rolls are never yours. On `work`, iterate the patch position freely (`1.3.1`,
    `1.3.2` — development states, never tagged, never consumed). **A release zeroes the
-   patch and bumps the minor**: `1.2.2` releases as `1.3.0` — merge `work` →
-   `release`, lay the annotated tag `v1.3.0`. Breaking changes bump the major; `0.x`
+   patch and bumps the minor**: `1.2.2` releases as `1.3.0`, merged and tagged `v1.3.0`
+   by the path in `development-and-release.md` (the one page for branches, tags and
+   what staging and production run). Breaking changes bump the major; `0.x`
    is pilot-only; `1.0.0` is the first generally consumable release. An untagged
    commit is not a release, and no consumer may be told to install from a branch.
    (Your `provides/` contracts carry your release's `MAJOR.MINOR`, one-to-one (§4): cut
@@ -248,8 +249,10 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
-   your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
-   credential helper) or mount an SSH agent socket. A session with no credential fails
+   your existing git config. On an estate seat the estate's credential helper mints a
+   token per repository: do nothing, and never export `GH_TOKEN` or run `gh auth login`
+   there (the orchestrator's seat manual, 2026-11-11). Elsewhere, in a container or CI,
+   inject a token plus a credential helper, or mount an SSH agent socket. A session with no credential fails
    at the first clone, not at publish.
 
    What the pieces do:
@@ -384,7 +387,7 @@ bottom of it (Orchestrator `decisions/0005-dev-loop-ladder`):
 |---|---|---|
 | **Seat** | code, unit tests, transient runs of your own processes against the project's platform containers | you, freely |
 | **Dev container** | your runtime, built by the estate, running your repo from a **shared checkout mounted into both your seat and the container**, in watch/reload mode | you iterate freely; ask the orchestrator only when your **requirements** change |
-| **Staging / production** | an immutable estate-built image, promoted deliberately | orchestrator |
+| **Staging / production** | a tagged release fetched from GitHub, and nothing else (`development-and-release.md`) | orchestrator, on the operator's word |
 
 So the rule is not "ask before you run anything" — it is *ask when the environment must
 change*, not when your code does. Immutability tightens as you climb: the dev rung trades

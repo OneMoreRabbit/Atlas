@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.3 (2026-11-11, operator): development-and-release.md - the ONE page for the
+#   path from development to production (seat or dev box; dev; tag; a staging branch
+#   and server when the project has one; main; production from the tag). SS6, SS9,
+#   component-init, arch-seat and house style rule 8 refer to it and no longer restate
+#   it. Version numbering stays a separate protocol (SS9). Also: the needs helper asks
+#   git for a token WITH the repository path, so it works on GitHub-App seats.
 #   1.35.2 (2026-11-11, estate ADR-0017, operator): staging and production run ONLY a
 #   tagged release built from its commit - no seat checkout, no dev-box file, no branch;
 #   the dev box is the seats' own. Doc-only, in SS6's release rule.
@@ -1721,12 +1727,10 @@ nothing to restore them.
 > the tag, into a clean environment, run from a neutral directory — a fresh venv for a
 > Python package, a pulled image for a container, a fresh clone for tooling, a tagged
 > run against a clean target for ansible. The working tree passing is not the release
-> working. **Staging and production run ONLY a tagged release** (estate ADR-0017,
-> operator 2026-11-11): an annotated tag on the release branch, fetched from GitHub and
-> built from that commit and nothing else — no seat checkout, no file staged from a dev
-> box, no local copy, no branch. The dev box is the seats' to develop and test on however
-> they like. A release that needs something not in it, or not pinned by it to a
-> versioned source, is not ready to deploy. And (ADR-0007, 1.30.11) **only when its use cases pass by observation,
+> working. **The path from development to production is one page:
+> `development-and-release.md`** (1.35.3, operator 2026-11-11) — where code runs, the
+> branches, the tag, and what staging and production may run. It is written there and
+> nowhere else; this specification refers to it. And (ADR-0007, 1.30.11) **only when its use cases pass by observation,
 > against criteria the builder did not write**: use cases live in
 > `components/<name>/tests/`, authored by the PRODUCT seat (arch where none is
 > declared — ADR-0007 as amended; the test seat, where declared, documents and runs
@@ -2046,9 +2050,9 @@ branch — no tag, no artifact, nothing to pin to):
    After shipping `1.3.0`, work-branch iteration moves the manifest through `1.3.1`,
    `1.3.2`, … — development states the component manages itself, never tagged as
    releases, never consumed. **A release zeroes the patch and bumps the minor**:
-   `1.2.2` in development releases as `1.3.0` — merge `work` → `release` per the
-   declared `branching:` policy and lay the annotated tag `v1.3.0` there (a trunk-only
-   project tags on `work`). Breaking changes bump the major. An untagged commit is not
+   `1.2.2` in development releases as `1.3.0`, merged and tagged `v1.3.0` by the path
+   in `development-and-release.md` (the one place the branches and the tag are
+   written, 1.35.3). Breaking changes bump the major. An untagged commit is not
    a release; `work` stays free to move fast. (A patch-position tag on a *released*
    line — a `v1.3.1` — is reserved for an urgent fix to that release, cut on the arch
    seat's approval: the exception, never the cadence.)
