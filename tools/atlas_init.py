@@ -272,6 +272,16 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     _sok = all(tracked(s) for s in _sc) and clean(_sc)
     check(_sok, "scripts/ committed (tracked, no uncommitted changes)",
           "" if _sok else "one or more atlas scripts are untracked or modified — git add + commit")
+    # .claude/ files the installer writes into the REPO (1.35.1, agent-eco's sync-compile:
+    # --force rewrote them, the steps staged only AGENTS.md/.atlas.conf/scripts/, verify
+    # looked only there - dirty tree, ALL PASS). The launch-dir settings.json is outside
+    # the repo and is not git's business.
+    _cl = [c for c in (".claude/settings.json", ".claude/commands/atlas-publish.md")
+           if (repo / c).exists()]
+    if _cl:
+        _cok = all(tracked(c) for c in _cl) and clean(_cl)
+        check(_cok, ".claude/ (settings.json, commands/atlas-publish.md) committed",
+              "" if _cok else "untracked or modified — git add .claude/ + commit (the installer writes them)")
     # pushed: local-only check against the upstream tracking ref (no network); a WARN,
     # not a FAIL, because verify may legitimately run between commit and push
     _ab = subprocess.run(["git", "-C", str(repo), "rev-list", "--count", "@{u}..HEAD"],
@@ -822,7 +832,10 @@ def main() -> int:
               "(absolute paths — the agent launches there, not in the repo)")
 
     print(f"\natlas_init: {len(written)} file(s) written. Next:")
-    print("  1. git add + commit these (AGENTS.md and .atlas.conf must be committed)")
+    _in_repo = sorted({str(w.resolve().relative_to(repo.resolve())).split("/")[0] + ("/" if w.resolve().relative_to(repo.resolve()).parts[1:] else "")
+                       for w in written if w.resolve().is_relative_to(repo.resolve())})
+    print("  1. git add " + " ".join(_in_repo or ["AGENTS.md", ".atlas.conf", "scripts/", ".claude/"])
+          + " && git commit   # --verify requires them COMMITTED")
     print("  2. sh scripts/atlas-context.sh   # sync + first ATLAS-CONTEXT.md")
     print("  3. register the component in the vault (component-init.md §1–3)")
     print(f"  4. python {Path(__file__).name} --component {args.slug} --verify"

@@ -6,7 +6,7 @@ updated: 2026-11-11
 
 # Next steps
 
-**TL;DR:** **v1.35.0 released 2026-11-10** on the operator's instruction, rolling up
+**TL;DR:** v1.35.1 (verify covers `.claude/`) on `main`; **v1.35.0 released 2026-11-10** on the operator's instruction, rolling up
 1.34.1 to 1.34.16; cascade brief sent to the orchestrator. Estate migrates on its word. Three needs and three hub asks
 are owed; two more asks need an operator ruling. The seat was signed out 13 to 27
 October; nothing was lost.

@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.1 — 2026-11-11
+
+**TL;DR:** `--verify` now checks the `.claude/` files the installer writes, so a seat can't
+end the upgrade with uncommitted changes and ALL PASS.
+
+- Stage `.claude/` too: `git add AGENTS.md .atlas.conf scripts/ .claude/`. The installer
+  prints the exact list.
+
+**Action:** component seats mid-migration: commit `.claude/` and re-run `--verify`.
+
 ## v1.35.0 — 2026-11-10 (estate release)
 
 **TL;DR:** everything since 1.34.0, rolled up for the whole estate.

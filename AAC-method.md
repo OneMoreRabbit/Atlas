@@ -349,6 +349,12 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.1 (2026-11-11, agent-eco's sync-compile in the 1.35.0 migration): --verify
+#   covers the .claude/ files the installer writes into the repo (settings.json,
+#   commands/atlas-publish.md) - --force rewrote them, the steps staged only
+#   AGENTS.md/.atlas.conf/scripts/, so a seat ended with a dirty tree and ALL PASS. The
+#   installer's closing hint prints the exact git add list; component-init carries the
+#   canonical upgrade steps (never skip-worktree these files).
 # 1.35.0 (2026-11-10): ESTATE RELEASE — rolls up 1.34.1-1.34.16. Every contract address
 #   checked against the directory, short forms refused; the arch briefing lists needs
 #   addressed to the arch seat; product outbox routed; verify means committed; declared

@@ -418,6 +418,19 @@ ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 ---
 
+## Upgrading to a new method pin (1.35.1) — only when your arch seat says the operator has given the go
+
+1. `sh scripts/atlas-sync.sh` — must print the new pin (NOT ADOPTED means step 2 fixes it).
+2. `python3 .atlas-method/tools/atlas_init.py --component <you> --vault-remote <vault-url> --launch-dir "$HOME/work" --force`
+3. `git add AGENTS.md .atlas.conf scripts/ .claude/ && git commit -m "atlas <pin>" && git push`
+   — the installer prints the exact list; `.claude/` holds the hooks and `/atlas-publish`,
+   which `--force` rewrites.
+4. `python3 .atlas-method/tools/atlas_init.py --component <you> --verify --launch-dir "$HOME/work"` — ALL PASS.
+   Verify checks the files are COMMITTED, so step 3 comes first. Never mark any of them
+   skip-worktree: the next upstream change breaks your pull.
+
+---
+
 ## Before you extend a mechanism, read the decision
 
 > **A structural change is a design act.** Before you add a directory, a file kind, or
