@@ -120,21 +120,46 @@ def register_url() -> str:
         or os.environ.get("ATLAS_NEEDS_REGISTER", "")
 
 
+def repo_path(url: str) -> str:
+    """`<owner>/<repo>` when the URL names a GitHub repository, else ''."""
+    for pat in (r"https?://api\.github\.com/repos/([^/]+/[^/?#]+)",
+                r"https?://raw\.githubusercontent\.com/([^/]+/[^/?#]+)",
+                r"https?://github\.com/([^/]+/[^/?#]+)"):
+        m = re.match(pat, url)
+        if m:
+            return m.group(1).removesuffix(".git")
+    return ""
+
+
 def token_for(url: str) -> str | None:
-    """The seat's own credential routing (git credential fill) — never a hardcoded file."""
+    """The seat's own credential routing (git credential fill) — never a hardcoded file.
+
+    Ask WITH the repository path first (1.35.3). A seat on the estate's GitHub App holds
+    no stored token: its credential helper mints one per repository and needs the path to
+    know which. Asked for the host alone it answers nothing, and the register read 404s
+    (arc-platform 2026-10-23, agent-eco 2026-11-11). Host-only stays as the fallback for
+    a seat with one stored token.
+    """
     m = re.match(r"https?://([^/]+)", url)
     if not m:
         return None
-    hosts = [m.group(1)]
+    asks = []
+    rp = repo_path(url)
+    if rp:
+        asks += [f"protocol=https\nhost=github.com\npath={rp}.git\n\n",
+                 f"protocol=https\nhost=github.com\npath={rp}\n\n"]
+    asks.append(f"protocol=https\nhost={m.group(1)}\n\n")
     if m.group(1) == "api.github.com":
-        hosts.append("github.com")   # a seat holding only the base-host credential is
-                                     # normal (1.30.11): fall back rather than go tokenless
-    for host in hosts:
+        # a seat holding only the base-host credential is normal (1.30.11): fall back
+        # rather than go tokenless
+        asks.append("protocol=https\nhost=github.com\n\n")
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0")     # a hook has nobody to prompt
+    for ask in asks:
         try:
-            out = subprocess.run(["git", "credential", "fill"], input=f"protocol=https\nhost={host}\n\n",
-                                 capture_output=True, text=True, timeout=10).stdout
+            out = subprocess.run(["git", "credential", "fill"], input=ask, env=env,
+                                 capture_output=True, text=True, timeout=30).stdout
             for line in out.splitlines():
-                if line.startswith("password="):
+                if line.startswith("password=") and len(line) > len("password="):
                     return line[len("password="):]
         except (OSError, subprocess.SubprocessError):
             pass
@@ -177,9 +202,11 @@ def refresh(explicit_slugs: str | None) -> int:
         # hours-old "nothing open" as current. Continue degraded; declare it.
         hint = ""
         if "404" in str(e) and not token_for(url):
-            hint = (" — NO CREDENTIAL resolved for this URL's host: to GitHub, a private "
+            hint = (" — NO CREDENTIAL resolved for this URL: to GitHub, a private "
                     "file without a token IS a 404, so this likely means missing "
-                    "credential, not missing register (1.30.11)")
+                    "credential, not missing register (1.30.11). Check: "
+                    "printf 'protocol=https\\nhost=github.com\\npath=<owner>/<repo>.git\\n\\n'"
+                    " | git credential fill")
         print(f"atlas-needs: refresh failed ({e}){hint}; keeping the existing file, marked stale",
               file=sys.stderr)
         if OUT.exists():
