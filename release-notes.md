@@ -24,6 +24,10 @@ incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
   test on the dev box does not prove a tag.
 - Only a plain annotated `vX.Y.Z` is a release; a tag with a suffix is never deployed.
 - An urgent fix branches from the live tag and is merged back into `dev`.
+- Live data: production data is kept, database changes only go forward, and they run on
+  a copy of production first.
+- Management repositories are not covered: vaults, the method repo, the estate's ansible
+  repo.
 - The arch seat sends the orchestrator the deploy ask with the tag and its commit; the
   operator says deploy each time.
 - House style rule 8 states it in every briefing. The specification, `component-init.md`

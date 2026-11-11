@@ -13,10 +13,10 @@ about: the one path from development to production — every other document refe
 Staging and production run only that tag, fetched from GitHub. This page is the one
 place the path is written; every other document refers here.
 
-It covers code that is deployed. Vaults and the method repo are not deployed
-(AAC-method §9). Version numbering is a separate protocol (AAC-method §9, "Which
-release is which"). Estate configuration (the orchestrator's ansible repo) is not
-covered; the operator has a separate decision open on it.
+It covers software that is deployed. It does not cover management repositories, which
+need no development machine: the Atlas vaults, the Nav vaults, the Atlas method repo
+and the estate's ansible repo (operator, 2026-11-11). Version numbering is a separate
+protocol (AAC-method §9, "Which release is which").
 
 ## Where things run
 
@@ -66,6 +66,15 @@ For when `dev` holds work that is not ready to go live.
 3. Merge it into `main` (into `staging` first, when there is one). Tag the next patch.
 4. Prove and deploy it as above.
 5. Merge the fix into `dev`.
+
+## Live data
+
+Once production holds real data:
+
+1. Production data is kept. Database changes only go forward and keep existing rows.
+2. A change that destroys data needs the operator's explicit word.
+3. A release's database changes run on a copy of production first.
+4. That copy leaves out anything holding a credential or a session.
 
 ## Rules in every case
 
