@@ -11,6 +11,16 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.2 — 2026-11-11
+
+**TL;DR:** staging and production run only a tagged release, built from that commit.
+
+- No seat checkout, no file from a dev box, no branch. The dev box is yours to develop
+  and test on. A release that needs anything not in it is not ready. (Estate ADR-0017.)
+
+**Action:** none; if your project's deploy takes anything from outside the release, tell
+the orchestrator.
+
 ## v1.35.1 — 2026-11-11
 
 **TL;DR:** `--verify` now checks the `.claude/` files the installer writes, so a seat can't
