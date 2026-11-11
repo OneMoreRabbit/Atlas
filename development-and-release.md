@@ -15,7 +15,8 @@ place the path is written; every other document refers here.
 
 It covers code that is deployed. Vaults and the method repo are not deployed
 (AAC-method §9). Version numbering is a separate protocol (AAC-method §9, "Which
-release is which").
+release is which"). Estate configuration (the orchestrator's ansible repo) is not
+covered; the operator has a separate decision open on it.
 
 ## Where things run
 
@@ -42,7 +43,8 @@ release is which").
 5. The staging server fetches that tag from GitHub and runs it.
 6. Test on staging. If it fails: fix on `dev`, go back to step 3, cut a new tag.
 7. It works: merge `staging` into `main`.
-8. On the operator's word, production fetches the same tag from GitHub and runs it.
+8. The arch seat sends the orchestrator the deploy ask: the tag and its commit.
+9. On the operator's word, production fetches the same tag from GitHub and runs it.
 
 ## The path — project without a staging server
 
@@ -50,25 +52,44 @@ release is which").
 2. Commit to `dev`. Push.
 3. Tested on dev and ready to go live: merge `dev` into `main`.
 4. Tag the release — an annotated tag `vX.Y.Z`. The version in the code equals the tag.
-5. On the operator's word, production fetches that tag from GitHub and runs it.
+5. Prove the tag: fetch it from GitHub into a clean environment, build it, run the
+   tests, and record the tag, its commit and the result.
+6. The arch seat sends the orchestrator the deploy ask: the tag and its commit.
+7. On the operator's word, production fetches that tag from GitHub and runs it.
 
-## Rules in both cases
+## Urgent fix to what is live
+
+For when `dev` holds work that is not ready to go live.
+
+1. Branch from the live tag.
+2. Fix and test on that branch.
+3. Merge it into `main` (into `staging` first, when there is one). Tag the next patch.
+4. Prove and deploy it as above.
+5. Merge the fix into `dev`.
+
+## Rules in every case
 
 1. **Staging and production run a tag fetched from GitHub and nothing else.** No seat
    checkout, no file copied from a seat or a dev box, no branch, no untagged commit.
-2. **A release holds everything it needs, or pins it to an exact version.** If a deploy
-   needs anything from outside the tag, the release is not ready.
-3. **Production runs the tag that was tested.** Where the tag was laid does not matter.
-4. **A tag is laid once.** Never moved, never reused, never deleted. A fix is a new tag.
-5. **`staging` and `main` change only by merge.** Nobody commits to them directly.
-6. **The running service reports its version.** After a deploy it must equal the tag.
-7. **The dev box is free.** Seats run what they like on it. None of the rules above
+2. **A release holds everything it needs, or pins it exactly**: every package at an
+   exact version (no ranges), every container base image by digest. If a deploy needs
+   anything from outside the tag, the release is not ready.
+3. **Production runs the tag that was proved**: tested on staging, or built from GitHub
+   in a clean environment. A test on the dev box does not prove a tag; the dev box may
+   run things the tag does not hold. Where the tag was laid does not matter.
+4. **Only a plain annotated `vX.Y.Z` is a release.** A tag with a suffix (`rc1`, `dev`)
+   never goes to staging or production.
+5. **A tag is laid once.** Never moved, never reused, never deleted. A fix is a new tag.
+6. **`staging` and `main` change only by merge.** Nobody commits to them directly.
+7. **The running service reports its version.** After a deploy it must equal the tag.
+8. **The dev box is free.** Seats run what they like on it. None of the rules above
    apply there.
 
 ## Who does what
 
 | Who | Does |
 |---|---|
-| The seat that owns the repo | develops, commits to `dev`, merges, tags |
-| The operator | tests, and says deploy |
-| The orchestrator | deploys the tag to staging and production |
+| The seat that owns the repo | develops, commits to `dev`, merges, tags, proves the tag |
+| The project's arch seat | confirms the proof; sends the orchestrator the deploy ask with the tag and its commit |
+| The operator | tests, and says deploy, each time |
+| The orchestrator | checks the tag against the commit, deploys it, checks the running version, reports |

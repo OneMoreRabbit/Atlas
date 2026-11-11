@@ -20,7 +20,12 @@ incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 - With a staging server: `dev` to `staging`, tag, test on staging, then `staging` to
   `main`. Without one: `dev` to `main`, tag.
 - Staging and production run only the tag, fetched from GitHub. Production runs the tag
-  that was tested.
+  that was proved: tested on staging, or built from GitHub in a clean environment. A
+  test on the dev box does not prove a tag.
+- Only a plain annotated `vX.Y.Z` is a release; a tag with a suffix is never deployed.
+- An urgent fix branches from the live tag and is merged back into `dev`.
+- The arch seat sends the orchestrator the deploy ask with the tag and its commit; the
+  operator says deploy each time.
 - House style rule 8 states it in every briefing. The specification, `component-init.md`
   and `arch-seat.md` no longer restate the path.
 - The needs helper (`scripts/atlas-needs.py`) now reads the estate register on seats that
