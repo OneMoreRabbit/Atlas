@@ -63,6 +63,10 @@ operator's rotation.
 - **Version numbering protocol**: the method says patch numbers are untagged development
   states; ArcPlatform tags fix releases and uses candidates. One rule needed (operator,
   2026-11-11: keep it a separate protocol from the path).
+- **Codex seats** (orchestrator, hub #13218, 2026-11-12): `atlas_init --arch` and
+  `--product` wire Claude only, so a Codex arch or product seat gets no briefing and no
+  guards. Proposed: (1) an `AGENTS.md` at the launch dir that says run the context script;
+  (2) Codex hooks beside the Claude ones, tested on a real Codex seat first. Needs the go.
 
 ## Backlog (ideas raised, not yet scheduled)
 
