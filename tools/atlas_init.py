@@ -6,8 +6,9 @@ Usage:  python atlas_init.py --component <name> --vault-remote <url>
 
 Installs templates/component-repo/ from this method repo into the target code repo
 (component-init.md §4 as one command): the atlas-* scripts, a filled-in .atlas.conf,
-a substituted AGENTS.md, the .gitignore entries, the /atlas-publish command, and the
-.claude hooks (merged into an existing settings.json rather than overwriting it).
+a substituted AGENTS.md, the .gitignore entries, the /atlas-publish command, and one
+hook file per agent runtime, rendered from templates/seat-hooks.json (merged into an
+existing file rather than overwriting it).
 
 Existing files are left alone unless --force; the scripts are meant to be re-copied
 this way when atlas-sync reports self-drift. Stdlib only — no dependencies.
@@ -28,7 +29,18 @@ import sys
 from pathlib import Path
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "component-repo"
+ARCH_TEMPLATES = TEMPLATES.parent / "arch-seat"
+PRODUCT_TEMPLATES = TEMPLATES.parent / "product-seat"
+TEST_TEMPLATES = TEMPLATES.parent / "test-seat"
+ROLE_TEMPLATES = {"arch": ARCH_TEMPLATES, "product": PRODUCT_TEMPLATES, "test": TEST_TEMPLATES}
+SEAT_HOOKS = TEMPLATES.parent / "seat-hooks.json"
+SEAT_INSTRUCTIONS = TEMPLATES.parent / "seat-instructions.md"
+PAYLOAD_HELPER = "atlas-payload.py"   # every write guard calls it; it sits beside them
 GITIGNORE_MARKER = "# --- Atlas ---"  # append-once marker for both fragments
+# the component scripts --verify requires present, committed and equal to the templates
+COMPONENT_SCRIPTS = ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
+                     "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py",
+                     PAYLOAD_HELPER)
 
 
 def derive_project(remote: str) -> str:
@@ -54,24 +66,96 @@ def install(dst: Path, text: str, force: bool, written: list) -> bool:
     return True
 
 
-def hook_settings(repo: Path, absolute: bool) -> dict:
-    """The hooks template, with script paths resolved for where the agent launches.
+def seat_hooks() -> dict:
+    """templates/seat-hooks.json: the hook moments, which script each role runs at each,
+    and how each agent runtime wires a moment. The one place a runtime is described."""
+    return json.loads(read(SEAT_HOOKS))
 
-    Default: ${CLAUDE_PROJECT_DIR} — correct when the agent's project dir IS the repo,
-    and portable, which matters because the repo's .claude/settings.json is COMMITTED
-    (a machine path there would break every other clone — AAC-method §9).
-    Absolute: for a launch dir outside the repo (a seat starting in the clone parent).
-    That settings file lives outside any repo, so it is machine-local by construction.
+
+def render_hooks(role: str, runtime: str, root: str) -> dict:
+    """One runtime's hook file for one role. `root` is where the role's scripts live, as
+    the hook command should spell it.
+
+    In the repo that is the runtime's own repo-root expression: the repo's hook file is
+    COMMITTED, and a machine path there would break every other clone (AAC-method §9).
+    At a launch dir outside the repo it is an absolute path; that file is outside any
+    repo, so it is machine-local by construction.
     """
-    tpl = json.loads(read(TEMPLATES / ".claude" / "settings.json"))
-    if not absolute:
-        return tpl
-    root = repo.as_posix()
-    for entries in tpl["hooks"].values():
-        for entry in entries:
-            for hook in entry["hooks"]:
-                hook["command"] = hook["command"].replace("${CLAUDE_PROJECT_DIR}", root)
-    return tpl
+    table = seat_hooks()
+    r, rt = table["roles"][role], table["runtimes"][runtime]
+    base = root + ("/" + r["dir"] if r["dir"] else "")
+    hooks: dict = {}
+    for moment, script in r["hooks"]:
+        wire = rt["wiring"].get(moment)
+        if not wire:
+            continue                           # this runtime has no such moment
+        cmd = f'sh "{base}/{script}"'
+        if moment == "shell" and not rt["ask"]:
+            # the runtime cannot put a question to the operator: the supervise guard
+            # refuses once instead (atlas-guard-supervise.sh)
+            cmd = "ATLAS_NO_ASK=1 " + cmd
+        if moment == "prompt":
+            cmd += " 2>/dev/null || true"      # a style line must never block a prompt
+        entry = {"matcher": wire["matcher"]} if "matcher" in wire else {}
+        entry["hooks"] = [{"type": "command", "command": cmd, **wire.get("handler", {})}]
+        hooks.setdefault(wire["event"], []).append(entry)
+    return {"hooks": hooks}
+
+
+def repo_root_exprs() -> list:
+    return [rt["repo_root"] for rt in seat_hooks()["runtimes"].values()]
+
+
+def resolve_cmd(cmd: str, root: Path) -> str:
+    """A hook command with every runtime's repo-root expression replaced by `root`."""
+    for expr in repo_root_exprs():
+        cmd = cmd.replace(expr, root.as_posix())
+    return cmd
+
+
+def seat_block(role: str, launch_dir: Path, root: str) -> str | None:
+    """The AGENTS.md block for a role: what a runtime with no hooks (or with hooks it has
+    not been allowed to run yet) needs to do by hand. None for a role with no briefing."""
+    r = seat_hooks()["roles"][role]
+    if "briefing" not in r:
+        return None
+    by = {moment: script for moment, script in r["hooks"]}
+    base = root + ("/" + r["dir"] if r["dir"] else "")
+    return (read(SEAT_INSTRUCTIONS).strip("\n")
+            .replace("<role>", role).replace("<briefing>", r["briefing"])
+            .replace("<scope>", r["scope"]).replace("<launch dir>", launch_dir.as_posix())
+            .replace("<context>", f"{base}/{by['session-start']}")
+            .replace("<gate>", f"{base}/{by['turn-end']}"))
+
+
+def write_seat_block(role: str, launch_dir: Path, root: str, written: list) -> None:
+    """Insert the role's block into AGENTS.md at the launch dir, or replace it between
+    its markers. Everything outside the markers is the seat's own and is never touched."""
+    block = seat_block(role, launch_dir, root)
+    if block is None:
+        return
+    dst = launch_dir / "AGENTS.md"
+    start, end = f"<!-- atlas:{role}-seat", f"<!-- /atlas:{role}-seat -->"
+    text = read(dst) if dst.exists() else ""
+    if start in text and end in text[text.index(start):]:
+        a = text.index(start)
+        new = text[:a] + block + text[text.index(end, a) + len(end):]
+    else:
+        gap = "" if not text else "\n" if text.endswith("\n") else "\n\n"
+        new = text + gap + block + "\n"
+    if new == text:
+        print(f"  ok     {dst} (Atlas {role}-seat block present)")
+        return
+    with dst.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(new)
+    written.append(dst)
+    print(f"  write  {dst} (Atlas {role}-seat block; the rest of the file is untouched)")
+
+
+def print_runtime_notes(launch_dir: Path) -> None:
+    for name, rt in seat_hooks()["runtimes"].items():
+        if rt.get("after_install"):
+            print(f"  note   {name}: " + rt["after_install"].replace("<launch dir>", str(launch_dir)))
 
 
 def portable_launch_dir(launch_dir: Path) -> str:
@@ -119,12 +203,13 @@ def conf_launch_dir(repo: Path) -> Path | None:
     return Path(raw).expanduser().resolve()
 
 
-def prune_dup_hooks(launch_dir: Path, keep_root: Path, event: str, script: str) -> int:
+def prune_dup_hooks(launch_dir: Path, hook_file: str, keep_root: Path, event: str,
+                    script: str) -> int:
     """One <script> hook per launch dir for <event>: keep keep_root's entry, drop other
     repos'. Seat scripts (context, write guard) cover their siblings, so one entry serves
     the whole seat; duplicates double-inject the briefing (1.21/1.27.4) or, for the write
     guard, deny each other's outbox (1.28.3, arc-platform). Idempotent."""
-    dst = launch_dir / ".claude" / "settings.json"
+    dst = launch_dir / hook_file
     if not dst.exists():
         return 0
     try:
@@ -146,33 +231,33 @@ def prune_dup_hooks(launch_dir: Path, keep_root: Path, event: str, script: str) 
     return removed
 
 
-def prune_context_hooks(launch_dir: Path, keep_root: Path) -> int:
-    return prune_dup_hooks(launch_dir, keep_root, "SessionStart", "atlas-context.sh")
-
-
 def any_context_hook(launch_dir: Path, exclude_root: Path):
-    """ANY SessionStart atlas-context hook installed at this launch dir from another
-    repo. One is enough: since 1.21 the context script emits a seat briefing covering
-    every wired sibling it discovers, so a second hook doubles the whole injection."""
-    dst = launch_dir / ".claude" / "settings.json"
-    if not dst.exists():
-        return None
-    try:
-        entries = json.loads(read(dst)).get("hooks", {}).get("SessionStart", [])
-    except json.JSONDecodeError:
-        return None
-    for entry in entries:
-        for hook in entry.get("hooks", []):
-            m = re.search(r'"([^"]+)/scripts/atlas-context\.sh"', hook.get("command", ""))
-            if m and Path(m.group(1)) != exclude_root:
-                return Path(m.group(1))
+    """ANY session-start atlas-context hook installed at this launch dir from another
+    repo, in any runtime's hook file. One is enough: since 1.21 the context script emits
+    a seat briefing covering every wired sibling it discovers, so a second hook doubles
+    the whole injection. That repo owns the launch-dir hooks for the whole seat."""
+    for rt in seat_hooks()["runtimes"].values():
+        dst = launch_dir / rt["file"]
+        if not dst.exists():
+            continue
+        try:
+            entries = json.loads(read(dst)).get("hooks", {}).get(
+                rt["wiring"]["session-start"]["event"], [])
+        except (json.JSONDecodeError, KeyError):
+            continue
+        for entry in entries:
+            for hook in entry.get("hooks", []):
+                m = re.search(r'"([^"]+)/scripts/atlas-context\.sh"', hook.get("command", ""))
+                if m and Path(m.group(1)) != exclude_root:
+                    return Path(m.group(1))
     return None
 
 
-def merge_settings(target: Path, tpl: dict, force: bool, written: list,
-                   repo_root: Path | None = None) -> None:
-    """Merge the hooks into an existing settings.json; never clobber."""
-    dst = target / ".claude" / "settings.json"
+def merge_settings(target: Path, hook_file: str, tpl: dict, force: bool, written: list,
+                   own: tuple = ()) -> None:
+    """Merge the hooks into an existing hook file; never clobber. `own` is the path
+    strings that mark an entry as this install's (replaced, never appended)."""
+    dst = target / hook_file
     if not dst.exists():
         install(dst, json.dumps(tpl, indent=2) + "\n", force, written)
         return
@@ -181,12 +266,8 @@ def merge_settings(target: Path, tpl: dict, force: bool, written: list,
     added = removed = 0
 
     def is_this_repos(entry) -> bool:
-        # an atlas hook already pointing into THIS repo (absolute or project-dir form)
         cmds = " ".join(h.get("command", "") for h in entry.get("hooks", []))
-        if "atlas-" not in cmds:
-            return False
-        return (repo_root is not None and f"{repo_root.as_posix()}/scripts/" in cmds) \
-            or "${CLAUDE_PROJECT_DIR}/scripts/" in cmds
+        return "atlas-" in cmds and any(o in cmds for o in own)
 
     for event, entries in tpl["hooks"].items():
         bucket = hooks.setdefault(event, [])
@@ -206,6 +287,173 @@ def merge_settings(target: Path, tpl: dict, force: bool, written: list,
         print(f"  merge  {dst} (+{added}/-{removed} hook entries)")
     else:
         print(f"  ok     {dst} (hooks already wired)")
+
+
+def conf_value(conf: Path, key: str) -> str | None:
+    if not conf.exists():
+        return None
+    m = re.search(rf'^{key}="?([^"\r\n]+)"?', read(conf), re.MULTILINE)
+    return m.group(1).replace("$HOME", str(Path.home())) if m else None
+
+
+def seat_scripts(role: str) -> list:
+    """(name, template) for every script an arch, product or test seat keeps at its
+    launch dir: the role's hook scripts plus the payload helper its write guard calls."""
+    names = [script for _, script in seat_hooks()["roles"][role]["hooks"]] + [PAYLOAD_HELPER]
+    return [(n, ROLE_TEMPLATES[role] / n if (ROLE_TEMPLATES[role] / n).exists()
+             else TEMPLATES / "scripts" / n) for n in names]
+
+
+def copy_seat_scripts(role: str, launch_dir: Path, force: bool, written: list,
+                      keep_differing: bool = False) -> None:
+    for name, src in seat_scripts(role):
+        dst = launch_dir / name
+        if keep_differing and dst.exists() and not force and read(dst) != read(src):
+            print(f"  skip   {dst} exists and differs — re-run with --force to overwrite")
+            continue
+        dst.write_text(read(src), encoding="utf-8", newline="\n")
+        dst.chmod(0o755)
+        written.append(dst)
+        print(f"  write  {dst}")
+
+
+def wire_seat(role: str, launch_dir: Path, force: bool, written: list) -> None:
+    """Hooks for an arch, product or test seat: every runtime's hook file at the launch
+    dir, with absolute paths (the scripts sit beside them), plus the AGENTS.md block."""
+    table = seat_hooks()
+    scripts = [script for _, script in table["roles"][role]["hooks"]]
+    own = tuple(f"{root}/{s}" for s in scripts for root in {launch_dir.as_posix(), str(launch_dir)})
+    for name, rt in table["runtimes"].items():
+        merge_settings(launch_dir, rt["file"], render_hooks(role, name, launch_dir.as_posix()),
+                       force, written, own)
+    write_seat_block(role, launch_dir, launch_dir.as_posix(), written)
+
+
+def fire_write(cmd: str, sample: dict, path: str, cwd: Path) -> int | None:
+    """Run a write-guard hook command the way a runtime would, with that runtime's
+    sample payload naming `path`. -> the exit code, None if it could not run."""
+    def fill(v):
+        if isinstance(v, str):
+            return v.replace("<path>", path)
+        if isinstance(v, dict):
+            return {k: fill(x) for k, x in v.items()}
+        return v
+    payload = dict(fill(sample), cwd=str(cwd))
+    try:
+        return subprocess.run(["sh", "-c", cmd], input=json.dumps(payload), cwd=str(cwd),
+                              capture_output=True, text=True, timeout=60).returncode
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def check_launch_hooks(check, role: str, launch_dir: Path, vault: Path | None,
+                       component: str = "", block: bool = True) -> None:
+    """The launch-dir rung of --verify, once per runtime: the hook file wires each of
+    the role's scripts exactly once, the scripts resolve, and the style line and the
+    write guard are FIRED as wired (1.33.1, orchestrator finding: a hook that blocked
+    every prompt passed a verify that only counted it). The write guard gets the
+    runtime's own payload shape, at a path it must allow and a path it must refuse."""
+    table = seat_hooks()
+    r = table["roles"][role]
+    for rt_name, rt in table["runtimes"].items():
+        f = launch_dir / rt["file"]
+        check(f.exists(), f"{rt_name}: hook file at the LAUNCH dir",
+              "" if f.exists() else f"{f} missing — re-run atlas_init")
+        if not f.exists():
+            continue
+        try:
+            hooks = json.loads(read(f)).get("hooks", {})
+        except json.JSONDecodeError as exc:
+            check(False, f"{rt_name}: {rt['file']} parses", str(exc))
+            continue
+        for moment, script in r["hooks"]:
+            wire = rt["wiring"].get(moment)
+            if not wire:
+                continue
+            # a component's hooks may be a sibling member's (one set serves the seat);
+            # a launch-dir role's are its own
+            needles = ([f"/{r['dir']}/{script}"] if r["dir"] else
+                       [f"{launch_dir.as_posix()}/{script}", f"{launch_dir}/{script}"])
+            cmds = [h.get("command", "") for e in hooks.get(wire["event"], [])
+                    for h in e.get("hooks", [])
+                    if any(n in h.get("command", "") for n in needles)]
+            check(len(cmds) == 1, f"{rt_name}: exactly one {script} hook ({wire['event']})",
+                  "" if len(cmds) == 1 else "not wired — re-run atlas_init" if not cmds
+                  else f"{len(cmds)} found — re-run atlas_init to prune")
+            if not cmds:
+                continue
+            cmd = resolve_cmd(cmds[0], launch_dir)
+            m = re.search(r'"([^"]*atlas-[a-z-]+\.sh)"', cmd)
+            if m:
+                check(Path(m.group(1)).exists(), f"{rt_name}: {script} resolves",
+                      "" if Path(m.group(1)).exists() else
+                      f"{m.group(1)} — launched elsewhere? re-run with --launch-dir")
+            if moment == "prompt":
+                try:
+                    pr = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True,
+                                        stdin=subprocess.DEVNULL, timeout=10)
+                    fired = pr.returncode == 0 and "HOUSE STYLE" in pr.stdout
+                except (OSError, subprocess.SubprocessError):
+                    fired = False
+                check(fired, f"{rt_name}: style hook FIRES and emits the style line",
+                      "" if fired else f"command failed as wired: {cmd[:100]}")
+            if moment == "write" and vault is not None:
+                for want, key, word in ((0, "allowed", "ALLOWS"), (2, "refused", "REFUSES")):
+                    rel = r[key].replace("<component>", component)
+                    rc = fire_write(cmd, rt["sample_write"], (vault / rel).as_posix(), launch_dir)
+                    check(rc == want, f"{rt_name}: write guard {word} {rel}",
+                          "" if rc == want else f"exit {rc}, expected {want} — the guard as "
+                          "wired is not this method version's; re-run atlas_init with --force")
+    if block and "briefing" in r:
+        ag = launch_dir / "AGENTS.md"
+        has = ag.exists() and f"<!-- atlas:{role}-seat" in read(ag)
+        check(has, f"AGENTS.md at the launch dir carries the Atlas {role}-seat block",
+              "" if has else "the fallback for a runtime that runs no hooks — re-run atlas_init")
+
+
+def verify_seat(role: str, launch_dir: Path) -> int:
+    """--verify for an arch, product or test seat at its launch dir. Reads and fires;
+    writes nothing (1.34.8, idea.arch: --arch --verify re-installed the hooks)."""
+    ok = True
+
+    def check(good: bool, label: str, detail: str = "") -> None:
+        nonlocal ok
+        ok = ok and good
+        print(f"  {'PASS' if good else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
+
+    r = seat_hooks()["roles"][role]
+    print(f"atlas_init --{role} --verify: launch dir {launch_dir}")
+    conf = launch_dir / f".atlas-{role}.conf"
+    raw = conf_value(conf, "ATLAS_VAULT")
+    vault = Path(raw) if raw else None
+    good = vault is not None and (vault / "registry" / "io-graph.yml").exists()
+    check(good, f"{conf.name} names the vault checkout",
+          "" if good else f"{conf} — install with atlas_init --{role} first")
+    missing = [n for n, _ in seat_scripts(role) if not (launch_dir / n).exists()]
+    drifted = [n for n, src in seat_scripts(role)
+               if (launch_dir / n).exists() and read(launch_dir / n) != read(src)]
+    check(not missing, "seat scripts present at the launch dir",
+          "MISSING: " + ", ".join(missing) + f" -- re-run atlas_init --{role}" if missing else "")
+    check(not drifted, "seat scripts match this method checkout's templates",
+          "DRIFTED: " + ", ".join(drifted) + f" -- re-run atlas_init --{role} --force" if drifted else "")
+    check_launch_hooks(check, role, launch_dir, vault if good else None)
+    if "briefing" in r:
+        # The rung above "wired": the briefing script must SUCCEED from the launch dir
+        # (1.28.2, arc-platform), run the way the runtime runs it.
+        ctx = launch_dir / dict((m, s) for m, s in r["hooks"])["session-start"]
+        try:
+            run = subprocess.run(["sh", str(ctx)], cwd=str(launch_dir), stdin=subprocess.DEVNULL,
+                                 capture_output=True, text=True, timeout=120)
+            fired = run.returncode == 0 and r["briefing"] in run.stdout
+            tail = (run.stderr.strip().splitlines() or [""])[-1][:140]
+            check(fired, f"{ctx.name} runs from the launch dir, exits 0, emits a briefing",
+                  "" if fired else f"exit {run.returncode}; {tail}")
+        except (OSError, subprocess.SubprocessError) as exc:
+            check(False, f"{ctx.name} runs", str(exc)[:140])
+    print_runtime_notes(launch_dir)
+    print(f"\natlas_init --{role} --verify: " + ("all checks passed" if ok else
+          "FAILURES above — the hook layer is not live; fix before trusting the write guard"))
+    return 0 if ok else 1
 
 
 def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
@@ -266,22 +514,22 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
         check(_ok, f"{_f} committed (tracked, no uncommitted changes)",
               "" if _ok else ("NOT tracked" if not tracked(_f) else "has UNCOMMITTED changes")
               + " — git add + commit it")
-    _sc = [f"scripts/{n}" for n in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
-           "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py")
-           if (repo / "scripts" / n).exists()]
+    _sc = [f"scripts/{n}" for n in COMPONENT_SCRIPTS if (repo / "scripts" / n).exists()]
     _sok = all(tracked(s) for s in _sc) and clean(_sc)
     check(_sok, "scripts/ committed (tracked, no uncommitted changes)",
           "" if _sok else "one or more atlas scripts are untracked or modified — git add + commit")
-    # .claude/ files the installer writes into the REPO (1.35.1, agent-eco's sync-compile:
-    # --force rewrote them, the steps staged only AGENTS.md/.atlas.conf/scripts/, verify
-    # looked only there - dirty tree, ALL PASS). The launch-dir settings.json is outside
-    # the repo and is not git's business.
-    _cl = [c for c in (".claude/settings.json", ".claude/commands/atlas-publish.md")
-           if (repo / c).exists()]
+    # The hook files and the command the installer writes into the REPO (1.35.1,
+    # agent-eco's sync-compile: --force rewrote them, the steps staged only
+    # AGENTS.md/.atlas.conf/scripts/, verify looked only there - dirty tree, ALL PASS).
+    # A launch-dir hook file is outside the repo and is not git's business.
+    _hf = [rt["file"] for rt in seat_hooks()["runtimes"].values()]
+    _cl = [c for c in _hf + [".claude/commands/atlas-publish.md"] if (repo / c).exists()]
     if _cl:
         _cok = all(tracked(c) for c in _cl) and clean(_cl)
-        check(_cok, ".claude/ (settings.json, commands/atlas-publish.md) committed",
-              "" if _cok else "untracked or modified — git add .claude/ + commit (the installer writes them)")
+        check(_cok, "hook files and commands committed (" + ", ".join(_cl) + ")",
+              "" if _cok else "untracked or modified — git add "
+              + " ".join(sorted({c.split("/")[0] + "/" for c in _cl}))
+              + " + commit (the installer writes them)")
     # pushed: local-only check against the upstream tracking ref (no network); a WARN,
     # not a FAIL, because verify may legitimately run between commit and push
     _ab = subprocess.run(["git", "-C", str(repo), "rev-list", "--count", "@{u}..HEAD"],
@@ -299,8 +547,7 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
               "found " + ", ".join(bad) + " — re-run atlas_init --force (it fills them in "
               "place), then commit" if bad else "")
     drifted = []
-    for name in ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
-                 "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py"):
+    for name in COMPONENT_SCRIPTS:
         dst = repo / "scripts" / name
         check(dst.exists(), f"scripts/{name}")
         src = TEMPLATES / "scripts" / name
@@ -312,53 +559,11 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     check(not drifted, "scripts match this method checkout's templates",
           "DRIFTED: " + ", ".join(drifted) + " -- re-run atlas_init with --force" if drifted else "")
 
-    settings = launch_dir / ".claude" / "settings.json"
-    check(settings.exists(), f"hooks settings at the LAUNCH dir", str(settings))
-    if settings.exists():
-        try:
-            hooks = json.loads(read(settings)).get("hooks", {})
-        except json.JSONDecodeError as exc:
-            check(False, "settings.json parses", str(exc))
-            hooks = {}
-        ctx_hooks = sum(1 for e in hooks.get("SessionStart", []) for h in e.get("hooks", [])
-                        if "atlas-context.sh" in h.get("command", ""))
-        check(ctx_hooks <= 1, "exactly one SessionStart atlas-context hook at the launch dir",
-              f"{ctx_hooks} found — each emits the whole seat briefing; re-run atlas_init to prune" if ctx_hooks > 1 else "")
-        # the style hook is EXECUTED, not just counted (1.33.1, orchestrator finding:
-        # a braceless variable shipped a hook that blocked every prompt while verify
-        # said PASS — verify must fire what the harness will fire)
-        for e in hooks.get("UserPromptSubmit", []):
-            for h in e.get("hooks", []):
-                if "atlas-style" not in h.get("command", ""):
-                    continue
-                import subprocess as _sp
-                cmd = h["command"].replace("${CLAUDE_PROJECT_DIR}", str(launch_dir or repo))
-                try:
-                    r = _sp.run(["sh", "-c", cmd], capture_output=True, text=True, timeout=10)
-                    fired = r.returncode == 0 and "HOUSE STYLE" in r.stdout
-                except (OSError, _sp.SubprocessError):
-                    fired = False
-                check(fired, "UserPromptSubmit style hook FIRES and emits the style line",
-                      "" if fired else f"command failed as wired: {cmd[:100]}")
-                check("$CLAUDE_PROJECT_DIR/" not in h["command"].replace("${CLAUDE_PROJECT_DIR}", ""),
-                      "style hook has no unresolved braceless variable")
-        wg_hooks = sum(1 for e in hooks.get("PreToolUse", []) for h in e.get("hooks", [])
-                       if "atlas-guard-write.sh" in h.get("command", ""))
-        check(wg_hooks <= 1, "exactly one write-guard hook at the launch dir",
-              f"{wg_hooks} found; two per-repo guards deny each other's outbox (1.28.3) -- re-run atlas_init" if wg_hooks > 1 else "")
-        for event in ("SessionStart", "PreToolUse", "Stop"):
-            cmds = [h["command"] for e in hooks.get(event, []) for h in e.get("hooks", [])
-                    if "atlas-" in h.get("command", "")]
-            check(bool(cmds), f"{event} hook registered")
-            for cmd in cmds:
-                m = re.search(r'"([^"]*atlas-[a-z-]+\.sh)"', cmd)
-                path = m.group(1) if m else None
-                if path and "${CLAUDE_PROJECT_DIR}" in path:
-                    resolved = Path(path.replace("${CLAUDE_PROJECT_DIR}", str(launch_dir)))
-                    check(resolved.exists(), f"{event} script resolves",
-                          f"{resolved} — launched elsewhere? re-run with --launch-dir")
-                elif path:
-                    check(Path(path).exists(), f"{event} script resolves", path)
+    _v = Path(conf_value(conf, "ATLAS_VAULT") or ".atlas")
+    # a launch dir outside the repo carries the AGENTS.md block; in the repo itself the
+    # committed AGENTS.md already says it
+    check_launch_hooks(check, "component", launch_dir, _v if _v.is_absolute() else repo / _v,
+                       slug, block=launch_dir != repo)
     # The rung above "firing": the SessionStart script must SUCCEED. A registered hook
     # whose script exits non-zero on the healthy path passed every check here while
     # reporting failure at every session start (arc-platform platform seat, 2026-09-03).
@@ -376,14 +581,10 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
         except (OSError, subprocess.TimeoutExpired) as exc:
             check(False, "scripts/atlas-context.sh runs", str(exc)[:140])
 
+    print_runtime_notes(launch_dir)
     print("\natlas_init --verify: " + ("all checks passed" if ok else
           "FAILURES above — the hook layer is not live; fix before trusting the write guard"))
     return 0 if ok else 1
-
-
-ARCH_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "arch-seat"
-PRODUCT_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "product-seat"
-TEST_TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "test-seat"
 
 
 def install_test(vault: Path, launch_dir: Path, force: bool) -> int:
@@ -398,10 +599,8 @@ def install_test(vault: Path, launch_dir: Path, force: bool) -> int:
     if not re.search(r"^\s*role:\s*test\s*$", graph_text, re.MULTILINE):
         print("  warn   the io-graph declares no `role: test` entry — ask the arch seat "
               "to add one (the seat is not yet declared, §10)")
-    dst = launch_dir / "atlas-test-guard.sh"
-    dst.write_text(read(TEST_TEMPLATES / "atlas-test-guard.sh"), encoding="utf-8", newline="\n")
-    dst.chmod(0o755)
-    print(f"  write  {dst}")
+    written: list = []
+    copy_seat_scripts("test", launch_dir, force, written)
     tdir = vault / "components" / "test"
     (tdir / "docs").mkdir(parents=True, exist_ok=True)
     cmd = tdir / "component.md"
@@ -411,11 +610,9 @@ def install_test(vault: Path, launch_dir: Path, force: bool) -> int:
     conf = launch_dir / ".atlas-test.conf"
     conf.write_text(f'ATLAS_VAULT="{vault}"\n', encoding="utf-8", newline="\n")
     print(f"  write  {conf}")
-    tpl = {"hooks": {"PreToolUse": [{"matcher": "Write|Edit|NotebookEdit",
-           "hooks": [{"type": "command", "command": f'sh "{launch_dir}/atlas-test-guard.sh"'}]}]}}
-    merge_settings(launch_dir, tpl, force, [], repo_root=launch_dir)
-    print("atlas_init --test: done — tests/-scoped write guard installed")
-    return 0
+    wire_seat("test", launch_dir, force, written)
+    print("atlas_init --test: installed — tests/-scoped write guard. Checking it:")
+    return verify_seat("test", launch_dir)
 
 
 def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None = None) -> int:
@@ -430,17 +627,8 @@ def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None 
     if not re.search(r"^product:", graph_text, re.MULTILINE):
         print("  warn   the io-graph declares no `product:` block — the seat is not yet "
               "declared (§10). Ask the arch seat to add `product: {enabled: true}`.")
-    written = []
-    (launch_dir / "atlas-style.sh").write_text(
-        read(TEMPLATES / "scripts" / "atlas-style.sh"), encoding="utf-8", newline="\n")
-    (launch_dir / "atlas-style.sh").chmod(0o755)
-    for name in ("atlas-product-context.sh", "atlas-product-guard.sh",
-                 "atlas-product-align.sh"):
-        dst = launch_dir / name
-        dst.write_text(read(PRODUCT_TEMPLATES / name), encoding="utf-8", newline="\n")
-        dst.chmod(0o755)
-        written.append(dst)
-        print(f"  write  {dst}")
+    written: list = []
+    copy_seat_scripts("product", launch_dir, force, written)
     (vault / "product" / "requirements").mkdir(parents=True, exist_ok=True)
     tpl = vault / "product" / "requirements" / "requirement-template.md"
     if not tpl.exists():
@@ -461,26 +649,12 @@ def install_product(vault: Path, launch_dir: Path, force: bool, nav: str | None 
     conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
                     encoding="utf-8", newline="\n")
     print(f"  write  {conf} (vault={kept['ATLAS_VAULT']})")
-    tpl_settings = json.loads(read(PRODUCT_TEMPLATES / "settings.json"))
     # hooks live at the launch dir with absolute paths (the arch launch-dir lesson, 1.28.2)
-    for ev in tpl_settings["hooks"].values():
-        for entry in ev:
-            for h in entry["hooks"]:
-                h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}", str(launch_dir))
-    merge_settings(launch_dir, tpl_settings, force, written, repo_root=launch_dir)
-    # prove the reorientation hook FIRES from the launch dir (the 1.28.2 rung)
-    try:
-        r = subprocess.run(["sh", str(launch_dir / "atlas-product-context.sh")],
-                           cwd=str(launch_dir), stdin=subprocess.DEVNULL,
-                           capture_output=True, text=True, timeout=120)
-        ok = r.returncode == 0 and "ATLAS-PRODUCT-CONTEXT" in r.stdout
-        print("  verify the product reorientation hook fires from the launch dir: "
-              + ("PASS" if ok else f"FAIL (exit {r.returncode}) {(r.stderr or '').strip()[:140]}"))
-    except (OSError, subprocess.SubprocessError) as e:
-        print(f"  verify the product hook fires: FAIL ({str(e)[:120]})")
-    print("atlas_init --product: done — reorientation + product/** write guard + "
-          "alignment gate installed")
-    return 0
+    wire_seat("product", launch_dir, force, written)
+    print("atlas_init --product: installed — reorientation, product/** write guard and "
+          "alignment gate. Checking them:")
+    # prove the hooks FIRE from the launch dir (the 1.28.2 rung), not just that files exist
+    return verify_seat("product", launch_dir)
 
 
 def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
@@ -493,28 +667,9 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
               "at the project VAULT checkout (the arch seat's working copy)",
               file=sys.stderr)
         return 2
-    written = []
-    style_src = TEMPLATES / "scripts" / "atlas-style.sh"
-    (launch_dir / "atlas-style.sh").write_text(read(style_src), encoding="utf-8", newline="\n")
-    (launch_dir / "atlas-style.sh").chmod(0o755)
-    for name in ("atlas-arch-context.sh", "atlas-arch-guard.sh", "atlas-arch-write.sh"):
-        src, dst = ARCH_TEMPLATES / name, launch_dir / name
-        if dst.exists() and not force and read(dst) == read(src):
-            pass
-        elif dst.exists() and not force:
-            print(f"  skip   {dst} exists and differs — re-run with --force to overwrite")
-            continue
-        dst.write_text(read(src), encoding="utf-8", newline="\n")
-        os.chmod(dst, 0o755)
-        written.append(dst)
-        print(f"  write  {dst}")
-    tpl = json.loads(read(ARCH_TEMPLATES / ".claude" / "settings.json"))
-    for entry_list in tpl["hooks"].values():   # scripts live beside settings: abs paths
-        for entry in entry_list:
-            for h in entry.get("hooks", []):
-                h["command"] = h["command"].replace("${CLAUDE_PROJECT_DIR}",
-                                                    str(launch_dir))
-    merge_settings(launch_dir, tpl, force, written, repo_root=vault)
+    written: list = []
+    copy_seat_scripts("arch", launch_dir, force, written, keep_differing=True)
+    wire_seat("arch", launch_dir, force, written)
     # MERGE the conf, never clobber it (1.26.1, canary catch: the rewrite dropped an
     # existing ATLAS_METHOD and every arch seat's reorientation died on a garbage path).
     # The installer also knows the method checkout it is running from — record it.
@@ -545,22 +700,11 @@ def install_arch(vault: Path, launch_dir: Path, force: bool) -> int:
     conf.write_text("".join(f'{k}="{v}"\n' for k, v in kept.items()),
                     encoding="utf-8", newline="\n")
     print(f"  write  {conf} (vault={kept['ATLAS_VAULT']}, method={kept['ATLAS_METHOD']})")
-    # Prove it FIRES, not just that files exist (1.28.2, arc-platform ask #2): run the
-    # reorientation hook the way the harness will, from the launch dir, and require a
-    # briefing on stdout. This is the arch analogue of the component --verify rung (1.12).
-    ctx = launch_dir / "atlas-arch-context.sh"
-    try:
-        env = dict(os.environ, ATLAS_VAULT=str(vault), ATLAS_METHOD=kept["ATLAS_METHOD"])
-        r = subprocess.run(["sh", str(ctx)], cwd=str(launch_dir), env=env,
-                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
-        ok = r.returncode == 0 and r.stdout.lstrip().startswith("# ATLAS-CONTEXT")
-        print(("  verify the arch reorientation hook fires from the launch dir: "
-               + ("PASS" if ok else f"FAIL (exit {r.returncode}) — {(r.stderr or '').strip()[:160]}")))
-    except (OSError, subprocess.SubprocessError) as e:
-        print(f"  verify the arch hook fires: FAIL ({str(e)[:120]})")
-    print("atlas_init --arch: done — reorientation (SessionStart) + alignment gate "
-          "(Stop) installed; both fire on compact as well as startup")
-    return 0
+    print("atlas_init --arch: installed — reorientation, alignment gate and write guard; "
+          "the first two fire on compact as well as startup. Checking them:")
+    # Prove they FIRE, not just that files exist (1.28.2, arc-platform ask #2): the arch
+    # analogue of the component --verify rung (1.12).
+    return verify_seat("arch", launch_dir)
 
 
 def main() -> int:
@@ -610,12 +754,12 @@ def main() -> int:
                     "(default: derived from the vault remote name)")
     ap.add_argument("--repo", default=".", help="target code-repo root (default: cwd)")
     ap.add_argument("--force", action="store_true",
-                    help="overwrite existing files (settings.json is always merged)")
+                    help="overwrite existing files (hook files are always merged)")
     ap.add_argument("--launch-dir", metavar="PATH",
                     help="where the agent actually starts, if not the repo root (a seat "
                          "launching in the clone parent, e.g. $HOME/work). Hooks are also "
                          "installed there with absolute paths, since the repo's own "
-                         ".claude/settings.json is not loaded when it is not the project dir")
+                         "hook files are not loaded when it is not the project dir")
     ap.add_argument("--verify", action="store_true",
                     help="check an existing install end to end and exit (no writes)")
     args = ap.parse_args()
@@ -631,45 +775,24 @@ def main() -> int:
     if not repo.is_dir():
         print(f"atlas_init: no such directory {repo}", file=sys.stderr)
         return 2
-    if args.test_role:
+    role = "test" if args.test_role else "product" if args.product else "arch" if args.arch else None
+    if role:
         ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
+        if args.verify:
+            return verify_seat(role, ld)
         if ld == repo:
-            print("atlas_init --test: refusing to install hooks into the vault working "
-                  f"tree - re-run with `--launch-dir {repo.parent}`.", file=sys.stderr)
-            return 2
-        return install_test(repo, ld, args.force)
-    if args.product:
-        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
-        if ld == repo:
-            print("atlas_init --product: refusing to install hooks into the vault working "
-                  f"tree — hooks load from the launch dir. Re-run with `--launch-dir {repo.parent}`.",
-                  file=sys.stderr)
-            return 2
-        return install_product(repo, ld, args.force, args.nav)
-    if args.arch and args.verify:
-        # verify READS (1.34.8, idea.arch: --arch --verify re-installed hooks and
-        # rewrote .atlas-arch.conf). Fire the installed hook from the launch dir; write
-        # nothing.
-        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
-        ctx = ld / "atlas-arch-context.sh"
-        if not ctx.exists():
-            print(f"  FAIL  no {ctx} — install with atlas_init --arch first")
-            return 1
-        r = subprocess.run(["sh", str(ctx)], cwd=str(ld), stdin=subprocess.DEVNULL,
-                           capture_output=True, text=True, timeout=120)
-        ok = r.returncode == 0 and "ATLAS-CONTEXT" in r.stdout
-        print("  " + ("PASS" if ok else "FAIL") + "  the arch reorientation hook fires from "
-              f"the launch dir (exit {r.returncode})")
-        return 0 if ok else 1
-    if args.arch:
-        ld = Path(args.launch_dir).resolve() if args.launch_dir else Path.cwd().resolve()
-        if ld == repo:
-            print("atlas_init --arch: refusing to install hooks into the vault working "
+            print(f"atlas_init --{role}: refusing to install hooks into the vault working "
                   "tree — hooks load from where the AGENT LAUNCHES (typically the vault's "
                   f"parent), not the checkout. Re-run with `--launch-dir {repo.parent}` "
                   "(commonly \"$HOME/work\").", file=sys.stderr)
             return 2
-        return install_arch(repo, ld, args.force)
+        if role == "test":
+            rc = install_test(repo, ld, args.force)
+        elif role == "product":
+            rc = install_product(repo, ld, args.force, args.nav)
+        else:
+            rc = install_arch(repo, ld, args.force)
+        return rc
     if not args.slug:
         ap.error("--component is required (component mode; use --arch/--product/--test "
                  "for those seats)")
@@ -797,44 +920,55 @@ def main() -> int:
     install(repo / ".claude" / "commands" / "atlas-publish.md",
             read(TEMPLATES / ".claude" / "commands" / "atlas-publish.md"),
             args.force, written)
-    merge_settings(repo, hook_settings(repo, absolute=False), args.force, written,
-                   repo_root=repo)
+    table = seat_hooks()
+    comp_hooks = table["roles"]["component"]["hooks"]
+    own = tuple(f"{root}/scripts/" for root in [repo.as_posix()] + repo_root_exprs())
+    for name, rt in table["runtimes"].items():
+        merge_settings(repo, rt["file"], render_hooks("component", name, rt["repo_root"]),
+                       args.force, written, own)
     if launch_dir and launch_dir != repo:
-        tpl = hook_settings(repo, absolute=True)
+        # ONE hook of each kind per launch dir (1.21 for the briefing; 1.28.3 for the
+        # guards; 1.34.3 for the style line). The SEAT scripts discover every wired
+        # sibling — the context script briefs the whole seat, the write guard allows the
+        # union of its components. A second repo's hooks would only double-inject the
+        # briefing or, for the write guard, deny this repo's outbox. So the first member
+        # installed owns the launch-dir hooks; the others add none and prune strays.
         other = any_context_hook(launch_dir, exclude_root=repo)
-        # 1.27.4 (arc-platform finding): a pre-1.21 seat kept N per-repo SessionStart hooks,
-        # and each now emits the whole SEAT briefing — 4 x 75KB, 3.6x worse than the bug
-        # 1.21 fixed, silently. Skipping the add was never enough: prune the others.
         keep = other or repo
-        for _ev, _sc, _msg in (("SessionStart", "atlas-context.sh", "one seat briefing, emitted once"),
-                               ("UserPromptSubmit", "atlas-style.sh", "one style line per turn"),
-                               ("PreToolUse", "atlas-guard-write.sh", "one write guard (union of the seat's slugs)"),
-                               ("Stop", "atlas-guard-publish.sh", "one publish guard"),
-                               ("PreToolUse", "atlas-guard-supervise.sh", "one supervise guard")):
-            _pr = prune_dup_hooks(launch_dir, keep, _ev, _sc)
-            if _pr:
-                print(f"  prune  {_pr} duplicate {_sc} hook(s) at {launch_dir} -- {_msg}")
+        for name, rt in table["runtimes"].items():
+            for moment, script in comp_hooks:
+                if moment not in rt["wiring"]:
+                    continue
+                _pr = prune_dup_hooks(launch_dir, rt["file"], keep,
+                                      rt["wiring"][moment]["event"], script)
+                if _pr:
+                    print(f"  prune  {_pr} duplicate {script} hook(s) in {launch_dir / rt['file']}"
+                          " -- one per seat")
+            if not other:
+                merge_settings(launch_dir, rt["file"],
+                               render_hooks("component", name, repo.as_posix()),
+                               args.force, written, own)
+            elif f"{other.as_posix()}/scripts/atlas-context.sh" not in (
+                    read(launch_dir / rt["file"]) if (launch_dir / rt["file"]).exists() else ""):
+                # temporary, while a seat's members upgrade one by one: dies when the
+                # owning member has re-run the installer
+                print(f"  WARN   {launch_dir / rt['file']} is not wired yet — re-run "
+                      f"atlas_init in {other} (it owns this seat's launch-dir hooks)")
         if other:
-            # ONE hook of each kind per launch dir (1.21 for SessionStart; 1.28.3 for the
-            # guards). A sibling seat member already installed the launch-dir hooks, and
-            # the SEAT scripts discover every wired sibling — the context script briefs the
-            # whole seat, the write guard allows the slug UNION. A second repo's hooks would
-            # only double-inject the briefing or, for the write guard, deny this repo's
-            # outbox. So add none of them; the existing member's cover this repo too.
-            for _ev in ("SessionStart", "PreToolUse", "Stop", "UserPromptSubmit"):
-                tpl["hooks"].pop(_ev, None)   # UserPromptSubmit added 1.34.3 (arc-platform,
-                                              # third report: style line fired twice)
             print(f"  skip   launch-dir hooks at {launch_dir} — the seat's are already "
                   f"installed from {other} and discover '{args.slug}' automatically")
-        merge_settings(launch_dir, tpl, args.force, written, repo_root=repo)
+        else:
+            write_seat_block("component", launch_dir, repo.as_posix(), written)
+            print(f"  hooks  also installed at {launch_dir} (absolute paths — the agent "
+                  "launches there, not in the repo)")
         persist_launch_dir(repo, launch_dir, written)
-        print(f"  hooks  also installed at {launch_dir}/.claude/settings.json "
-              "(absolute paths — the agent launches there, not in the repo)")
+    print_runtime_notes(launch_dir)
 
     print(f"\natlas_init: {len(written)} file(s) written. Next:")
     _in_repo = sorted({str(w.resolve().relative_to(repo.resolve())).split("/")[0] + ("/" if w.resolve().relative_to(repo.resolve()).parts[1:] else "")
                        for w in written if w.resolve().is_relative_to(repo.resolve())})
-    print("  1. git add " + " ".join(_in_repo or ["AGENTS.md", ".atlas.conf", "scripts/", ".claude/"])
+    _hook_dirs = sorted({rt["file"].split("/")[0] + "/" for rt in table["runtimes"].values()})
+    print("  1. git add " + " ".join(_in_repo or ["AGENTS.md", ".atlas.conf", "scripts/"] + _hook_dirs)
           + " && git commit   # --verify requires them COMMITTED")
     print("  2. sh scripts/atlas-context.sh   # sync + first ATLAS-CONTEXT.md")
     print("  3. register the component in the vault (component-init.md §1–3)")

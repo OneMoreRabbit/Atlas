@@ -139,8 +139,8 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    ```
    **If the agent does not launch with this repo as its project directory** — a devagent
    seat starting in the clone parent, for example — add `--launch-dir "$HOME/work"`.
-   Otherwise the repo's `.claude/settings.json` is never loaded and every hook is
-   silently inert: no context injection, and **no local write guard** (decisions/0002).
+   Otherwise the repo's hook files (`.claude/settings.json`, `.codex/hooks.json`) are
+   never loaded and every hook is silently inert: no context injection, and **no local write guard** (decisions/0002).
    `--launch-dir` is persisted into `.atlas.conf` ($HOME-relative — the file is
    committed), so later verifies check the real launch dir automatically. Then prove
    it, on the seat, before trusting the guard:
@@ -189,7 +189,8 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end
    of the turn it lands in, not at your next session.
    `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
-   gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
+   gitignore entries, and merges the hooks into each runtime's hook file (`.claude/settings.json`,
+   `.codex/hooks.json` — context-plane.md, "Runtimes");
    re-running skips existing files (`--force` re-copies drifted scripts). Installing by
    hand is the same set of moves — all scripts are POSIX sh and run identically under
    git-bash on Windows and on a fresh Ubuntu VM:
@@ -222,7 +223,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
      breaks in a Linux container) and `.atlas.conf` (a `\r` in `ATLAS_VAULT` used to
      fail the write guard open; the scripts now strip `\r` defensively, but the
      attributes stop the mangling at the source);
-   - copy `.claude/` — vendor-specific shims with no logic of their own.
+   - copy `.claude/` — vendor-specific shims with no logic of their own. The hook files
+     are rendered from `templates/seat-hooks.json`, so for any other runtime use the
+     installer.
 
 5. **Set the repo's default branch to the project's `work` branch** (the `branching:`
    policy in the vault's `io-graph.yml` — AAC-method §9). This is what makes every fresh
@@ -261,9 +264,10 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    |---|---|
    | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); note for periodic review when the remote has a newer minor/major release than the pin; self-drift check on these scripts |
    | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
+   | `scripts/atlas-payload.py` | reads each runtime's write payload for the write guard |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |
-   | `.claude/settings.json` | wires the three hooks; SessionStart injects the context script's stdout |
+   | `.claude/settings.json`, `.codex/hooks.json` | one per runtime; each wires the same hooks; SessionStart injects the context script's stdout. Codex runs them only once trusted (context-plane.md, "Runtimes") |
    | `.claude/commands/atlas-publish.md` | `/atlas-publish` — the outbox half of the protocol |
 
 ---
@@ -425,8 +429,8 @@ ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 1. `sh scripts/atlas-sync.sh` — must print the new pin (NOT ADOPTED means step 2 fixes it).
 2. `python3 .atlas-method/tools/atlas_init.py --component <you> --vault-remote <vault-url> --launch-dir "$HOME/work" --force`
-3. `git add AGENTS.md .atlas.conf scripts/ .claude/ && git commit -m "atlas <pin>" && git push`
-   — the installer prints the exact list; `.claude/` holds the hooks and `/atlas-publish`,
+3. `git add AGENTS.md .atlas.conf scripts/ .claude/ .codex/ && git commit -m "atlas <pin>" && git push`
+   — the installer prints the exact list; `.claude/` and `.codex/` hold the hooks and `/atlas-publish`,
    which `--force` rewrites.
 4. `python3 .atlas-method/tools/atlas_init.py --component <you> --verify --launch-dir "$HOME/work"` — ALL PASS.
    Verify checks the files are COMMITTED, so step 3 comes first. Never mark any of them

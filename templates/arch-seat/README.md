@@ -10,13 +10,17 @@ when origin holds commits the checkout lacks.
 **Install with one command:** run `python .atlas-method/tools/atlas_init.py --arch
 --launch-dir "$HOME/work"` from the vault checkout. The installer refuses to write
 hooks into the vault working tree — an arch seat launches beside its vault, so
-`--launch-dir` is required. It copies both scripts, merges the settings and writes
-`.atlas-arch.conf`; the manual steps below are the equivalent.
+`--launch-dir` is required. It copies the scripts, writes one hook file per agent runtime
+(`.claude/settings.json`, `.codex/hooks.json`), adds the seat block to `AGENTS.md`, writes
+`.atlas-arch.conf` and runs its own verify. The manual steps below cover Claude Code only;
+for any other runtime use the installer (context-plane.md, "Runtimes").
 
 Install in the arch seat's launch dir (where the agent starts — beside the vault, e.g.
 the `~/work` clone parent holding `Atlas-<P>` and `Nav-<P>`):
 
-1. Copy `atlas-arch-context.sh` and `atlas-arch-guard.sh` there; `chmod +x` both.
+1. Copy `atlas-arch-context.sh`, `atlas-arch-guard.sh` and `atlas-arch-write.sh` there, plus
+   `atlas-style.sh` and `atlas-payload.py` from `templates/component-repo/scripts/`;
+   `chmod +x` them.
 2. Merge `.claude/settings.json` into the launch dir's (same shape as a component seat's).
 3. Write `ATLAS_VAULT` and `ATLAS_METHOD` into `.atlas-arch.conf` beside the scripts,
    if the automatic resolution (the unique `registry/io-graph.yml` sibling;

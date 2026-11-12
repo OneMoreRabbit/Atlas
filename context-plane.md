@@ -34,19 +34,20 @@ flowchart TD
 
 ## The three hooks
 
-Every seat's `.claude/settings.json` wires exactly these. A hook is a shell script Claude
-Code runs at a lifecycle moment; what it prints and the code it exits with are how Atlas
-reaches into the session.
+Every seat's hook file wires exactly these, one file per agent runtime (see
+[Runtimes](#runtimes)). A hook is a shell script the runtime runs at a lifecycle moment;
+what it prints and the code it exits with are how Atlas reaches into the session.
 
 | Hook | Script | Fires | Does |
 |---|---|---|---|
-| **SessionStart** | `atlas-context.sh` | startup · resume · `/clear` · **compaction** (no matcher) | Compiles the whole reading list and prints it to stdout — Claude Code adds it to the context window. The main injection, and the only one. |
-| **PreToolUse** | `atlas-guard-write.sh` | before every `Write` / `Edit` / `MultiEdit` / `NotebookEdit` | Decides per file whether the write may land. Allows the seat's own outbox, an additive proposal, and edges naming it; denies everything else with a reason; fails closed. |
+| **SessionStart** | `atlas-context.sh` | startup · resume · `/clear` · **compaction** (no matcher) | Compiles the whole reading list and prints it to stdout — the runtime adds it to the context window. The main injection, and the only one. |
+| **PreToolUse** | `atlas-guard-write.sh` | before every file write (Claude Code: `Write` / `Edit` / `MultiEdit` / `NotebookEdit`; Codex: `apply_patch`) | Decides per file whether the write may land. Allows the seat's own outbox, an additive proposal, and edges naming it; refuses everything else (exit 2, the reason on stderr); fails closed. |
 | **Stop** | `atlas-guard-publish.sh` | end of every turn | Two checks that can exit 2 to refuse the turn's end: the **alignment gate** (vault moved since the briefing? re-brief) and the **publish nag** (vault clone dirty? `/atlas-publish`). Fails open offline. |
 
 *(An arch seat has no slug and works the vault directly: `SessionStart` runs
-`atlas-arch-context.sh` (`--emit-arch-context`) and `Stop` runs the arch alignment gate;
-there is no write guard, because the arch seat authors the vault as its reviewer.)*
+`atlas-arch-context.sh` (`--emit-arch-context`), `Stop` runs the arch alignment gate, and
+`PreToolUse` runs `atlas-arch-write.sh`, which refuses `product/**`. A product seat and a
+test seat have the same three, with their own scripts.)*
 
 ## Reorientation is a source, not a separate hook
 
@@ -84,3 +85,51 @@ the graph if it's insufficient); **raw contract artifacts** (delivered as files 
 `ATLAS-CONTEXT.d/`, referenced by path, never inlined); **other components' deliveries**
 (one index line, not the body); and **answered or retired needs** (collapsed or dropped —
 a briefing carries current obligations, not history).
+
+## Runtimes
+
+The scripts are the same on every agent runtime. What differs is the file that tells the
+runtime when to run them. One table holds both halves:
+[`templates/seat-hooks.json`](templates/seat-hooks.json).
+
+- `roles`: what each kind of seat runs at each moment (briefing, write guard, shell guard,
+  turn-end gate, style line), and its write scope.
+- `runtimes`: how one runtime is told (its hook file, its event names, the tools that
+  write files, how a hook command finds the repo).
+
+`atlas_init.py` writes the hook file for **every** runtime in the table. A runtime reads
+only its own file, so a seat can change runtime without a re-install.
+
+| Runtime | Hook file | Writes files with | Publish in supervised mode |
+|---|---|---|---|
+| Claude Code | `.claude/settings.json` | `Write`, `Edit`, `MultiEdit`, `NotebookEdit` | asks the operator |
+| Codex | `.codex/hooks.json` | `apply_patch` | cannot ask: refused once, the same command goes through when run again within the hour |
+
+Tested on Claude Code and on Codex CLI 0.160.0.
+
+**A runtime with no hooks, or whose hooks did not run.** The installer writes a short
+block into `AGENTS.md` at the launch dir. It tells the agent what to do when no briefing
+is in its context: run the briefing script, keep the write scope by hand, run the
+turn-end gate before finishing, and tell the operator. Vault CI still checks every pull
+request.
+
+**Codex trust.** Codex skips a new or changed hook until it is trusted, and gives no
+warning. After an install, and after any upgrade that changes `.codex/hooks.json`:
+
+1. Start Codex in the launch dir. The launch dir must be a trusted project.
+2. Open `/hooks` and trust the Atlas hooks.
+3. Start a new session. The briefing must be in its context.
+
+**Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
+those seats) fires each runtime's write guard as wired, at one path it must allow and one
+it must refuse. It cannot see Codex trust; step 3 above does.
+
+**To add a runtime:**
+
+1. Add one entry under `runtimes` in `templates/seat-hooks.json`.
+2. If its write payload has a new shape, add one branch to
+   `templates/component-repo/scripts/atlas-payload.py`.
+3. Run `python3 tools/tests/test_seat_hooks.py`.
+4. Install on a real seat of that runtime and run `--verify`.
+5. In a live session there, check: the briefing is in context, a write outside the scope
+   is refused, a write inside the scope lands.

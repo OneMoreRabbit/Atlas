@@ -1,0 +1,91 @@
+{
+  "about": "The seat hooks, described once. 'moments' is the contract every hook script keeps. 'roles' says which script runs at which moment for each kind of seat. 'runtimes' says how each agent runtime wires a moment. tools/atlas_init.py renders one hook file per runtime from these tables. To add a runtime, follow context-plane.md, 'Runtimes'.",
+  "moments": {
+    "session-start": "Session start, resume and after compaction. The script prints the briefing on stdout.",
+    "write": "Before a file write. The payload arrives on stdin. Exit 2 with the reason on stderr refuses the write.",
+    "shell": "Before a shell command. The payload arrives on stdin. Exit 2 with the reason on stderr refuses the command.",
+    "turn-end": "When the agent is about to finish its turn. Exit 2 with the reason on stderr keeps it working.",
+    "prompt": "With every operator prompt. The script prints one line on stdout."
+  },
+  "roles": {
+    "component": {
+      "dir": "scripts",
+      "hooks": [
+        ["session-start", "atlas-context.sh"],
+        ["write", "atlas-guard-write.sh"],
+        ["shell", "atlas-guard-supervise.sh"],
+        ["turn-end", "atlas-guard-publish.sh"],
+        ["prompt", "atlas-style.sh"]
+      ],
+      "briefing": "# ATLAS-CONTEXT",
+      "scope": "In the project vault, write only what AGENTS.md in your code repo lists.",
+      "allowed": "components/<component>/docs/atlas-verify.md",
+      "refused": "product/atlas-verify.md"
+    },
+    "arch": {
+      "dir": "",
+      "hooks": [
+        ["session-start", "atlas-arch-context.sh"],
+        ["turn-end", "atlas-arch-guard.sh"],
+        ["write", "atlas-arch-write.sh"],
+        ["prompt", "atlas-style.sh"]
+      ],
+      "briefing": "# ATLAS-CONTEXT",
+      "scope": "In the project vault, write anything except product/**. In the Nav vault, write only _bridge/** and _inbox/archive/**.",
+      "allowed": "architecture/atlas-verify.md",
+      "refused": "product/atlas-verify.md"
+    },
+    "product": {
+      "dir": "",
+      "hooks": [
+        ["session-start", "atlas-product-context.sh"],
+        ["write", "atlas-product-guard.sh"],
+        ["turn-end", "atlas-product-align.sh"],
+        ["prompt", "atlas-style.sh"]
+      ],
+      "briefing": "# ATLAS-PRODUCT-CONTEXT",
+      "scope": "In the project vault, write only product/** and your own outbox under components/. In the Nav vault, write only _gps/**.",
+      "allowed": "product/atlas-verify.md",
+      "refused": "architecture/atlas-verify.md"
+    },
+    "test": {
+      "dir": "",
+      "hooks": [
+        ["write", "atlas-test-guard.sh"]
+      ],
+      "allowed": "tests/atlas-verify.md",
+      "refused": "architecture/atlas-verify.md"
+    }
+  },
+  "runtimes": {
+    "claude": {
+      "file": ".claude/settings.json",
+      "repo_root": "${CLAUDE_PROJECT_DIR}",
+      "ask": true,
+      "wiring": {
+        "session-start": {"event": "SessionStart"},
+        "write": {"event": "PreToolUse", "matcher": "Write|Edit|MultiEdit|NotebookEdit"},
+        "shell": {"event": "PreToolUse", "matcher": "Bash"},
+        "turn-end": {"event": "Stop"},
+        "prompt": {"event": "UserPromptSubmit"}
+      },
+      "sample_write": {"hook_event_name": "PreToolUse", "tool_name": "Write",
+                       "tool_input": {"file_path": "<path>", "content": ""}}
+    },
+    "codex": {
+      "file": ".codex/hooks.json",
+      "repo_root": "$(git rev-parse --show-toplevel)",
+      "ask": false,
+      "wiring": {
+        "session-start": {"event": "SessionStart", "handler": {"additionalContextLimit": 0}},
+        "write": {"event": "PreToolUse", "matcher": "apply_patch|Edit|Write"},
+        "shell": {"event": "PreToolUse", "matcher": "Bash"},
+        "turn-end": {"event": "Stop"},
+        "prompt": {"event": "UserPromptSubmit"}
+      },
+      "sample_write": {"hook_event_name": "PreToolUse", "tool_name": "apply_patch",
+                       "tool_input": {"command": "*** Begin Patch\n*** Add File: <path>\n+x\n*** End Patch\n"}},
+      "after_install": "Codex runs a new or changed hook only after it is trusted, and skips an untrusted hook without a warning. Start Codex in <launch dir>, open /hooks and trust the Atlas hooks. The directory must also be a trusted project."
+    }
+  }
+}

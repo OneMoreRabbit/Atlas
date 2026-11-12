@@ -14,9 +14,10 @@ gitattributes.fragment       → append to the repo's .gitattributes (LF for scr
 scripts/atlas-common.sh      → shared: repo root, config load, defaults
 scripts/atlas-sync.sh        → clone/ff the vault + method at the pinned tag; self-drift check
 scripts/atlas-context.sh     → emit ATLAS-CONTEXT.md, report injected size
+scripts/atlas-payload.py     → reads each runtime's write payload for the write guard
 scripts/atlas-guard-write.sh → PreToolUse: deny writes outside this component's outbox
 scripts/atlas-guard-publish.sh → Stop: refuse to end with unpublished vault work
-.claude/settings.json        → wires the three hooks
+.claude/settings.json        → wires the hooks for Claude Code (the installer also writes .codex/hooks.json)
 .claude/commands/atlas-publish.md → the /atlas-publish command
 ```
 
@@ -30,9 +31,9 @@ copy unique and the drift undetectable — the same failure §8 diagnoses for th
 
 ## Vendor scope
 
-`.claude/` is Claude Code-specific and contains **no logic** — each hook is a one-line shim
-over a POSIX script. Porting to another agent means writing that vendor's config to call the
-same scripts. The CI guard in `templates/vault-ci/` is the vendor-neutral backstop: a
+The hook files (`.claude/settings.json`, `.codex/hooks.json`) contain **no logic** — each hook
+is a one-line shim over a POSIX script. The installer renders one per agent runtime from
+`templates/seat-hooks.json`; adding a runtime is one entry there (context-plane.md, "Runtimes"). The CI guard in `templates/vault-ci/` is the vendor-neutral backstop: a
 component driven by an unconfigured agent still cannot merge an out-of-scope diff.
 
 ## Install
@@ -45,8 +46,8 @@ python .atlas-method/tools/atlas_init.py --component <slug> --vault-remote <url>
 ```
 
 It copies the tree in, fills `.atlas.conf` and `AGENTS.md`, appends both fragments
-(gitignore + gitattributes, marker-guarded), and **merges** the hooks into any existing
-`.claude/settings.json` rather than overwriting it. Re-running is a no-op on existing
+(gitignore + gitattributes, marker-guarded), and **merges** the hooks into each runtime's
+existing hook file rather than overwriting it. Re-running is a no-op on existing
 files; `--force` re-copies (the fix when `atlas-sync.sh` reports script self-drift).
 Manual install remains: copy the tree, rename the two templated files, append the two
 fragments.

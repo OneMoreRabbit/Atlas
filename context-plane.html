@@ -248,7 +248,7 @@
 <section>
   <div class="wrap">
     <div class="sec-h"><span class="sec-n">01</span><h2>Three hooks on the session lifecycle</h2></div>
-    <p class="sec-lead">Every seat's <code class="mono">.claude/settings.json</code> wires exactly these. A hook is a shell script Claude Code runs at a lifecycle moment; what it prints and the code it exits with are how Atlas reaches into the session.</p>
+    <p class="sec-lead">Every seat's hook file wires exactly these, one file per agent runtime (<code class="mono">.claude/settings.json</code>, <code class="mono">.codex/hooks.json</code>; see Runtimes in <code class="mono">context-plane.md</code>). A hook is a shell script the runtime runs at a lifecycle moment; what it prints and the code it exits with are how Atlas reaches into the session.</p>
 
     <div class="spine">
       <!-- SessionStart -->
@@ -293,7 +293,7 @@
               <div class="vrow"><span class="vtag deny">Deny</span><span class="vbody">Anything else in the vault — returned with a reason that <b>names the remedy</b> (file it in <code>docs/needs/</code>, or open a proposal). Not an obstacle to route around.</span></div>
               <div class="vrow"><span class="vtag hold">Closed</span><span class="vbody">A payload the guard <b>can't parse is denied</b>, never waved through. Guards fail closed.</span></div>
             </div>
-            <div class="foot-note"><b>Mechanism:</b> emits a JSON <code>permissionDecision</code>; the write never reaches the tool unless allowed.</div>
+            <div class="foot-note"><b>Mechanism:</b> exits 2 with the reason on stderr; the write never reaches the tool unless allowed.</div>
           </div>
         </div>
       </div>

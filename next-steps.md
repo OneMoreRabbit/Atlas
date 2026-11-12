@@ -1,12 +1,13 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-11-11
+updated: 2026-11-12
 ---
 
 # Next steps
 
-**TL;DR:** 1.35.3 is prepared on `dev` and NOT released (operator, 2026-11-11: the orchestrator
+**TL;DR:** 1.35.4 is prepared on `dev` and NOT released (operator go to build, 2026-11-12, hub
+#13225): seat hooks for every agent runtime, Codex added; see "Codex seats" below. 1.35.3 is prepared on `dev` and NOT released (operator, 2026-11-11: the orchestrator
 reviews it first): `development-and-release.md`, the one page for the path from development to
 production, text approved by the operator; needs helper works on GitHub-App seats. `main` is at v1.35.2. **v1.35.0 released 2026-11-10** (estate release, rolled up 1.34.1 to
 1.34.16); the estate is migrating to it. Since then: 1.35.1 (verify covers `.claude/`), 1.35.2
@@ -63,10 +64,28 @@ operator's rotation.
 - **Version numbering protocol**: the method says patch numbers are untagged development
   states; ArcPlatform tags fix releases and uses candidates. One rule needed (operator,
   2026-11-11: keep it a separate protocol from the path).
-- **Codex seats** (orchestrator, hub #13218, 2026-11-12): `atlas_init --arch` and
-  `--product` wire Claude only, so a Codex arch or product seat gets no briefing and no
-  guards. Proposed: (1) an `AGENTS.md` at the launch dir that says run the context script;
-  (2) Codex hooks beside the Claude ones, tested on a real Codex seat first. Needs the go.
+
+## Codex seats and other runtimes (1.35.4, built, not released)
+
+Built on `dev` and proved through the real Codex CLI 0.160.0 against a stand-in model:
+briefing, style line, write guard, shell guard and turn-end gate, for component, arch and
+product seats. Open before release:
+
+1. **Real-seat test** (orchestrator): `bakehouse.arc-gis.arch` and
+   `bakehouse.ai-tutor.product`. Not provable here: a write inside the scope landing
+   (this container cannot start Codex's sandbox), and the briefing after a compaction.
+2. **Codex trust on unattended seats** (orchestrator): Codex skips untrusted hooks with no
+   warning. Seat provisioning has to trust them.
+3. **`method-ci.yml`** (orchestrator's file): parse `templates/seat-hooks.json`; run every
+   `tools/tests/test_*.py` (`test_seat_hooks.py` is not in CI until then); `sh -n` the
+   product-seat and test-seat scripts; stop parsing the two files in item 4.
+4. **Temporary, remove at the next estate release (1.36.0):**
+   `templates/component-repo/.claude/settings.json` and
+   `templates/arch-seat/.claude/settings.json`. The installer no longer reads them; they
+   stay only because `method-ci.yml` parses them by name.
+5. `context-plane.pdf` is not regenerated; the Runtimes section is in `context-plane.md`.
+6. Component repos keep their committed `AGENTS.md`; the installer never overwrites it, so
+   its wording stays as installed.
 
 ## Backlog (ideas raised, not yet scheduled)
 

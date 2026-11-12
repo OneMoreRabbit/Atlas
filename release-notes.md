@@ -1,7 +1,7 @@
 ---
 title: Release notes — Atlas (the AAC method)
 status: active
-updated: 2026-11-11
+updated: 2026-11-12
 owner: atlas.arch
 about: one short entry per method release, newest first — what changed and what seats must do
 ---
@@ -10,6 +10,26 @@ about: one short entry per method release, newest first — what changed and wha
 
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
+
+## v1.35.4 — 2026-11-12
+
+**TL;DR:** Codex seats now get the briefing and the guards. The hooks are described once
+and written for every agent runtime, so the next runtime is one table entry.
+
+- `atlas_init.py` writes `.codex/hooks.json` beside `.claude/settings.json`, for
+  component, arch, product and test seats.
+- The write guards understand Codex's `apply_patch`.
+- `AGENTS.md` at the launch dir gets a short Atlas block: what to do when no briefing is
+  in context.
+- `--verify` fires each runtime's write guard at a path it must allow and a path it must
+  refuse. `--arch`, `--product` and `--test` installs end with that verify.
+- Codex skips a hook until it is trusted, with no warning. Trust the Atlas hooks in
+  `/hooks` after an install.
+- How it works and how to add a runtime: `context-plane.md`, "Runtimes".
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force`, commit `.codex/` with the rest, and on a Codex seat trust the
+hooks.
 
 ## v1.35.3 — 2026-11-11
 

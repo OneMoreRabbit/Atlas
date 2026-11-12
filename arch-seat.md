@@ -47,7 +47,8 @@ Works against the vault's work branch directly (it is the reviewer, not a PR aut
 **Reorientation is mechanical.** Install with
 `python .atlas-method/tools/atlas_init.py --arch --launch-dir "$HOME/work"` (name your
 launch dir — the parent of the vault, where hooks actually load; running from inside the
-vault installs hooks that never fire, 1.28.2) — it wires both arch hooks. Or by hand from
+vault installs hooks that never fire, 1.28.2) — it wires the arch hooks for every agent
+runtime (context-plane.md, "Runtimes"; on a Codex seat, trust them in `/hooks`). Or by hand from
 `templates/arch-seat/` in your launch dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
 estate/drift, your review queue, `registry/estate.md` (your project's runtime seats,

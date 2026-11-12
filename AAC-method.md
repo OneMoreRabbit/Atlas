@@ -349,6 +349,20 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.4 (2026-11-12, operator via orchestrator hub #13225; estate finding #13218):
+#   seat hooks for every agent runtime, not Claude only. templates/seat-hooks.json is
+#   the ONE description of what each seat kind runs at each moment (briefing, write
+#   guard, shell guard, turn-end gate, style line) and of how each runtime is told;
+#   atlas_init renders one hook file per runtime from it (.claude/settings.json,
+#   .codex/hooks.json) for component, arch, product and test seats. One helper
+#   (atlas-payload.py) reads each runtime's write payload, so the write guards
+#   understand Codex's apply_patch, several files per patch. Guards refuse with exit 2
+#   and the reason on stderr on every runtime. A runtime with no hooks, or whose hooks
+#   did not run, gets a block in AGENTS.md at the launch dir (run the briefing script,
+#   keep the scope by hand, run the turn-end gate, tell the operator). --verify fires
+#   each runtime's write guard as wired, at an allowed and a refused path; --arch,
+#   --product and --test installs end with that verify. Adding a runtime is one table
+#   entry (context-plane.md, "Runtimes"). Proved through the real Codex CLI 0.160.0.
 #   1.35.3 (2026-11-11, operator): development-and-release.md - the ONE page for the
 #   path from development to production (seat or dev box; dev; tag; a staging branch
 #   and server when the project has one; main; production from the tag). SS6, SS9,
@@ -1949,7 +1963,7 @@ desktop, a fresh cloud VM, or a phone-driven remote session.
 |---|---|---|
 | Method (`Atlas`) | this spec, `component-init`, the validator and seat tooling (`tools/`) | cloned per session (`$ATLAS_METHOD`, default `./.atlas-method`) |
 | Project vault (`Atlas-<Project>`) | constitution, ADRs, io-graph, component docs, compiled manifests | cloned per session (`$ATLAS_VAULT`, default `./.atlas`) |
-| Code (one per component) | the code, plus the hooks: `AGENTS.md`, `scripts/atlas-sync.sh`, `.claude/` | where the session runs |
+| Code (one per component) | the code, plus the hooks: `AGENTS.md`, `scripts/atlas-sync.sh`, one hook file per agent runtime (`.claude/`, `.codex/`) | where the session runs |
 
 - **Resolution is by env var with a default, never by path.** `scripts/atlas-sync.sh`
   clones or fast-forwards `$ATLAS_VAULT` and `$ATLAS_METHOD`. A local layout that already
