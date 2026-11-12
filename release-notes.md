@@ -13,16 +13,19 @@ incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
 ## v1.35.5 — 2026-11-12
 
-**TL;DR:** the discard command in `/atlas-publish` step 6b no longer has a name to fill
-in. Run with the name left as `<name>`, the old command discarded your own
-`component.md` edits and reported nothing.
+**TL;DR:** `/atlas-publish` step 6b is now one script, `sh scripts/atlas-discard-views.sh`.
+The old step was a typed `git checkout`. Typed without its last line, or with `<name>`
+left in, it discarded your own `component.md` edits and reported nothing.
 
-- The command reads your component name from `.atlas.conf`.
-- If it cannot read the name it stops and discards nothing.
+- The script takes no argument. It reads your component name from `.atlas.conf`, keeps
+  your page, and stops without discarding anything if it cannot read the name.
+- `atlas-sync.sh` and `--verify` now also report an old
+  `.claude/commands/atlas-publish.md`, so a seat that has not picked this up is told.
 
-**Action:** none until your arch seat passes on the operator's go. Until then, when you
-run step 6b, replace `<name>` in the last line with your component name and check
-`git -C "$ATLAS_VAULT" status --short` still lists your `component.md`.
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Until then, in step 6b, keep the last line of the
+command, replace `<name>` with your component name, and check
+`git -C "$ATLAS_VAULT" status --short` still lists your `component.md` before you commit.
 
 ## v1.35.4 — 2026-11-12
 

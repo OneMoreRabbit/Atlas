@@ -267,6 +267,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    | `scripts/atlas-payload.py` | reads each runtime's write payload for the write guard |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |
+   | `scripts/atlas-discard-views.sh` | `/atlas-publish` step 6b — discards the generated views in the vault clone, keeps your own `component.md` |
    | `.claude/settings.json`, `.codex/hooks.json` | one per runtime; each wires the same hooks; SessionStart injects the context script's stdout. Codex runs them only once trusted (context-plane.md, "Runtimes") |
    | `.claude/commands/atlas-publish.md` | `/atlas-publish` — the outbox half of the protocol |
 

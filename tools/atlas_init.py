@@ -40,7 +40,7 @@ GITIGNORE_MARKER = "# --- Atlas ---"  # append-once marker for both fragments
 # the component scripts --verify requires present, committed and equal to the templates
 COMPONENT_SCRIPTS = ("atlas-common.sh", "atlas-sync.sh", "atlas-context.sh",
                      "atlas-guard-write.sh", "atlas-guard-publish.sh", "atlas-needs.py",
-                     PAYLOAD_HELPER)
+                     "atlas-discard-views.sh", PAYLOAD_HELPER)
 
 
 def derive_project(remote: str) -> str:
@@ -558,6 +558,12 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
     # Compare bytes against the method checkout this verify runs from — the pinned one.
     check(not drifted, "scripts match this method checkout's templates",
           "DRIFTED: " + ", ".join(drifted) + " -- re-run atlas_init with --force" if drifted else "")
+    # the publish steps are a copy too (1.35.5, sync-compile): an old one keeps old commands
+    _pub = Path(".claude") / "commands" / "atlas-publish.md"
+    if (repo / _pub).exists():
+        _pok = read(repo / _pub) == read(TEMPLATES / _pub)
+        check(_pok, f"{_pub.as_posix()} matches this method checkout's template",
+              "" if _pok else "DRIFTED -- re-run atlas_init with --force")
 
     _v = Path(conf_value(conf, "ATLAS_VAULT") or ".atlas")
     # a launch dir outside the repo carries the AGENTS.md block; in the repo itself the

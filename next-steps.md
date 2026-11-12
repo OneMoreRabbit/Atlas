@@ -7,8 +7,8 @@ updated: 2026-11-12
 # Next steps
 
 **TL;DR:** 1.35.5 is prepared on `dev` and NOT released (dprox finding, hub #13341): the
-`/atlas-publish` discard command reads the component name from `.atlas.conf`, so it can no longer
-discard a component's own page. 1.35.4 is prepared on `dev` and NOT released (operator go to build, 2026-11-12, hub
+`/atlas-publish` step 6b is one script with no argument, so it can no longer discard a component's
+own page; the drift check now covers the publish steps file (hub #13380). 1.35.4 is prepared on `dev` and NOT released (operator go to build, 2026-11-12, hub
 #13225): seat hooks for every agent runtime, Codex added; see "Codex seats" below. 1.35.3 is prepared on `dev` and NOT released (operator, 2026-11-11: the orchestrator
 reviews it first): `development-and-release.md`, the one page for the path from development to
 production, text approved by the operator; needs helper works on GitHub-App seats. `main` is at v1.35.2. **v1.35.0 released 2026-11-10** (estate release, rolled up 1.34.1 to

@@ -22,14 +22,12 @@ Publish this session's Atlas outputs. Work in the vault clone at $ATLAS_VAULT (d
       print `atlas/<name>/<topic>` (or the work branch, for ATLAS_ROLE="both"). Never
       amend or commit on any other branch.
    b. Discard the generated views IMMEDIATELY before committing — any validate run
-      regenerates them, so discarding earlier does not hold. Your own component.md is
-      kept, so your edits to it and the step-4 stamp survive. Run this from the repo
-      root exactly as written, as one command. It reads your component name from
-      .atlas.conf and stops without discarding anything if it cannot:
-      . ./.atlas.conf && git -C "${ATLAS_VAULT:-.atlas}" checkout -- \
-          registry/graph.md dashboard.md registry/.compiled \
-          'components/*/component.md' \
-          ":(exclude)components/${COMPONENT:?}/component.md"
+      regenerates them, so discarding earlier does not hold. Run this, from the repo
+      root. It keeps your own component.md, so your edits to it and the step-4 stamp
+      survive:
+      sh scripts/atlas-discard-views.sh
+      Do not type a `git checkout --` of your own in its place: one without the
+      exclude for your page discards your edits and reports nothing.
    c. Stage your authored files BY PATH (components/<name>/**, any ADR, any io-graph
       edge naming you) — never `git add -A`, which picks up anything regenerated.
    d. Commit on branch atlas/<name>/<topic>, push, and open a PR against the vault's

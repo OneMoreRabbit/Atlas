@@ -17,6 +17,7 @@ scripts/atlas-context.sh     → emit ATLAS-CONTEXT.md, report injected size
 scripts/atlas-payload.py     → reads each runtime's write payload for the write guard
 scripts/atlas-guard-write.sh → PreToolUse: deny writes outside this component's outbox
 scripts/atlas-guard-publish.sh → Stop: refuse to end with unpublished vault work
+scripts/atlas-discard-views.sh → /atlas-publish step 6b: discard generated views, keep your own component.md
 .claude/settings.json        → wires the hooks for Claude Code (the installer also writes .codex/hooks.json)
 .claude/commands/atlas-publish.md → the /atlas-publish command
 ```

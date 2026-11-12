@@ -349,13 +349,18 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
-#   1.35.5 (2026-11-12, agent-eco's dprox via orchestrator hub #13341): /atlas-publish
-#   step 6b - the discard command carried a placeholder, ':(exclude)components/<name>/
-#   component.md'. Run with the placeholder left in, or with that last line lost, the
-#   exclude matches nothing, git exits 0, and the component's own component.md edits
-#   are discarded with the generated views. Now one command that sources .atlas.conf
-#   and names the page as components/${COMPONENT:?}/component.md: no name to fill in,
-#   and an unreadable name stops the command before anything is discarded.
+#   1.35.5 (2026-11-12, agent-eco's dprox and sync-compile via orchestrator hub #13341,
+#   #13380): /atlas-publish step 6b - the discard was a typed four-line git checkout
+#   whose last line, ':(exclude)components/<name>/component.md', kept the component's
+#   own page. dprox typed it without that line: git exits 0 and the page's hand edits
+#   are discarded with the generated views; the same happens with <name> left in. Now
+#   the step is one script with no argument, scripts/atlas-discard-views.sh: it reads
+#   COMPONENT through atlas-common.sh, so the exclude cannot be left off, and an
+#   unreadable name stops it before anything is discarded. atlas-sync's self-drift
+#   check and --verify now also compare .claude/commands/atlas-publish.md with the
+#   template (it was scripts/ only), so a seat still on the old steps is told. Hook
+#   files are not byte-compared: they are rendered per seat and --verify fires them.
+#   tools/tests/test_discard_views.py.
 #   1.35.4 (2026-11-12, operator via orchestrator hub #13225; estate finding #13218):
 #   seat hooks for every agent runtime, not Claude only. templates/seat-hooks.json is
 #   the ONE description of what each seat kind runs at each moment (briefing, write
