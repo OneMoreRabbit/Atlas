@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.5 (2026-11-12, agent-eco's dprox via orchestrator hub #13341): /atlas-publish
+#   step 6b - the discard command carried a placeholder, ':(exclude)components/<name>/
+#   component.md'. Run with the placeholder left in, or with that last line lost, the
+#   exclude matches nothing, git exits 0, and the component's own component.md edits
+#   are discarded with the generated views. Now one command that sources .atlas.conf
+#   and names the page as components/${COMPONENT:?}/component.md: no name to fill in,
+#   and an unreadable name stops the command before anything is discarded.
 #   1.35.4 (2026-11-12, operator via orchestrator hub #13225; estate finding #13218):
 #   seat hooks for every agent runtime, not Claude only. templates/seat-hooks.json is
 #   the ONE description of what each seat kind runs at each moment (briefing, write

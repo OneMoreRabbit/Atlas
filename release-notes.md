@@ -11,6 +11,19 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.5 — 2026-11-12
+
+**TL;DR:** the discard command in `/atlas-publish` step 6b no longer has a name to fill
+in. Run with the name left as `<name>`, the old command discarded your own
+`component.md` edits and reported nothing.
+
+- The command reads your component name from `.atlas.conf`.
+- If it cannot read the name it stops and discards nothing.
+
+**Action:** none until your arch seat passes on the operator's go. Until then, when you
+run step 6b, replace `<name>` in the last line with your component name and check
+`git -C "$ATLAS_VAULT" status --short` still lists your `component.md`.
+
 ## v1.35.4 — 2026-11-12
 
 **TL;DR:** Codex seats now get the briefing and the guards. The hooks are described once

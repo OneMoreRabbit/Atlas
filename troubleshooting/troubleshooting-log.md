@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting log — the method's own tools
 status: active
-updated: 2026-10-08
+updated: 2026-11-12
 owner: atlas.arch
 about: one row per incident in the method's tooling (installer, validator, hooks, guards), newest first; the known-issues library for every seat that runs them
 ---
@@ -14,6 +14,7 @@ issue: if you see the symptom, check your pin is at or past it.
 
 | Opened | Closed | Symptom (exact text where there is one) | Cause | Status | Report |
 |---|---|---|---|---|---|
+| 2026-11-12 | 2026-11-12 | `/atlas-publish` step 6b: your own `component.md` edits are gone after the discard command; git reports nothing | the command's last line is `':(exclude)components/<name>/component.md'`; with `<name>` not replaced, or that line lost, the exclude matches nothing and git exits 0 | fixed 1.35.5 (name read from `.atlas.conf`; stops if unreadable). Before that: replace `<name>` yourself and check `git status --short` after | — |
 | 2026-10-13 | 2026-10-13 | after re-copying vault CI, an open PR still runs the OLD guard and fails | GitHub kept the PR's test-merge commit on the old base, even across close/reopen, so the old workflow ran | fixed: press "Update branch" on the PR (or merge the base into it); any open PR needs this after a vault-ci re-copy | — |
 | 2026-10-13 | 2026-10-13 | public-readiness scan: infrastructure address in `tools/publish.cmd` (history only) | the first commit held a Windows publish script with a private-range NAS share path; removed at method 1.1, still in public history | tolerated: not a credential, private address, history only; rewriting a public repo's history does not un-publish it. Reverse if the share is ever exposed beyond the LAN | — |
 | 2026-10-08 | 2026-10-08 | `--verify` ALL PASS with every atlas file modified and unstaged | "committed" was checked as TRACKED only (git ls-files), not clean | fixed 1.34.1 (git diff --quiet HEAD) | — |
