@@ -53,6 +53,12 @@ operator's rotation.
    README, LICENSE, `.gitignore` (shaped by the scan report).
 7. View on the stray-documents check proposal (estate review PR #58): sound if the
    exception list lives in the io-graph.
+8. **Two active versions of one interface** (agent-eco sync-compile, 2026-11-12, hub
+   #13279; need in Atlas-AgentEco `components/sync-compile/docs/needs/`): the validator
+   passes two `status: active` documents with one `interface:`. Sound. Measured at every
+   vault's remote head 2026-11-12: one live case, Atlas-Blocks `blocks-service-api` 0.8
+   and 0.9. Proposed: warn in the release that adds the check, error from the next estate
+   release; an old version still honoured is `deprecated`. Needs the go.
 
 ## Blocked on @nav
 
