@@ -6,7 +6,8 @@ updated: 2026-11-17
 
 # Next steps
 
-**TL;DR:** 1.35.6 is prepared on `dev` and NOT released (sync-compile fault report, hub #14459):
+**TL;DR:** 1.35.7 is prepared on `dev` and NOT released (orchestrator, hub #14571): a failed
+read of the needs register puts a dated line at the top of the list and exits 1. 1.35.6 is prepared on `dev` and NOT released (sync-compile fault report, hub #14459):
 `atlas-sync.sh` no longer switches a code repo that has uncommitted changes, and the briefing states
 the branch; whether a clean feature branch is left alone needs the operator's ruling (owed item 9).
 1.35.5 is prepared on `dev` and NOT released (dprox finding, hub #13341): the

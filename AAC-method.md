@@ -349,6 +349,13 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.7 (2026-11-17, orchestrator hub #14571): atlas-needs.py --refresh exited 0
+#   when the register could not be read and marked the list STALE once, with no date;
+#   every seat's list stayed four days old and the estate's timer saw nothing. Now the
+#   STALE line carries the date of the failed attempt and is replaced at each failure, a
+#   seat with no list gets one that says so, and the command exits 1. The cause of the
+#   failed reads (no token on credential-router seats) was fixed in 1.35.3, unreleased
+#   at the time. Test: tools/tests/test_needs_refresh.py.
 #   1.35.6 (2026-11-17, agent-eco's sync-compile via orchestrator hub #14459):
 #   atlas-sync.sh switched a code repo on any named branch to the work branch, and git
 #   carried uncommitted changes across; the notice was stderr only. It runs at every
@@ -1610,6 +1617,8 @@ carries that file at every start and compaction; the Stop guard's `--show` surfa
 *change* once at turn end (exit 2 — an exit-0 print never reaches the model). It never
 wakes a seat: the file is written on a timer, and the guard speaks only inside a turn
 already underway. A single-vault project sets no register and the tool stays inert.
+When the register cannot be read, `--refresh` puts a dated STALE line at the top of the
+file and exits 1 (1.35.7), so the seat and whatever schedules the refresh both see it.
 **A provider is entitled to see its cross-vault consumers** (1.27.4, agent-compile
 finding). Under read-in-place the edge lives in the *consumer's* `external:` — correct,
 but from the provider's vault an absent edge and no consumer look identical, and

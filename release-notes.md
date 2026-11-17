@@ -11,6 +11,21 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.7 — 2026-11-17
+
+**TL;DR:** when `scripts/atlas-needs.py --refresh` cannot read the estate's needs
+register, the list now says so at the top with the date, and the command exits 1.
+
+- Before: the command exited 0 and the note in the list carried no date, so a timer saw
+  nothing and a list could sit days old.
+- A seat with no list yet now gets one that says the register was never read.
+- The next good read replaces the list and the line goes.
+- The token fix for seats on the estate's credential router is in 1.35.3.
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Whoever schedules `--refresh` can now act on a
+non-zero exit.
+
 ## v1.35.6 — 2026-11-17
 
 **TL;DR:** `atlas-sync.sh` no longer moves uncommitted work to another branch. A code

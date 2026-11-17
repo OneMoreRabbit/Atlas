@@ -11,6 +11,7 @@ here). This reads the estate's needs register, filters to this seat, and keeps a
 file the briefing and the Stop guard read.
 
   --refresh   fetch the register, write ~/.atlas/needs-open.md   (the ESTATE schedules this)
+              register not reached: the file gets a dated STALE line, exit 1
   --show      exit 2 with a short message IF the file changed     (Stop guard, every turn)
   (no flag)   print the file                                       (by hand)
 
@@ -209,14 +210,31 @@ def refresh(explicit_slugs: str | None) -> int:
                     " | git credential fill")
         print(f"atlas-needs: refresh failed ({e}){hint}; keeping the existing file, marked stale",
               file=sys.stderr)
+        # The mark carries the date of the failed attempt and is replaced at every
+        # failure; a seat with no file yet gets one that says so. Exit 1, so whatever
+        # schedules --refresh sees the failure (1.35.7, orchestrator: a list stayed four
+        # days old on every seat and the timer saw nothing).
+        mark = (f"> ⚠ **STALE — last refresh FAILED {date.today().isoformat()}** "
+                f"({str(e)[:80]}). The register was not reached; the list below is older "
+                "and may be out of date.")
         if OUT.exists():
-            body = OUT.read_text(encoding="utf-8")
-            mark = f"> ⚠ **STALE — last refresh FAILED** ({str(e)[:80]}). This list is as of the "
-            if "STALE — last refresh FAILED" not in body:
-                lines = body.splitlines()
-                lines.insert(1, mark + "date below and may be out of date; the register was not reached.")
-                OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        return 0
+            lines, skip = [], False
+            for line in OUT.read_text(encoding="utf-8").splitlines():
+                if "STALE — last refresh FAILED" in line:
+                    skip = True                    # drop the old mark and its blank line
+                    continue
+                if skip and not line.strip():
+                    skip = False
+                    continue
+                skip = False
+                lines.append(line)
+        else:
+            lines = [f"# Needs addressed to this seat ({', '.join(slugs)})", "",
+                     "_No list yet: the register has never been read on this seat._"]
+        lines[2:2] = [mark, ""]
+        STATE.mkdir(parents=True, exist_ok=True)
+        OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return 1
     reg_date = str(reg.get("updated", ""))[:10]
     mine, _seen = [], set()
     for n in reg.get("needs", []):
