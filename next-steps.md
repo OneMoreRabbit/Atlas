@@ -1,12 +1,15 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-11-12
+updated: 2026-11-17
 ---
 
 # Next steps
 
-**TL;DR:** 1.35.5 is prepared on `dev` and NOT released (dprox finding, hub #13341): the
+**TL;DR:** 1.35.6 is prepared on `dev` and NOT released (sync-compile fault report, hub #14459):
+`atlas-sync.sh` no longer switches a code repo that has uncommitted changes, and the briefing states
+the branch; whether a clean feature branch is left alone needs the operator's ruling (owed item 9).
+1.35.5 is prepared on `dev` and NOT released (dprox finding, hub #13341): the
 `/atlas-publish` step 6b is one script with no argument, so it can no longer discard a component's
 own page; the drift check now covers the publish steps file (hub #13380). 1.35.4 is prepared on `dev` and NOT released (operator go to build, 2026-11-12, hub
 #13225): seat hooks for every agent runtime, Codex added; see "Codex seats" below. 1.35.3 is prepared on `dev` and NOT released (operator, 2026-11-11: the orchestrator
@@ -61,6 +64,15 @@ operator's rotation.
    vault's remote head 2026-11-12: one live case, Atlas-Blocks `blocks-service-api` 0.8
    and 0.9. Proposed: warn in the release that adds the check, error from the next estate
    release; an old version still honoured is `deprecated`. Needs the go.
+9. **Feature branches in code repos** (agent-eco sync-compile, 2026-11-17, hub #14459):
+   `atlas-sync.sh` switches a clean code repo on any named branch to the work branch at
+   every briefing. sync-compile builds each fix on a feature branch its arch reads before
+   the tag, and was moved four times in one day. The urgent fix path on
+   `development-and-release.md` also works on a branch from the live tag, which the script
+   switches away from. Proposed: switch only when the repo is on the `release` branch;
+   leave any other named branch alone and name it in the briefing. This changes the branch
+   policy in `AAC-method.md` section 9, so it needs the operator's ruling. The uncommitted
+   changes half is done in 1.35.6.
 
 ## Blocked on @nav
 

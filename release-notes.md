@@ -1,7 +1,7 @@
 ---
 title: Release notes — Atlas (the AAC method)
 status: active
-updated: 2026-11-12
+updated: 2026-11-17
 owner: atlas.arch
 about: one short entry per method release, newest first — what changed and what seats must do
 ---
@@ -10,6 +10,20 @@ about: one short entry per method release, newest first — what changed and wha
 
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
+
+## v1.35.6 — 2026-11-17
+
+**TL;DR:** `atlas-sync.sh` no longer moves uncommitted work to another branch. A code
+repo with uncommitted changes stays on its branch. The briefing now says when the repo
+was switched to the work branch, and when it was not.
+
+- Before: on any branch but the work branch, every briefing switched the repo, and git
+  carried uncommitted changes along. The notice went to stderr only.
+- A clean repo on another branch is still switched to the work branch.
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Until then, commit on your branch before you run
+`sh scripts/atlas-context.sh`, and check `git branch --show-current` after it.
 
 ## v1.35.5 — 2026-11-12
 

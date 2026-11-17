@@ -58,6 +58,7 @@ rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
 # whole briefing is the worst possible reading of "not adopted" (1.33.11 regression,
 # caught in test: set -e killed the hook on the new exit path).
 _SYNC_RC=0
+_BR0=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
 sh scripts/atlas-sync.sh >&2 || _SYNC_RC=$?
 if [ "$_SYNC_RC" = 3 ]; then
   echo "> ⚠ **SYNC DEGRADED** — the method pin was fetched but this seat's scripts or checkout are NOT at the pin (see stderr for the exact files and the refresh command). Finish the refresh before relying on guards."
@@ -157,6 +158,16 @@ SRCBR=$([ -n "$WT" ] && echo "origin/$BWORK" || echo "$VBR")
 NOTE="> **Compiled from** vault \`$SRCBR\` @ \`$SHA\`."
 if [ -z "$WT" ] && [ -n "$BWORK" ] && [ "$VBR" != "$BWORK" ]; then
   NOTE="> ⚠⚠ **STALE SOURCE** — compiled from vault branch \`$VBR\` @ \`$SHA\`, not the work branch \`$BWORK\`. Pins, ADRs and contracts may be historical. Switch the vault clone to \`$BWORK\` and re-run \`sh scripts/atlas-context.sh\` before relying on this."
+fi
+# The code repo's branch, when sync switched it or could not (1.35.6, sync-compile):
+# both notices were stderr only, where a session does not read them.
+_BR1=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+if [ "$_BR0" != "$_BR1" ]; then
+  NOTE="$NOTE
+> ⚠ **BRANCH SWITCHED** — this repo was on \`$_BR0\` and is now on the work branch \`$_BR1\` (branching policy). Check which branch your next commit belongs on."
+elif [ -n "$BWORK" ] && [ "$_BR1" != "$BWORK" ] && [ "$_BR1" != "HEAD" ]; then
+  NOTE="$NOTE
+> ⚠ **BRANCH** — this repo is on \`$_BR1\`, not the work branch \`$BWORK\`. It was not switched: it has uncommitted changes, or \`$BWORK\` does not exist here."
 fi
 OUT=$(printf '%s\n\n%s' "$NOTE" "$OUT")
 

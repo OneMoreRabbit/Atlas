@@ -110,7 +110,13 @@ if [ -n "$BWORK" ]; then
   # a missing branch is never invented — that is a seat-setup problem, reported loudly.
   CUR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
   if [ "$CUR" != "$BWORK" ] && [ "$CUR" != "HEAD" ]; then
-    if git checkout -q "$BWORK" 2>/dev/null ||
+    # Uncommitted work is never carried to another branch (1.35.6, agent-eco's
+    # sync-compile: git takes it along when nothing conflicts, and an unfinished change
+    # on a feature branch ended up on the work branch). atlas-context puts the branch
+    # in the briefing either way.
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+      echo "atlas-sync: BRANCH POLICY — this repo is on '$CUR' with uncommitted changes; NOT switched to '$BWORK'. Commit them on '$CUR' first." >&2
+    elif git checkout -q "$BWORK" 2>/dev/null ||
        git checkout -q -b "$BWORK" --track "origin/$BWORK" 2>/dev/null; then
       echo "atlas-sync: switched $CUR -> $BWORK (branching policy in the vault's io-graph.yml)" >&2
     else

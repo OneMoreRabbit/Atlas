@@ -349,6 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.6 (2026-11-17, agent-eco's sync-compile via orchestrator hub #14459):
+#   atlas-sync.sh switched a code repo on any named branch to the work branch, and git
+#   carried uncommitted changes across; the notice was stderr only. It runs at every
+#   briefing, and the turn-end gate asks for a new briefing whenever the vault moves, so
+#   a seat on a feature branch was moved several times a day. Now a repo with
+#   uncommitted changes (tracked or new files) is not switched, and atlas-context.sh
+#   states a switch, or a refusal to switch, in the briefing. A clean repo on another
+#   branch is still switched: leaving feature branches alone changes the branch policy
+#   (§9) and waits for the operator's ruling (next-steps.md, owed item 9).
 #   1.35.5 (2026-11-12, agent-eco's dprox and sync-compile via orchestrator hub #13341,
 #   #13380): /atlas-publish step 6b - the discard was a typed four-line git checkout
 #   whose last line, ':(exclude)components/<name>/component.md', kept the component's
@@ -2043,7 +2052,9 @@ every point where a session meets a repo:
 - **`atlas-sync.sh` applies the policy at session start**: it reads the block from the
   synced vault, switches the code repo and the vault clone to `work` if they are
   elsewhere, and warns loudly when it cannot (a missing `work` branch is a seat-setup
-  defect, never silently invented; detached-HEAD checkouts, i.e. CI, are exempt).
+  defect, never silently invented; detached-HEAD checkouts, i.e. CI, are exempt). A code
+  repo with uncommitted changes is **not** switched (1.35.6): the changes stay on the
+  branch they were made on. A switch, or a refusal to switch, is stated in the briefing.
 - **The `release` branch is protected** (PRs only) so wrong-branch work fails at push —
   recoverably — instead of landing silently.
 - **The dashboard reports per-repo branch status** (validator, §8): each repo's default
