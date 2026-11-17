@@ -118,6 +118,13 @@ Build a separate vault branch only when a project needs it.
 
 ## Blocked on @nav
 
+- **IMPORTANT, briefing cut at 10,000 characters** (found 2026-11-17): Claude Code
+  replaces hook output over 10,000 characters with a 2,000 character preview and a file
+  path. Briefings measured at 34,000 to 61,000 characters; proved on this seat, Claude
+  Code 2.1.295. Fix is a short briefing head that fits the cap, says what is not loaded
+  and names the file to read. Not built; waits for the operator's go. Raised with the
+  orchestrator on the hub 2026-11-17. Detail: `Nav-Atlas/_bridge/threads/operational-atlas-research.md`
+  section 9.
 - **Root `.gitignore` ownership**: arch seats cannot change their vault's root
   `.gitignore` (guard refuses root files; outboxes grant directories only). Rule needed:
   an exact-file grant, and who owns Nav vault roots (arch writes `_bridge/` only).
