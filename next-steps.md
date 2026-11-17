@@ -46,13 +46,14 @@ operator's rotation.
 
 ## Owed by the method seat (in order)
 
-1. **Briefing needs count/list mismatch** (arc-platform): count and list from one query,
-   scoped to the briefed component's address.
+1. ~~Briefing needs count/list mismatch~~ (arc-platform): marked resolved by
+   arc-platform.arch 2026-11-11, answered in 1.35.0.
 2. ~~Needs helper fails on GitHub-App seats~~ done in 1.35.3 (asks git with the repository
    path). The `<project>.<seat>` form is not matched: the validator refuses it at write.
 3. **Card stamp on needs-only publishes** (arc-platform): stamp `component.md` only when
    the component itself changes.
-4. **Backlog template** beside `roadmap.md` (Idea; operator ask 2026-10-17).
+4. ~~Backlog template beside `roadmap.md`~~ (Idea): withdrawn by idea.arch 2026-11-11;
+   the backlog section in `roadmap.md` serves.
 5. **Vault `.gitignore` fragment** + check (estate review PR #63).
 6. **Public-readiness rule**: pre-commit secrets scan, CI scan, `--verify` checks for
    README, LICENSE, `.gitignore` (shaped by the scan report).
@@ -73,6 +74,22 @@ operator's rotation.
    leave any other named branch alone and name it in the briefing. This changes the branch
    policy in `AAC-method.md` section 9, so it needs the operator's ruling. The uncommitted
    changes half is done in 1.35.6.
+10. **Drift report reads clean when a consumer is behind** (agent-eco.arch, 2026-11-12; need
+   in Atlas-AgentEco `components/arch/docs/needs/agenteco-needs-drift-version-parsing-v0_1.md`).
+   Both halves confirmed in `tools/atlas_validate.py`, 2026-11-17. (1) An unquoted
+   `version: 0.10` is read by YAML as the number 0.1, so every pin above 0.1 reads aligned.
+   No vault has such a version live today; agent-eco quoted theirs. An unquoted
+   `pinned: 0.10` in the io-graph is misread the same way. Proposed: the validator reads the
+   version as written in the file, so no vault has to change. Refusing unquoted versions
+   instead would turn Atlas-AgentEco (101 live contracts) and Atlas-Orchestrator (7) red on
+   adoption. (2) The drift label takes `repin` from the newest version only, so a
+   `terms-change` version is hidden by a later additive one. Proposed, as asked: the label
+   takes the most severe class among all versions after the pin, archived ones included.
+   Needs the go.
+11. **Urgent fix path has the operator's yes** (need from arc-platform.arch, 2026-11-11,
+   quoting the operator: "Urgent fix path is fine"). The section stays in
+   `development-and-release.md` as written and is released with 1.35.3. Owed at that
+   release: the formal response naming the need.
 
 ## Blocked on @nav
 
