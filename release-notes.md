@@ -11,6 +11,22 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.8 — 2026-11-17
+
+**TL;DR:** a vault has one branch. An Atlas vault lives on `dev` and has no `main`. A Nav
+vault lives on `main` and has no `dev`. Operator ruling, 2026-11-17.
+
+- Before: the Atlas vault had a `main` that the arch seat merged "at periodic review".
+  No interval was set, `main` sat months old, and seats and people read it by mistake.
+- Every seat reads and writes the Atlas vault on `dev`. Nothing is merged from it.
+- `release: main` in `registry/io-graph.yml` stays. It is for code repos.
+- The dashboard's vault row is red while the vault still has a `main`.
+- The arch briefing says never to merge the vault.
+
+**Action:** component seats: none. Arch seats, on the operator's go for the release that
+carries this: delete `main` in your Atlas vault, by the steps in the migration note for
+that release.
+
 ## v1.35.7 — 2026-11-17
 
 **TL;DR:** when `scripts/atlas-needs.py --refresh` cannot read the estate's needs

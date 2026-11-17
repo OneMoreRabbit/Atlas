@@ -685,8 +685,13 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
             md += ["", "| Repo | Wired |", "|---|---|"]
             md += [f"| {s} | {wired_cell(s)} |" for s in wiring]
         return "\n".join(md), console
+    # a repo that declares its release branch as its default releases from it (the
+    # method repo); every other vault has one branch, the work branch (1.35.8, §9)
+    one_branch = pol.get("default") != release
     head = (f"**Branch policy:** work `{work}`"
-            + (f" → release `{release}` (merged by the architecture session at periodic review)"
+            + ((f" → release `{release}` in code repos (merged by the architecture session at "
+                f"periodic review). The vault has one branch, `{work}`." if one_branch else
+                f" → release `{release}` (merged by the architecture session at periodic review)")
                if release else ""))
     # Communication planes (§6, comms.md): the hub is opt-in; nav and atlas are always on.
     comms = graph.get("comms") or {}
@@ -713,8 +718,18 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
         want = pol.get("default") or work
         d_cell = f"`{d}` 🟢" if d == want else f"`{d}` 🔴 policy: `{want}`"
         w, r = info["heads"].get(work), info["heads"].get(release) if release else None
+        # The vault has one branch, the work branch (1.35.8, §9): nothing reads a vault's
+        # release branch, so one that exists is a stale copy somebody will read by
+        # mistake.
+        stale = name == "vault" and r is not None and one_branch
         if w is None:
             wr = f"🔴 no `{work}` branch"
+        elif stale:
+            wr = f"🔴 has a `{release}` branch — delete it: the vault has one branch, `{work}`"
+            console.append(f"  🔴 branch  vault: has a '{release}' branch; the vault has one "
+                           f"branch, '{work}' (AAC-method §9) — delete '{release}'")
+        elif name == "vault" and release and one_branch:
+            wr = f"one branch, `{work}`"
         elif release is None or r is None:
             wr = "—" if release is None else f"no `{release}` branch"
         else:
@@ -2009,7 +2024,8 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
         "io-graph; you review component outboxes but never author them; you write only "
         "`_bridge/` in the Nav vault. Full protocol: `arch-seat.md` in the method repo.",
         f"> Work branch: `{pol.get('work', '?')}`"
-        + (f"; release `{pol.get('release')}` (you merge it at periodic review)." if pol.get('release') else "."),
+        + (f"; release `{pol.get('release')}` in code repos only. The vault has one "
+           f"branch, `{pol.get('work', '?')}`: never merge it anywhere." if pol.get('release') else "."),
         "",
         "## Every session, before acting: sync; answer the needs addressed to you (listed "
         "below); carry genuine human asks to the bridge (`_bridge/tasks.md`); act on "

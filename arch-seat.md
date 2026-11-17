@@ -77,9 +77,9 @@ runs `ATLAS_MODE="supervised"` (it pauses for you at publish/release); a compone
 drive over the hub runs `ATLAS_MODE="autonomous"` (it publishes through the write model
 and you oversee via PR review and the hub). Declared in each component's `.atlas.conf`.
 
-**Your release act is the vault merge, not a tag** (§9, "Which release is which"): the
-`Atlas-<Project>` vault carries no product tags — its release is your `work` →
-`release` merge at periodic review. Component seats release their own code (dev
+**The vault is not released** (§9, "Which release is which"): the `Atlas-<Project>`
+vault has one branch, `dev`, no `main`, and no product tags. Never merge it anywhere
+(1.35.8). Component seats release their own code (dev
 iterates the patch position; a release zeroes patch, bumps minor, tags annotated on
 `release`); you approve any exceptional patch tag on a released line, and you gate
 nothing else of theirs. **A component's `provides/` contracts carry its release's
@@ -131,7 +131,7 @@ Your own unpushed work never triggers it.
 ## Periodic review
 
 Pull-driven — run it when the dashboard shows it is due (open threads, unreleased
-`dev → main` delta, red rows), not on a fixed calendar.
+`dev → main` delta in a code repo, red rows), not on a fixed calendar.
 
 1. Walk open `_bridge/threads/`; resolve or reply, then move resolved ones to
    `_bridge/archive/`.
@@ -153,8 +153,9 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    You **record** direction; you never invent a release. If the roadmap and the bridge
    disagree, the bridge is the newer truth — reconcile it there first.
 6. Clear the validator's naming and doc-plane warnings.
-7. Merge work → release across the project's repos per the declared `branching:`
-   policy, then cut the release as its own deliberate act: tag the shipped commit
+7. Merge work → release across the project's code repos per the declared `branching:`
+   policy (never the vault: it has one branch), then cut the release as its own
+   deliberate act: tag the shipped commit
    `vX.Y.Z` (annotated). The merge alone is not a release, and nothing deploys
    until a consumer moves its pin; a trunk-only project just tags (§9). Replace
    `next-steps.md` at every cut. For code that is deployed, the branches, the tag and
@@ -315,7 +316,7 @@ before forming a theory.
 
 ## Release notes (1.33.14)
 
-Every time you merge dev to main and tag the vault, add an entry at the top of
+Every time you tag the vault, add an entry at the top of
 `release-notes.md` (top level; template `templates/release-notes/`) in the same commit:
 TL;DR line, three to six plain bullets, an Action line.
 

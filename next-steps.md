@@ -6,7 +6,9 @@ updated: 2026-11-17
 
 # Next steps
 
-**TL;DR:** 1.35.7 is prepared on `dev` and NOT released (orchestrator, hub #14571): a failed
+**TL;DR:** 1.35.8 is prepared on `dev` and NOT released (operator ruling 2026-11-17): a vault
+has one branch, Atlas vaults `dev` and Nav vaults `main`; the release that carries it deletes
+`main` in every Atlas vault (see "Migration at the next estate release"). 1.35.7 is prepared on `dev` and NOT released (orchestrator, hub #14571): a failed
 read of the needs register puts a dated line at the top of the list and exits 1. 1.35.6 is prepared on `dev` and NOT released (sync-compile fault report, hub #14459):
 `atlas-sync.sh` no longer switches a code repo that has uncommitted changes, and the briefing states
 the branch; whether a clean feature branch is left alone needs the operator's ruling (owed item 9).
@@ -91,6 +93,28 @@ operator's rotation.
    quoting the operator: "Urgent fix path is fine"). The section stays in
    `development-and-release.md` as written and is released with 1.35.3. Owed at that
    release: the formal response naming the need.
+
+## Migration at the next estate release
+
+**One branch per vault (1.35.8).** Goes in that release's migration note. Per Atlas vault:
+
+1. Orchestrator: remove the branch protection on the vault's `main`.
+2. Arch seat: `git fetch origin`, then
+   `git log --no-merges --oneline origin/dev..origin/main`. Anything listed other than
+   "atlas: regenerate derived views" goes to `dev` by PR first.
+3. Arch seat: `git push origin --delete main`.
+4. Arch seat: run the validator. The dashboard's vault row reads "one branch, `dev`".
+5. Orchestrator: `git ls-remote --heads` on each Nav vault shows `main` only.
+
+Measured 2026-11-17 at every vault's remote head: nine Atlas vaults have a `main`
+(ArcPlatform, AgentEco, Blocks, DiscoCat, FrogYeti, Idea, MathsPractise, Orchestrator,
+Orient); ArcWeb and Labs have none. In all nine, `main` holds nothing `dev` lacks: only
+merge commits, and in three vaults one regenerated-views commit. `registry/io-graph.yml`
+does not change: `release: main` stays for code repos. The vault CI files do not change.
+
+Not built: a project that declares `work: main` for its code keeps its Atlas vault on
+`main`, because the scripts take the vault's branch from `work`. No estate project does.
+Build a separate vault branch only when a project needs it.
 
 ## Blocked on @nav
 

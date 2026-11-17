@@ -48,8 +48,9 @@ tag, or red rows. Not on a calendar.
 3. Decide the proposals the arch seat escalated to you (§3). Say yes or no on the
    bridge; the arch seat writes it up as an ADR.
 4. Green-light the release on the bridge. The arch session merges `dev → main`
-   across the project's repos; **the annotated `vX.Y.Z` tag on the shipped commit
+   across the project's code repos; **the annotated `vX.Y.Z` tag on the shipped commit
    is the release** — not the branch. Consumers go live only when their pin rolls.
+   The vault is never merged: it stays on `dev` and has no `main`.
 
 ## 3. What you discuss with the arch seat
 

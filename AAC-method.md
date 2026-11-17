@@ -349,6 +349,16 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.8 (2026-11-17, operator ruling): a vault has one branch. An Atlas vault lives
+#   on dev and has no main; a Nav vault lives on main and has no dev. Before, the vault
+#   had a release branch "merged at periodic review" with no interval; in nine vaults it
+#   had not moved for one to three months, two vaults had none, and seats and people
+#   read the old copy. Nothing in the method reads a vault's release branch. §9 states
+#   the rule; the vault's release merge is removed from arch-seat.md and the operating
+#   manual; the dashboard's vault row is red while a release branch exists; the arch
+#   briefing says never merge the vault. The scripts are unchanged: they already keep
+#   every clone on work. MIGRATION at the release that carries this: delete main in
+#   each Atlas vault (next-steps.md).
 #   1.35.7 (2026-11-17, orchestrator hub #14571): atlas-needs.py --refresh exited 0
 #   when the register could not be read and marked the list STALE once, with no date;
 #   every seat's list stayed four days old and the estate's timer saw nothing. Now the
@@ -1524,7 +1534,8 @@ method:
                              # ALWAYS quoted: unquoted 1.10 is the YAML float 1.1
 branching:                     # this project's branch policy (§9) — declared at initiation
   work: dev                    # every session, every repo, works here
-  release: main                # merged by the architecture session at periodic review
+  release: main                # code repos only; merged by the architecture session at
+                               # periodic review. The vault has one branch: work (§9)
 product:                       # OPTIONAL (1.28.9): this project runs a product seat (§10)
   enabled: true                # omit the block entirely for no product seat — most projects
 outboxes:                      # OPTIONAL (1.34.10): extra write paths per component, beyond
@@ -2049,6 +2060,19 @@ test realities), but it is **declared, never assumed**: a `branching:` block in
 `release` branch is merged **only by the architecture session, at periodic review**. A
 trunk-only project declares `work: main` and omits `release`.
 
+**A vault has one branch (1.35.8, operator ruling 2026-11-17).** The `release` branch is
+for code repos. The two vaults of a project never have one:
+
+| Vault | Its one branch | Never has |
+|---|---|---|
+| Atlas vault, `Atlas-<Project>` | `dev` | `main` |
+| Nav vault, `Nav-<Project>` | `main` | `dev` |
+
+Every seat reads and writes the Atlas vault on `dev`. Nothing is merged from it to
+anywhere, on any schedule: a second branch is only an old copy that somebody reads by
+mistake. The scripts take the Atlas vault's branch from `work`, which is `dev` on the
+default policy. The dashboard shows red while an Atlas vault still has a release branch.
+
 Why this must be mechanical: the current branch is *invisible ambient state* — the
 working tree looks identical on every branch, nothing in a session's loop surfaces it,
 and a fresh clone lands on the default branch, so "correct" would otherwise require an
@@ -2068,7 +2092,8 @@ every point where a session meets a repo:
   recoverably — instead of landing silently.
 - **The dashboard reports per-repo branch status** (validator, §8): each repo's default
   branch against policy, work-vs-release divergence (unreleased changes awaiting the
-  periodic review), and the latest release tag. Misalignment is visible red, but
+  periodic review), and the latest release tag. The vault's row says "one branch", or
+  red when it still has a release branch. Misalignment is visible red, but
   branch status never fails the run — it is seat configuration, not contract truth.
 
 ### Which release is which — four version spaces, kept apart
@@ -2080,7 +2105,7 @@ only ever operates in its own:
 | Space | Artefact | Versioned how | Released by | Consumed by |
 |---|---|---|---|---|
 | **Method** | the Atlas repo | `vX.Y.Z` tags; patch = iteration between rolls, minor = an estate push | the method seat, on operator instruction | vaults pin an exact version; **component seats never act on this** |
-| **Architecture** | `Atlas-<Project>` vault | **no product tags** — the release act is the `work` → `release` merge at the arch seat's periodic review; the vault is continuous truth, not a shipped artefact | the arch seat | seats read compiled briefings |
+| **Architecture** | `Atlas-<Project>` vault | **no product tags and no release merge** — one branch, `dev` (above); the vault is continuous truth, not a shipped artefact | the arch seat | seats read compiled briefings |
 | **Nav** | `Nav-<Project>` | none — the human's space has no releases | — | the human |
 | **Code** | a component's own repo(s) | the scheme below | **the component seat** — its only release surface | others, pinning exact tags |
 | **Contracts** | `docs/provides/*.md` | frontmatter `version:` = the **release's `MAJOR.MINOR`**, one-to-one (release `v1.3.0` → contracts at `1.3`); re-stamped when you cut a release, not during patch/dev iteration; drift = pinned vs latest (§4) | the publishing component, in step with its code release | edges pin per interface |
@@ -2248,7 +2273,7 @@ and the hooks that make its protocol mechanical. Five seat types and one human:
 | Seat | Owns / writes | Reads | Credentials | Defined by |
 |---|---|---|---|---|
 | **operator** (@nav, human) | Nav vaults; ticks the bridge; rules and releases | everything | everything | being the human |
-| **arch** — one per project | `architecture/**`, io-graph, derived views; merges `release` at periodic review; writes `_bridge/` in the Nav vault and nothing else there | the vault, the bridge, component repos (read-only) | vault write + `<project>-arch-read` (Contents/PRs/Actions **read** over the project's component repos; never write, never org-wide) | works the vault checkout, no slug; `atlas_init --arch` |
+| **arch** — one per project | `architecture/**`, io-graph, derived views; merges `release` in code repos at periodic review (never the vault: it has one branch); writes `_bridge/` in the Nav vault and nothing else there | the vault, the bridge, component repos (read-only) | vault write + `<project>-arch-read` (Contents/PRs/Actions **read** over the project's component repos; never write, never org-wide) | works the vault checkout, no slug; `atlas_init --arch` |
 | **component** — per component; may hold several repos | its code repo(s) and `components/<slug>/**` outbox (via guarded PRs) | its `ATLAS-CONTEXT.md` — never the wider vault | its repos' write + outbox path | `SLUG` in a wired repo's `.atlas.conf`; `atlas_init --slug` |
 | **both-hats** — a single-seat project | the union: outbox + `architecture/**` + own edges | as arch | as both, one identity | `ATLAS_ROLE="both"`; transitional — the §9 migration is the exit |
 | **product** — OPTIONAL, per project (`product:` in the io-graph) | `product/**` in the vault; `_gps/**` in the Nav vault (the product↔operator lane) — nothing else in either | the bridge (direction), evidence (users, data, the running product), the vault | vault write scoped to `product/` + a Nav PAT scoped to the project's Nav repo, `_gps/` only | `atlas_init --product`; declared in the io-graph |
@@ -2400,7 +2425,7 @@ Its properties are boundaries as much as powers:
   project's architecture or code. It provisions the arch seat; it does not do
   architecture. A fault it diagnoses in a project becomes an evidenced finding
   delivered to the owner — reproduction, mechanism, suggested fix — never a patch.
-  Arch seats gate releases (the work→release merge); the orchestrator enforces pins
+  Arch seats gate releases (the work→release merge in code repos); the orchestrator enforces pins
   and reports conformity estate-side.
 - **Its writes outside its own vault are exactly one blessed lane**:
   `components/<its-slug>/docs/provides/**` in a consumer vault — banner-marked
@@ -2504,6 +2529,6 @@ briefings, CI) never calls out to any of them.
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.
 - **Nav vault** — `Nav-<Project>`: the human's idea space beside the Atlas vault.
-  Human-edited only, trunk-only, exempt from canon and ceremony.
+  Human-edited only, one branch (`main`, no `dev`), exempt from canon and ceremony.
 - **Bridge** — `_bridge/` in the Nav vault: the human/AI interface (owner-tagged
   tasks + threads); the one place the AI writes in a Nav vault. See [[bridge-init]].
