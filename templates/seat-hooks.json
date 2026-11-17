@@ -1,7 +1,7 @@
 {
   "about": "The seat hooks, described once. 'moments' is the contract every hook script keeps. 'roles' says which script runs at which moment for each kind of seat. 'runtimes' says how each agent runtime wires a moment. tools/atlas_init.py renders one hook file per runtime from these tables. To add a runtime, follow context-plane.md, 'Runtimes'.",
   "moments": {
-    "session-start": "Session start, resume and after compaction. The script prints the briefing on stdout.",
+    "session-start": "Session start, resume and after compaction. The script prints the head of the briefing on stdout, no more than 10,000 characters, and writes the rest to files the head lists.",
     "write": "Before a file write. The payload arrives on stdin. Exit 2 with the reason on stderr refuses the write.",
     "shell": "Before a shell command. The payload arrives on stdin. Exit 2 with the reason on stderr refuses the command.",
     "turn-end": "When the agent is about to finish its turn. Exit 2 with the reason on stderr keeps it working.",

@@ -296,6 +296,16 @@ def conf_value(conf: Path, key: str) -> str | None:
     return m.group(1).replace("$HOME", str(Path.home())) if m else None
 
 
+# One hook's output may be this many characters. Over it the runtime keeps the first
+# 2,000 and a file path, and the seat starts without its briefing (1.35.9).
+HOOK_LIMIT = 10_000
+
+
+def hook_size(text: str) -> int:
+    """Length as the runtime counts it (UTF-16 code units)."""
+    return len(text.encode("utf-16-le")) // 2
+
+
 def seat_scripts(role: str) -> list:
     """(name, template) for every script an arch, product or test seat keeps at its
     launch dir: the role's hook scripts plus the payload helper its write guard calls."""
@@ -448,6 +458,12 @@ def verify_seat(role: str, launch_dir: Path) -> int:
             tail = (run.stderr.strip().splitlines() or [""])[-1][:140]
             check(fired, f"{ctx.name} runs from the launch dir, exits 0, emits a briefing",
                   "" if fired else f"exit {run.returncode}; {tail}")
+            if fired:
+                n = hook_size(run.stdout)
+                check(n <= HOOK_LIMIT, f"{ctx.name} prints no more than the hook carries",
+                      f"{n:,} of {HOOK_LIMIT:,} characters" if n <= HOOK_LIMIT else
+                      f"{n:,} characters, limit {HOOK_LIMIT:,}: the runtime keeps the first "
+                      "2,000 and the seat never sees the rest")
         except (OSError, subprocess.SubprocessError) as exc:
             check(False, f"{ctx.name} runs", str(exc)[:140])
     print_runtime_notes(launch_dir)
@@ -584,6 +600,13 @@ def verify(repo: Path, slug: str, launch_dir: Path | None) -> int:
             check(good, "scripts/atlas-context.sh runs, exits 0, emits a briefing",
                   f"exit {r.returncode}; {tail}" if not good else
                   f"{len(r.stdout.encode()):,} bytes")
+            if good:
+                n = hook_size(r.stdout)
+                check(n <= HOOK_LIMIT, "scripts/atlas-context.sh prints no more than the "
+                      "hook carries",
+                      f"{n:,} of {HOOK_LIMIT:,} characters" if n <= HOOK_LIMIT else
+                      f"{n:,} characters, limit {HOOK_LIMIT:,}: the runtime keeps the first "
+                      "2,000 and the seat never sees the rest")
         except (OSError, subprocess.TimeoutExpired) as exc:
             check(False, "scripts/atlas-context.sh runs", str(exc)[:140])
 

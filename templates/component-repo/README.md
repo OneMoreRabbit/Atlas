@@ -13,7 +13,7 @@ gitignore.fragment           → append to the repo's .gitignore
 gitattributes.fragment       → append to the repo's .gitattributes (LF for scripts + conf)
 scripts/atlas-common.sh      → shared: repo root, config load, defaults
 scripts/atlas-sync.sh        → clone/ff the vault + method at the pinned tag; self-drift check
-scripts/atlas-context.sh     → emit ATLAS-CONTEXT.md, report injected size
+scripts/atlas-context.sh     → print the briefing head, write the briefing files to ATLAS-CONTEXT.d/
 scripts/atlas-payload.py     → reads each runtime's write payload for the write guard
 scripts/atlas-guard-write.sh → PreToolUse: deny writes outside this component's outbox
 scripts/atlas-guard-publish.sh → Stop: refuse to end with unpublished vault work

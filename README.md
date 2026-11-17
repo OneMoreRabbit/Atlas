@@ -31,7 +31,7 @@ contract drift on each project's dashboard.
 - [`components/method/docs/needs/`](components/method/docs/needs/) — the method seat's outbox: findings and asks from @atlas addressed to project arch seats, read in place (every seat clones this repo). **Outbox traffic commits straight to `main`, untagged** — it is communication, not method content, so it is never gated behind a release; an untagged commit on `main` is not a release (§9) and moves no seat's pin. Answered/retired by the raiser like any need.
 - [`decisions/`](decisions/) — the method's own ADR log (the method is governed by its own rules; methodology-level ADRs raised in project vaults are extracted here on acceptance).
 - [`article-architecture-above-code.md`](article-architecture-above-code.md) — Substack draft describing the method.
-- **The context plane** — visual reference for how the method fills and guards an agent's context window (the three hooks — SessionStart / PreToolUse / Stop — what each injects, when, and what is kept out). Three forms of the same diagram: [`context-plane.md`](context-plane.md) (mermaid, renders inline on GitHub), [`context-plane.pdf`](context-plane.pdf) (the designed page, viewable on GitHub and downloadable), and [`context-plane.html`](context-plane.html) (theme-aware, for a browser).
+- **The context plane** — visual reference for how the method fills and guards an agent's context window (the three hooks — SessionStart / PreToolUse / Stop — what each injects, when, and what is kept out). Three forms of the same diagram: [`context-plane.md`](context-plane.md) (mermaid, renders inline on GitHub), [`context-plane.pdf`](context-plane.pdf) (the designed page, viewable on GitHub and downloadable; printed at 1.28 and not current, see the other two for 1.35.4 and 1.35.9), and [`context-plane.html`](context-plane.html) (theme-aware, for a browser).
 
 ## Starting from nothing (a bare clone of this repo)
 
@@ -68,7 +68,7 @@ implementation of that role, not a dependency.
    per-repo branch status.
 2. Write its `constitution.md`; register components per [`component-init.md`](component-init.md),
    which also wires each code repo to resolve the vault via `$ATLAS_VAULT` (a per-session
-   clone) and to inject `ATLAS-CONTEXT.md` at session start.
+   clone) and to brief the session at its start (a head in context, the rest in files).
 3. Copy [`templates/vault-ci/`](templates/vault-ci/) into the vault's `.github/workflows/`
    — **the ORCHESTRATOR does this step, never an arch seat** (1.33.6, PAT matrix: no
    arch PAT holds the GitHub Workflows permission; measured estate-wide when the

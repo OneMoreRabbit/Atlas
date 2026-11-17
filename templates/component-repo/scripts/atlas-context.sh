@@ -1,10 +1,16 @@
 #!/bin/sh
-# atlas-context — emit this component's ATLAS-CONTEXT.md to stdout.
+# atlas-context — print the head of this component's briefing; write the rest to files.
 # A SessionStart hook injects stdout into the session context automatically. The hook
 # has no matcher, so it fires on startup, resume, clear AND compact — the last is why
-# reorientation is automatic: after a compaction the briefing is re-injected. On those
+# reorientation is automatic: after a compaction the briefing is rebuilt. On those
 # non-startup sources we prepend an imperative directive so the model RE-ORIENTS from it
 # rather than treating re-injected context as passive reference (method 1.23).
+#
+# The runtime carries at most 10,000 characters from one hook. Over that it keeps the
+# first 2,000 and a file path, and does not ask the agent to read the file. A briefing is
+# 30,000 to 80,000 characters, so until 1.35.9 a seat started with the house style block
+# and little else. Now stdout is a short head: the list of files to read, then what must
+# always be in context. The content is in ATLAS-CONTEXT.d/, rewritten at every start.
 set -e
 # shellcheck source=atlas-common.sh disable=SC1091
 . "$(dirname -- "$0")/atlas-common.sh"
@@ -44,14 +50,14 @@ if [ "$LAUNCH" != "$ATLAS_REPO_ROOT" ] && [ -d "$LAUNCH" ]; then
   done
   [ -n "$SEAT_SLUGS" ] || { SEAT_SLUGS="$SLUG"; SEAT_ROOTS="$ATLAS_REPO_ROOT"; }
 fi
-case "$SRC" in compact|resume|clear)
-  if [ -f "${ATLAS_METHOD:-}/templates/reorient.md" ]; then
-    cat "$ATLAS_METHOD/templates/reorient.md"; echo
-  else
-    echo "> REORIENT — session was $SRC. Re-orient from durable state: repos, bridge, needs, contracts. Read, don't recall."
-  fi ;;
-esac
 rm -f "$ATLAS_SENTINEL"   # new session: re-arm the publish guard
+
+# Warnings are collected and lead the head (1.35.9). They were echoed as they arose,
+# ahead of everything else, which is only safe while nothing counts the characters.
+WARN=""
+warn() { WARN="${WARN}${1}
+
+"; }
 
 # sync exit 3 = DECLARED degradation (stale pull, or scripts not at pin) — the
 # briefing must still emit, carrying the warning itself; a drifted seat losing its
@@ -61,11 +67,9 @@ _SYNC_RC=0
 _BR0=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
 sh scripts/atlas-sync.sh >&2 || _SYNC_RC=$?
 if [ "$_SYNC_RC" = 3 ]; then
-  echo "> ⚠ **SYNC DEGRADED** — the method pin was fetched but this seat's scripts or checkout are NOT at the pin (see stderr for the exact files and the refresh command). Finish the refresh before relying on guards."
-  echo
+  warn "> ⚠ **SYNC DEGRADED** — the method pin was fetched but this seat's scripts or checkout are NOT at the pin (see stderr for the exact files and the refresh command). Finish the refresh before relying on guards."
 elif [ "$_SYNC_RC" != 0 ]; then
-  echo "> ⚠ sync failed (exit $_SYNC_RC) — briefing compiled from the current checkout; see stderr."
-  echo
+  warn "> ⚠ sync failed (exit $_SYNC_RC) — briefing compiled from the current checkout; see stderr."
 fi
 
 # Release notes in THIS code repo (1.34.14): one entry per tag, headed "## <tag> — <date>",
@@ -74,11 +78,9 @@ for _r in $SEAT_ROOTS; do
   _t=$(git -C "$_r" describe --tags --abbrev=0 2>/dev/null || true)
   [ -n "$_t" ] || continue
   if [ ! -f "$_r/release-notes.md" ]; then
-    echo "> ⚠ **release-notes.md missing** in $(basename "$_r") though it is tagged ($_t) — copy .atlas-method/templates/release-notes/release-notes.md to its top level, one entry per tag."
-    echo
+    warn "> ⚠ **release-notes.md missing** in $(basename "$_r") though it is tagged ($_t) — copy .atlas-method/templates/release-notes/release-notes.md to its top level, one entry per tag."
   elif ! grep -qE "^## $_t[[:space:]]+—" "$_r/release-notes.md"; then
-    echo "> ⚠ **release-notes.md in $(basename "$_r") has no entry headed \`## $_t — <date>\`** — write it in the tagging commit; the estate release log reads that heading."
-    echo
+    warn "> ⚠ **release-notes.md in $(basename "$_r") has no entry headed \`## $_t — <date>\`** — write it in the tagging commit; the estate release log reads that heading."
   fi
 done
 
@@ -115,10 +117,10 @@ fi
 cleanup() { [ -n "$WT" ] || return 0; git -C "$ATLAS_VAULT" worktree remove --force "$WT" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-# Raw contract artifacts (OpenAPI, JSON Schema) are delivered as exact files beside the
-# briefing, never inlined into it (method 1.21). A generator reads them by path; the
-# model's context stays bounded. Local-only: excluded via .git/info/exclude so seats
-# wired before 1.21 need no .gitignore change.
+# The briefing files (1.35.9) are written to the top of this folder. Raw contract
+# artifacts (OpenAPI, JSON Schema) are delivered as exact files in its subfolders, never
+# inlined (method 1.21): a generator reads them by path. Local-only: excluded via
+# .git/info/exclude so seats wired before 1.21 need no .gitignore change.
 ART="$ATLAS_REPO_ROOT/ATLAS-CONTEXT.d"
 rm -rf "$ART"
 if [ -d "$ATLAS_REPO_ROOT/.git" ] && ! grep -qs '^ATLAS-CONTEXT.d/$' "$ATLAS_REPO_ROOT/.git/info/exclude" 2>/dev/null; then
@@ -136,13 +138,15 @@ EMIT="$SLUG"
 case "$HELP" in *"SLUG[,SLUG"*) EMIT="$SEAT_SLUGS" ;;      # pinned method understands seats
   *) [ "$SEAT_SLUGS" = "$SLUG" ] || echo "atlas-context: pinned method predates seat briefings — emitting per-slug for $SLUG only" >&2 ;;
 esac
+set -- "$SRC" --emit-context "$EMIT"
 case "$HELP" in
-  *"--artifacts-dir"*)
-    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT" --artifacts-dir "$ART") ;;
-  *)
-    echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2
-    OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-context "$EMIT") ;;
+  *"--artifacts-dir"*) set -- "$@" --artifacts-dir "$ART" ;;
+  *) echo "atlas-context: pinned method predates raw-artifact delivery — briefing only" >&2 ;;
 esac
+# --parts-dir: the content goes to files in $ART and stdout is the head (1.35.9)
+PARTS=""
+case "$HELP" in *"--parts-dir"*) PARTS=1; set -- "$@" --parts-dir "$ART" ;; esac
+OUT=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$@")
 
 case "$OUT" in
   "# ATLAS-CONTEXT"*) ;;
@@ -169,20 +173,24 @@ elif [ -n "$BWORK" ] && [ "$_BR1" != "$BWORK" ] && [ "$_BR1" != "HEAD" ]; then
   NOTE="$NOTE
 > ⚠ **BRANCH** — this repo is on \`$_BR1\`, not the work branch \`$BWORK\`. It was not switched: it has uncommitted changes, or \`$BWORK\` does not exist here."
 fi
-OUT=$(printf '%s\n\n%s' "$NOTE" "$OUT")
 
 # Reorientation directive on a non-startup source. After a compaction (or resume/clear)
 # the conversation that held "who I am and what I was doing" is gone or summarised; the
-# briefing below is the durable orientation, so instruct the model to act on it rather
-# than read past it. On a fresh startup the agent reads AGENTS.md anyway, so no banner.
+# briefing is the durable orientation, so instruct the model to act on it rather than
+# read past it. On a fresh startup the agent reads AGENTS.md anyway, so no directive.
+# One text for every kind of seat: templates/reorient.md. (Until 1.35.9 this script
+# tested the wrong variable, so a component seat never received that text.)
+REORIENT=""
 case "$ATLAS_SRC" in
   compact|resume|clear)
-    REORIENT="> ⟳ **REORIENT — session was ${ATLAS_SRC}ed.** Your working context was just
-> rebuilt. Before your next action: read the briefing below in full, confirm which
-> component (\`$SLUG\`) you are and what you were doing, and resume from it. This is your
-> complete orientation — do **not** ask the operator to re-orient you, and do not act on
-> a half-remembered task until you have reconciled it against what follows."
-    OUT=$(printf '%s\n\n%s' "$REORIENT" "$OUT") ;;
+    if [ -f "${ATLAS_METHOD:-}/templates/reorient.md" ]; then
+      REORIENT=$(cat "$ATLAS_METHOD/templates/reorient.md")
+    else
+      REORIENT="> ⟳ **REORIENT — session was ${ATLAS_SRC}.** Re-orient from durable state before your next action: your briefing, repos, bridge, needs, contracts. Read, don't recall."
+    fi
+    REORIENT="$REORIENT
+>
+> You are the \`$SLUG\` seat." ;;
 esac
 
 # Mode banner (method 1.26.10): the seat's development posture, prepended so it leads the
@@ -196,7 +204,11 @@ fi
 MODE_BANNER="$MODE_BANNER
 >
 > **House style (always):** reply in plain English, concise. Use the method's existing terms; do not coin new ones. Say less — no preamble, no restatement, no summary of what you just did unless asked."
-OUT=$(printf '%s\n\n%s' "$MODE_BANNER" "$OUT")
+# TOP is this script's own lines. It leads the head, and is all of the briefing that is
+# printed if the rest has to go to one file (the floor, at the end).
+TOP=$(printf '%s%s' "$WARN" "$MODE_BANNER")
+[ -z "$REORIENT" ] || TOP=$(printf '%s\n\n%s' "$TOP" "$REORIENT")
+TOP=$(printf '%s\n\n%s' "$TOP" "$NOTE")
 
 # Record which vault commit this briefing was compiled from, for every seat member —
 # the Stop guard compares it against the remote at each turn end (alignment gate, 1.24):
@@ -214,8 +226,9 @@ fi
 # vaults are EXTERNAL — the in-vault compile cannot render them. atlas-needs.py --refresh (scheduled by
 # the estate) keeps ~/.atlas/needs-open.md current; carry it in the briefing so a fresh
 # or compacted session sees its whole queue, not just its own vault's slice.
+# With briefing files (1.35.9) it is listed among them and read in place.
 NEEDS_FILE="${HOME:-~}/.atlas/needs-open.md"
-if [ -s "$NEEDS_FILE" ]; then
+if [ -z "$PARTS" ] && [ -s "$NEEDS_FILE" ]; then
   OUT=$(printf '%s\n\n---\n\n# External needs — addressed to me, filed in other vaults (read in place)\n\n%s' "$OUT" "$(cat "$NEEDS_FILE")")
 fi
 
@@ -225,7 +238,9 @@ fi
 # the arch half (minus what this briefing already carries) so the union mode has a union
 # briefing. Gated on the pinned validator knowing the flag.
 if [ "${ATLAS_ROLE:-component}" = "both" ] && printf '%s' "$HELP" | grep -q -- '--arch-only'; then
-  ARCH_HALF=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$SRC" --emit-arch-context --arch-only 2>/dev/null || true)
+  set -- "$SRC" --emit-arch-context --arch-only
+  [ -z "$PARTS" ] || set -- "$@" --parts-dir "$ART"
+  ARCH_HALF=$("$PY" "$ATLAS_METHOD/tools/atlas_validate.py" "$@" 2>/dev/null || true)
   case "$ARCH_HALF" in "# ATLAS-CONTEXT"*) OUT=$(printf '%s\n\n---\n\n%s' "$OUT" "$ARCH_HALF") ;; esac
 fi
 
@@ -233,13 +248,44 @@ fi
 # invisible from here otherwise. atlas-needs.py --refresh writes ~/.atlas/consumers.md
 # from the estate edges register (when the estate publishes one); carry it.
 CONS_FILE="${HOME:-~}/.atlas/consumers.md"
-if [ -s "$CONS_FILE" ]; then
+if [ -z "$PARTS" ] && [ -s "$CONS_FILE" ]; then
   OUT=$(printf '%s\n\n---\n\n# My contracts consumed in other vaults (read in place)\n\n%s' "$OUT" "$(cat "$CONS_FILE")")
 fi
 
-# Report the size of what we inject. Growth here is a defect in the io-graph,
-# not a fact of life — the retrieval invariant is only worth anything if measured.
-printf '%s' "$OUT" | wc -c |
-  awk '{printf "atlas-context: %s — %d bytes (~%d tokens) injected\n", "'"$SLUG"'", $1, $1/4}' >&2
+# ---- what the hook prints (1.35.9) -------------------------------------------------
+# The head: the list of briefing files, then TOP, then the validator's head. The
+# validator counts the characters and reports the sizes on stderr. Growth in the files
+# is a defect in the io-graph, not a fact of life.
+WHOLE=$(printf '%s\n\n%s' "$TOP" "$OUT")
+HEAD=""
+if [ -n "$PARTS" ]; then
+  HEAD=$(printf '%s\n' "$WHOLE" | "$PY" "$ATLAS_METHOD/tools/atlas_validate.py" --compose-head \
+    --parts-dir "$ART" \
+    --also-read "$NEEDS_FILE=Needs addressed to you, filed in other vaults" \
+    --also-read "$CONS_FILE=Your contracts consumed in other vaults") || HEAD=""
+fi
+# The floor: this hook never prints more than the runtime carries. Reached when the
+# pinned method predates 1.35.9 (the whole briefing is in $WHOLE) or the step above
+# failed. A short briefing is printed as it is; a long one goes to one file and the
+# hook prints where it is.
+if [ -z "$HEAD" ]; then
+  [ -z "$PARTS" ] || WHOLE=$(printf '%s\n\n%s' "# ATLAS-CONTEXT: read these files before you act
 
-printf '%s\n' "$OUT"
+> **This text is only the head of your briefing.** The rest is in the \`.md\` files at the top of \`$ART\`, written fresh at this session start. **Read every one now, in full, in name order, before your next action.**" "$WHOLE")
+  if [ "$(printf '%s' "$WHOLE" | wc -c)" -le 9000 ]; then
+    HEAD="$WHOLE"
+  else
+    mkdir -p "$ART"
+    printf '%s\n' "$WHOLE" > "$ART/0-briefing.md"
+    HEAD=$(printf '%s\n\n%s' "# ATLAS-CONTEXT: read this file before you act
+
+> **This text is only the head of your briefing.** A session-start hook carries at most 10,000 characters. The whole briefing is in one file, written fresh at this session start. **Read it now, in full, before your next action:**
+>
+> \`$ART/0-briefing.md\`" "$TOP")
+    echo "atlas-context: briefing written whole to $ART/0-briefing.md (the pinned method predates 1.35.9, or the head could not be composed)" >&2
+  fi
+  printf '%s' "$HEAD" | wc -c |
+    awk '{printf "atlas-context: %s — head %d bytes in the hook\n", "'"$SLUG"'", $1}' >&2
+fi
+
+printf '%s\n' "$HEAD"

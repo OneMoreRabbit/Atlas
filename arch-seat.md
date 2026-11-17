@@ -53,7 +53,9 @@ runtime (context-plane.md, "Runtimes"; on a Codex seat, trust them in `/hooks`).
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
 estate/drift, your review queue, `registry/estate.md` (your project's runtime seats,
 orchestrator-generated; at `estate/registry.md` until the 1.28.8 move lands), `next-steps.md` as last stated (replace before
-ending if anything moved), and where the bridge is. Because it fires on **compact**
+ending if anything moved), and where the bridge is. The hook prints the head of that
+briefing and writes the rest to files in `ATLAS-CONTEXT.d/` in your launch dir; the head
+lists them, and you read every one before you act (1.35.9). Because it fires on **compact**
 as well as startup, a compaction re-injects your bearings with a directive to resume;
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)

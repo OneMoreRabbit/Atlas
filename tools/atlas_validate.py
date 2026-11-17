@@ -26,6 +26,10 @@ Emits   one ATLAS-CONTEXT.md to stdout (or --out <path>): the component's comple
         session reading list — constitution, pinned upstream contracts, consumers'
         needs addressed to it, in-flight proposals touching it, and a drift summary.
         A byte/token estimate is printed to stderr.
+With    --parts-dir DIR (1.35.9): the content goes to files in DIR and stdout carries
+        only a short head. A session-start hook carries at most 10,000 characters;
+        --compose-head puts the list of those files in front of the head and holds
+        the whole to that limit.
 This is the retrieval boundary of the method: a session reads ATLAS-CONTEXT.md, not
 the vault. If the context proves insufficient, the io-graph is wrong — fix the graph.
 
@@ -1639,6 +1643,166 @@ def address_book(graph) -> list[str]:
     return L
 
 
+# ---- briefing files (1.35.9) -------------------------------------------------------
+# Claude Code replaces any hook output over 10,000 characters with a 2,000-character
+# preview and a file path, and does not ask the agent to read the file. Briefings were
+# 34,000 to 61,000 characters, so a seat started each session with the house style block
+# and little else. With --parts-dir the content goes to files and the hook prints a head:
+# the list of files to read, then what must always be in context.
+HOOK_LIMIT = 10_000      # the runtime's cap on one hook's output, in characters
+HEAD_MAX = 9_000         # what the head may be; the margin is for what a runtime adds
+HEAD_OVERFLOW = "0-head-in-full.md"
+HEAD_LIST_CAP = 8        # needs or proposals named in the head; the rest are in their file
+PART = "\x00part:"       # a sections entry naming the file that the entries after it go to
+
+PARTS_COMPONENT = {
+    "constitution": ("1-constitution.md", "Constitution"),
+    "architecture": ("2-architecture.md",
+                     "Architecture in force, reference library, addresses, hub"),
+    "contracts": ("3-contracts.md", "Contracts you build against"),
+    "needs": ("4-needs.md", "Needs addressed to you, in full"),
+    "proposals": ("5-proposals-and-drift.md", "Proposals in flight and drift"),
+}
+PARTS_ARCH = {
+    "constitution": ("1-constitution.md", "Constitution"),
+    "architecture": ("2-architecture.md",
+                     "Architecture in force, reference library, addresses, hub"),
+    "estate": ("3-estate-and-drift.md", "Estate and drift"),
+    "queue": ("4-needs-and-proposals.md", "Needs addressed to you and proposals in flight"),
+    "next": ("5-next-steps.md", "next-steps.md as last stated"),
+}
+# a both-hats seat: these follow the component files in the same folder
+PARTS_ARCH_HALF = {
+    "estate": ("6-arch-estate-and-drift.md", "Arch seat: estate and drift"),
+    "queue": ("7-arch-needs-and-proposals.md",
+              "Arch seat: needs addressed to you and proposals in flight"),
+    "next": ("8-arch-next-steps.md", "Arch seat: next-steps.md as last stated"),
+}
+
+
+def part(name: str) -> str:
+    return PART + name
+
+
+def units(text: str) -> int:
+    """Length as the runtime counts it (UTF-16 code units)."""
+    return len(text.encode("utf-16-le")) // 2
+
+
+def join_sections(sections: list[str]) -> str:
+    """The whole briefing as one text: what every caller got before 1.35.9."""
+    return "\n".join(s for s in sections if not s.startswith(PART)) + "\n"
+
+
+def head_list(lines: list[str], fname: str) -> list[str]:
+    if not lines:
+        return ["_none._"]
+    if len(lines) <= HEAD_LIST_CAP:
+        return lines
+    return lines[:HEAD_LIST_CAP] + [f"- and {len(lines) - HEAD_LIST_CAP} more: every one "
+                                    f"is in `{fname}`."]
+
+
+def write_parts(sections: list[str], parts_dir: Path, files: dict, who: str,
+                head_extra: list[str]) -> tuple[str, int, int]:
+    """Write each part to its file in parts_dir. -> (head text, characters written,
+    files written). Entries before the first part() and those under part("head") are the
+    head; part("tail") closes the head, after head_extra."""
+    split: dict[str, list[str]] = {"head": [], "tail": []}
+    cur = "head"
+    for s in sections:
+        if s.startswith(PART):
+            cur = s[len(PART):]
+            split.setdefault(cur, [])
+            continue
+        split[cur].append(s)
+    stray = set(split) - set(files) - {"head", "tail"}
+    if stray:
+        raise SystemExit(f"ATLAS-CONTEXT: no file is named for part(s) {sorted(stray)}")
+    parts_dir.mkdir(parents=True, exist_ok=True)
+    total = count = 0
+    for key, (fname, title) in files.items():
+        body = "\n".join(split.get(key, [])).strip()
+        body = re.sub(r"\A---\s*\n", "", body).strip()
+        if not body:
+            continue
+        text = (f"# {title}\n\n> Briefing file for {who}. The Atlas session-start hook "
+                "rewrites it at every start. Do not edit.\n\n" + body + "\n")
+        (parts_dir / fname).write_text(text, encoding="utf-8")
+        total += units(text)
+        count += 1
+    head = "\n".join(split["head"] + head_extra + split["tail"]) + "\n"
+    return head, total, count
+
+
+def compose_head(parts_dir: str, also: list[str], head_max: int) -> int:
+    """stdin: the head as the hook script built it. stdout: the list of briefing files,
+    then that head, held to head_max characters. The list comes first so that it is
+    inside the runtime's 2,000-character preview even if the head were ever cut."""
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+    body = sys.stdin.read().strip() + "\n"
+    d = Path(parts_dir).resolve()
+    over = d / HEAD_OVERFLOW
+    if over.exists():
+        over.unlink()
+    rows, in_files = [], 0
+    for p in sorted(d.glob("*.md")) if d.is_dir() else []:
+        text = p.read_text(encoding="utf-8", errors="replace")
+        first = (text.splitlines() or [p.name])[0]
+        rows.append((p.name, first.lstrip("# ").strip() or p.name, units(text)))
+    for spec in also or []:
+        path, _, label = spec.partition("=")
+        p = Path(path).expanduser()
+        if p.is_file() and p.stat().st_size:
+            rows.append((p.as_posix(), label or p.name,
+                         units(p.read_text(encoding="utf-8", errors="replace"))))
+    in_files = sum(n for _, _, n in rows)
+
+    def listing(first_row: str = "") -> str:
+        if not rows and not first_row:
+            return ""
+        L = ["# ATLAS-CONTEXT: read these files before you act", "",
+             "> **This text is only the head of your briefing.** A session-start hook "
+             f"carries at most {HOOK_LIMIT:,} characters, so the rest is in the files "
+             "below, written fresh at this session start. **Read every one now, in full, "
+             "in this order, before your next action.**",
+             ">", f"> Folder: `{d.as_posix()}`", ">"]
+        if first_row:
+            L.append(first_row)
+        L += [f"> {i}. `{name}`: {title} ({n:,} characters)"
+              for i, (name, title, n) in enumerate(rows, 1)]
+        return "\n".join(L) + "\n\n"
+
+    text = listing() + body
+    whole = units(text)
+    if whole > head_max:
+        # Never leave the cut to the runtime: it would keep 2,000 characters and say
+        # nothing. Cut here, say so, and put the whole head in a file at the top of the list.
+        d.mkdir(parents=True, exist_ok=True)
+        over.write_text(body, encoding="utf-8")
+        top = listing(f"> 0. `{HEAD_OVERFLOW}`: THE REST OF THIS HEAD. It did not fit the "
+                      "hook. Read it first.")
+        warn = (f"\n> ⚠ **HEAD CUT HERE.** It was {whole:,} characters and the hook carries "
+                f"{HOOK_LIMIT:,}. The whole of it is in `{HEAD_OVERFLOW}` in the folder above: "
+                "read that file now. Then tell your arch seat that the briefing head is too "
+                "long.\n")
+        room = max(head_max - units(top) - units(warn), 0)
+        kept = body.encode("utf-16-le")[:room * 2].decode("utf-16-le", errors="ignore")
+        kept = kept[:kept.rfind("\n") + 1] if "\n" in kept else ""
+        text = top + kept + warn
+        print(f"atlas-context: WARNING: head was {whole:,} characters, over the "
+              f"{head_max:,} it may be; cut, and saved whole to {over.as_posix()}",
+              file=sys.stderr)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stdout.write(text)
+    print(f"atlas-context: head {units(text):,} characters in the hook (limit "
+          f"{HOOK_LIMIT:,}); {in_files:,} characters in {len(rows)} file(s) to read"
+          + (f" under {d.as_posix()}" if rows else ""), file=sys.stderr)
+    return 0
+
+
 def house_style() -> list[str]:
     """The estate-wide usability statement (1.28.13, operator): house-style.md at the
     method root, injected prominently into EVERY briefing. Managed by editing that one
@@ -1656,7 +1820,8 @@ def house_style() -> list[str]:
     return ["> " + ln if ln else ">" for ln in lines] + [""]
 
 
-def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = None) -> int:
+def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = None,
+                 parts_dir: str | None = None) -> int:
     """Emit the briefing for one slug, or ONE seat briefing for several
     (comma-separated). A seat holding N components pays for its briefing once per
     SESSION, not once per slug: shared sections — constitution, architecture index,
@@ -1709,21 +1874,42 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         return 2
 
     who = slugs[0] if not seat else "seat briefing — " + ", ".join(slugs)
+    F = PARTS_COMPONENT
+    head_needs: list[str] = []       # one line per unanswered need, for the head (1.35.9)
+    if parts_dir:
+        reading = [
+            "> Generated by tools/atlas_validate.py --emit-context from the committed",
+            "> io-manifests. Do not edit.",
+            "> This head and the files listed at its top are the session's complete reading",
+            "> list. Consult the wider vault only if they are insufficient — and treat that",
+            "> as a defect in `registry/io-graph.yml`: fix the graph, don't browse.",
+            f"> The cycle: (1) architecture in force, (2) READ the input contracts in",
+            f"> `{F['contracts'][0]}` — you build AGAINST them, and your consumers' needs",
+            "> are what you owe — then (3) develop, (4) test, (5) update your own provides/",
+            "> and needs/ and publish.",
+            "> Code contradicting a pinned contract is a defect even if every test passes.",
+        ]
+    else:
+        reading = [
+            "> Generated by tools/atlas_validate.py --emit-context from the committed",
+            "> io-manifests. Do not edit.",
+            "> This is the session's complete reading list. Consult the wider vault only if",
+            "> this file is insufficient — and treat that as a defect in `registry/io-graph.yml`:",
+            "> fix the graph, don't browse.",
+            "> The cycle: (1) architecture in force, (2) READ the input contracts below — you",
+            "> build AGAINST them, and your consumers' needs are what you owe — then",
+            "> (3) develop, (4) test, (5) update your own provides/ and needs/ and publish.",
+            "> Code contradicting a pinned contract is a defect even if every test passes.",
+        ]
     sections: list[str] = [
         f"# ATLAS-CONTEXT — {who}",
         "",
         *house_style(),
+        part("architecture"),
         *address_book(graph),
+        part("head"),
         *troubleshooting_pointer(),
-        "> Generated by tools/atlas_validate.py --emit-context from the committed",
-        "> io-manifests. Do not edit.",
-        "> This is the session's complete reading list. Consult the wider vault only if",
-        "> this file is insufficient — and treat that as a defect in `registry/io-graph.yml`:",
-        "> fix the graph, don't browse.",
-        "> The cycle: (1) architecture in force, (2) READ the input contracts below — you",
-        "> build AGAINST them, and your consumers' needs are what you owe — then",
-        "> (3) develop, (4) test, (5) update your own provides/ and needs/ and publish.",
-        "> Code contradicting a pinned contract is a defect even if every test passes.",
+        *reading,
     ]
     pn = project_name(graph)
     if pn:
@@ -1732,16 +1918,21 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                         "refused since 1.33.3).\n")
     if seat:
         sections.append("> One briefing for every component this seat holds: shared "
-                        "sections appear once; per-component sections follow (1.21).")
+                        "sections appear once; per-component sections follow (1.21)."
+                        if not parts_dir else
+                        "> One briefing for every component this seat holds: "
+                        + ", ".join(f"`{s}`" for s in slugs) + ". In the files, shared "
+                        "sections appear once and each component has its own (1.21).")
     if skipped:
         sections.append("> ⚠ Not briefed (no compiled manifest yet — registration pending "
                         f"or regen not run): {', '.join(f'`{s}`' for s in skipped)}.")
 
     # ---- shared: constitution ------------------------------------------------------
     const_rel = readings[slugs[0]].get("constitution", "architecture/constitution.md")
-    sections += [f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel)]
+    sections += [part("constitution"), f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel)]
 
     # ---- shared: architecture in force (index — reading it is retrieval) -----------
+    sections.append(part("architecture"))
     arch_idx = architecture_in_force()
     if arch_idx:
         sections += ["\n---\n\n# Architecture in force — read on demand (this is "
@@ -1777,6 +1968,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                              ARTIFACT_TABLE_HEAD, *rows])
 
     # ---- shared: contracts delivered from other vaults (vault-scoped by definition) -
+    sections.append(part("contracts"))
     ext_inputs = readings[slugs[0]].get("external_inputs") or []
     if ext_inputs:
         # Routed by consumer, not vault-scoped (1.25.2, rbac-compile finding: 44% of an
@@ -1875,6 +2067,8 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
             sections.append(f"- answered — `{rel_p}` ({meta}) → {by}")
             return
         outstanding += 1
+        head_needs.append(f"- from {owner}: `{rel_p}` ({meta})"
+                          + (f", to {', '.join(unanswered)}" if seat else ""))
         tag = "**UNANSWERED**" if len(for_slugs) == 1 else \
               f"**UNANSWERED** for {', '.join(unanswered)}" + \
               ("".join(f"; answered by `{states[s].relative_to(ROOT).as_posix()}` ({s})"
@@ -1883,6 +2077,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         sections.extend([f"## {tag} — from {owner}: `{rel_p}`{aud}\n\n"
                          f"_{meta}. Delivered because: {why}._\n", read_doc(p)])
 
+    sections.append(part("needs"))
     if seat and shared_needs:
         sections.append("\n---\n\n# Needs addressed to several of my components "
                         "(shown once)\n")
@@ -1894,6 +2089,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     for s in slugs:
         reading = readings[s]
         inputs = reading.get("inputs", [])
+        sections.append(part("contracts"))
         if seat:
             sections.append(f"\n---\n\n# Component: {s}\n")
         sections.append("\n---\n\n" + (f"## {s} — inputs" if seat else
@@ -1935,6 +2131,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
                     emit_artifacts(path, str(inp["interface"]), str(ver), delivered=False)
             drift_rows += [(s, inp)]
         solo = solo_needs[s]
+        sections.append(part("needs"))
         sections.append("\n" + (f"## {s} — needs addressed to me" if seat else
                         "\n---\n\n# Consumer feedback — needs addressed to me") + "\n")
         if not solo and not (seat and shared_needs):
@@ -1950,6 +2147,7 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
 
     # ---- shared: proposals (union, once) -------------------------------------------
     proposals_dir = ROOT / readings[slugs[0]].get("proposals", "architecture/proposals/")
+    sections.append(part("proposals"))
     sections.append("\n---\n\n# In-flight proposals affecting "
                     + ("this seat's components" if seat else "me") + "\n")
     hits = []
@@ -1987,16 +2185,43 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
         print(f"ATLAS-CONTEXT: WARNING — frontmatter of `{src}` does not parse "
               f"({detail}); it has NO fields for this briefing — a contract there reads "
               "as unpublished, an ask as unaddressed", file=sys.stderr)
-    text = "\n".join(sections) + "\n"
+    label = who if not seat else f"seat ({len(slugs)} components)"
+    if parts_dir:
+        extra = [f"\n## Unanswered needs addressed to you ({len(head_needs)})\n",
+                 *head_list(head_needs, F["needs"][0]),
+                 f"\nFull text of each is in `{F['needs'][0]}`. A need is answered when your "
+                 "`docs/provides/` carries `responds_to:` naming it.",
+                 f"\n## Proposals in flight affecting you ({len(hits)})\n",
+                 *head_list([f"- `{p.relative_to(ROOT).as_posix()}` (status: "
+                             f"{fm.get('status', '?')})" for p, fm, _ in hits],
+                            F["proposals"][0]),
+                 f"\nFull text of each is in `{F['proposals'][0]}`."]
+        moved_on = [(s, i) for s, i in drift_rows if i.get("state") != "aligned"]
+        if moved_on:
+            extra += [f"\n## Contracts you pin that have moved ({len(moved_on)} of "
+                      f"{len(drift_rows)})\n",
+                      *head_list([f"- {s + ': ' if seat else ''}`{i['interface']}` from "
+                                  f"{i['provider']}, pinned {i['pinned']}: "
+                                  f"{i.get('state', '?')}" for s, i in moved_on],
+                                 F["proposals"][0]),
+                      f"\nThe contracts are in `{F['contracts'][0]}`; the whole table is "
+                      f"in `{F['proposals'][0]}`."]
+        text, in_files, n_files = write_parts(sections, Path(parts_dir), F, who, extra)
+    else:
+        text = join_sections(sections)
     if out:
         Path(out).write_text(text, encoding="utf-8")
         print(f"wrote {out}", file=sys.stderr)
     else:
         sys.stdout.write(text)
     size = len(text.encode("utf-8"))
-    label = who if not seat else f"seat ({len(slugs)} components)"
-    print(f"ATLAS-CONTEXT for {label}: {size:,} bytes, ~{size // 4:,} tokens"
-          + (" — SESSION TOTAL in one artefact" if seat else ""), file=sys.stderr)
+    if parts_dir:
+        print(f"ATLAS-CONTEXT for {label}: head {units(text):,} characters; "
+              f"{in_files:,} characters in {n_files} file(s) -> "
+              f"{Path(parts_dir).resolve().as_posix()}", file=sys.stderr)
+    else:
+        print(f"ATLAS-CONTEXT for {label}: {size:,} bytes, ~{size // 4:,} tokens"
+              + (" — SESSION TOTAL in one artefact" if seat else ""), file=sys.stderr)
     if art_count:
         print(f"ATLAS-CONTEXT raw artifacts: {art_count} file(s), {art_bytes:,} bytes "
               f"-> {dest.as_posix() if dest else 'not written (pass --artifacts-dir)'}",
@@ -2004,7 +2229,8 @@ def emit_context(slug_arg: str, out: str | None, artifacts_dir: str | None = Non
     return 0
 
 
-def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
+def emit_arch_context(out: str | None, arch_only: bool = False,
+                      parts_dir: str | None = None) -> int:
     """The arch seat's reorientation briefing (method 1.23). Component seats re-orient
     from their io-manifest; an arch seat has no slug and works the vault directly, so
     when it compacts nothing re-injects its bearings (the orchestrator lost orientation
@@ -2014,11 +2240,14 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
     graph = load_graph()
     const_rel = "architecture/constitution.md"
     pol = graph.get("branching") or {}
+    F = PARTS_ARCH_HALF if arch_only else PARTS_ARCH
     sections = [
         "# ATLAS-CONTEXT — arch seat",
         "",
         *house_style(),
+        part("architecture"),
         *address_book(graph),
+        part("head"),
         *troubleshooting_pointer(),
         "> The architecture session's reorientation. You own `architecture/**` and the "
         "io-graph; you review component outboxes but never author them; you write only "
@@ -2030,6 +2259,7 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
         "## Every session, before acting: sync; answer the needs addressed to you (listed "
         "below); carry genuine human asks to the bridge (`_bridge/tasks.md`); act on "
         "dashboard reds; clear the review queue. (arch-seat.md §Every session.)",
+        part("constitution"),
         f"\n---\n\n## Constitution — `{const_rel}`\n", read_doc(ROOT / const_rel),
     ]
     if arch_only:
@@ -2040,8 +2270,14 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
                     "> You also hold this vault's architecture. Your review queue, the "
                     "estate picture, next-steps and the bridge are below; the constitution "
                     "and design record are in the component briefing above. Full protocol: "
-                    "`arch-seat.md`."]
+                    "`arch-seat.md`."
+                    if not parts_dir else
+                    "> You also hold this vault's architecture. Your review queue is "
+                    "below. The estate picture and next-steps are in the files whose "
+                    "names start `6-`, `7-` and `8-`; the constitution and design record "
+                    "are in the component files. Full protocol: `arch-seat.md`."]
     else:
+        sections.append(part("architecture"))
         arch_idx = architecture_in_force()
         if arch_idx:
             sections += ["\n---\n\n# Architecture in force — the design record (read on demand)\n",
@@ -2053,7 +2289,7 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
         sections += comms_banner(graph)
     # the estate/drift picture the dashboard shows
     branch_md, _ = gen_branch_section(graph)
-    sections += ["\n---\n\n# Estate & drift (dashboard view)\n", branch_md]
+    sections += [part("estate"), "\n---\n\n# Estate & drift (dashboard view)\n", branch_md]
     latest = latest_contract_versions()
     rows = edge_rows(graph, latest)
     hot = [r for r in rows if r["emoji"] in ("🔴", "🟠")]
@@ -2082,12 +2318,17 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
             continue
         if any(names_slug(_to, s) for s in _me):
             _mine.append((_p, _f, _p.stem in _answered))
+    sections.append(part("queue"))
     sections.append("\n---\n\n## Needs addressed to you (" + (f"{_pn}.arch" if _pn else "arch") + ")\n")
     if not _mine:
         sections.append("_none open._")
     for _p, _f, _ans in _mine:
         sections.append(f"- {'ANSWERED — raiser to retire' if _ans else '**OPEN**'}: "
                         f"`{_p.relative_to(ROOT).as_posix()}` — {_f.get('title', '')}")
+    _open = [f"- `{_p.relative_to(ROOT).as_posix()}`"
+             + (f": {str(_f.get('title') or _f.get('need'))[:100]}"
+                if _f.get("title") or _f.get("need") else "")
+             for _p, _f, _ans in _mine if not _ans]
     # in-flight proposals — the arch seat's review queue
     proposals_dir = ROOT / "architecture" / "proposals"
     props = [p for p in sorted(proposals_dir.glob("*.md"))
@@ -2099,19 +2340,45 @@ def emit_arch_context(out: str | None, arch_only: bool = False) -> int:
                  if props else ["_none._"])
     ns = ROOT / "next-steps.md"
     if ns.exists():
-        sections += ["\n---\n\n# next-steps.md — as last stated (replace before "
+        sections += [part("next"),
+                     "\n---\n\n# next-steps.md — as last stated (replace before "
                      "ending if anything moved)\n", read_doc(ns)]
+    sections.append(part("tail"))
     sections.append("\n---\n\n# The bridge\n"
                     "Read `_bridge/tasks.md` and `_bridge/threads/` in the project's Nav "
                     "vault; answer `@atlas` items before ending. (You write only there.)")
-    text = "\n".join(sections) + "\n"
+    if parts_dir:
+        extra = [f"\n## Open needs addressed to you ({len(_open)})\n",
+                 *head_list(_open, F["queue"][0]),
+                 f"\n## Proposals in flight, your review queue ({len(props)})\n",
+                 *head_list([f"- `{p.relative_to(ROOT).as_posix()}`: "
+                             f"{str(parse_frontmatter(p).get('title', p.stem))[:100]}"
+                             for p in props], F["queue"][0]),
+                 *([f"\n## Contract drift needing attention ({len(hot)})\n",
+                    *head_list([f"- {r['emoji']} {r['from']} to {r['to']} "
+                                f"`{r['interface']}` pinned {r['pinned']} ({r['label']})"
+                                for r in hot], F["estate"][0])] if hot else []),
+                 f"\nThe estate table is in `{F['estate'][0]}`. What you last said comes "
+                 f"next is in `{F['next'][0]}`: replace `next-steps.md` before ending if "
+                 "anything moved."]
+        text, in_files, n_files = write_parts(
+            sections, Path(parts_dir), F,
+            "the arch half of a both-hats seat" if arch_only else "the arch seat", extra)
+    else:
+        text = join_sections(sections)
     if out:
         Path(out).write_text(text, encoding="utf-8")
         print(f"wrote {out}", file=sys.stderr)
     else:
         sys.stdout.write(text)
     size = len(text.encode("utf-8"))
-    print(f"ATLAS-CONTEXT arch seat: {size:,} bytes, ~{size // 4:,} tokens", file=sys.stderr)
+    if parts_dir:
+        print(f"ATLAS-CONTEXT arch seat: head {units(text):,} characters; {in_files:,} "
+              f"characters in {n_files} file(s) -> {Path(parts_dir).resolve().as_posix()}",
+              file=sys.stderr)
+    else:
+        print(f"ATLAS-CONTEXT arch seat: {size:,} bytes, ~{size // 4:,} tokens",
+              file=sys.stderr)
     return 0
 
 
@@ -2360,14 +2627,31 @@ if __name__ == "__main__":
                          "bytes) to DIR/<interface>/<file>, beside the briefing")
     ap.add_argument("--out", metavar="PATH",
                     help="with --emit-context: write to PATH instead of stdout")
+    ap.add_argument("--parts-dir", metavar="DIR",
+                    help="with --emit-context or --emit-arch-context: write the content "
+                         "to files in DIR and print only a short head (a session-start "
+                         "hook carries at most 10,000 characters; 1.35.9)")
+    ap.add_argument("--compose-head", action="store_true",
+                    help="read a briefing head on stdin; print the list of briefing files "
+                         "in --parts-dir, then the head, held to --head-max characters. "
+                         "Reads no vault (1.35.9)")
+    ap.add_argument("--also-read", metavar="PATH=LABEL", action="append", default=[],
+                    help="with --compose-head: one more file to list for reading "
+                         "(repeatable; skipped if absent or empty)")
+    ap.add_argument("--head-max", metavar="N", type=int, default=HEAD_MAX,
+                    help=f"with --compose-head: the most the head may be (default {HEAD_MAX})")
     args = ap.parse_args()
     ROOT = Path(args.root).resolve()
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    if args.compose_head:
+        if not args.parts_dir:
+            ap.error("--compose-head needs --parts-dir")
+        sys.exit(compose_head(args.parts_dir, args.also_read, args.head_max))
     if args.emit_arch_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.exit(emit_arch_context(args.out, args.arch_only))
+        sys.exit(emit_arch_context(args.out, args.arch_only, args.parts_dir))
     if args.refresh_directory:
         n, src = directory_names()
         print(f"directory: {src or 'UNAVAILABLE (no secrets, no cache)'}"
@@ -2376,5 +2660,5 @@ if __name__ == "__main__":
     if args.emit_context:
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.exit(emit_context(args.emit_context, args.out, args.artifacts_dir))
+        sys.exit(emit_context(args.emit_context, args.out, args.artifacts_dir, args.parts_dir))
     sys.exit(main(args.check_wiring))

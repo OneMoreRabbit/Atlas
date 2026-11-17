@@ -11,6 +11,33 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.35.9 — 2026-11-17
+
+**TL;DR:** the session-start hook now prints a short head, and the briefing is in files
+the head lists. Before this, a seat saw only the first 2,000 characters of its briefing.
+
+- Cause: Claude Code carries 10,000 characters from one hook. Over that it keeps the
+  first 2,000 and a file path, and does not ask the agent to read the file. Briefings
+  are 34,000 to 81,000 characters. Proved on two seats, Claude Code 2.1.295.
+- The head is held under 9,000 characters. It leads with the list of files. Then the
+  mode, the house style, the reorientation steps after a compaction, and one line for
+  each unanswered need, proposal in flight and contract that has moved.
+- The files are in `ATLAS-CONTEXT.d/`, beside the seat's code or in the arch seat's
+  launch dir: `1-constitution.md`, `2-architecture.md`, `3-contracts.md`, `4-needs.md`,
+  `5-proposals-and-drift.md`. They are written fresh at every session start and never
+  committed.
+- **The seat reads every listed file before it acts.** The reads were injected; now they
+  are an instruction.
+- `atlas_init --verify` fails a hook that prints more than 10,000 characters.
+- A component seat now gets the full reorientation steps after a compaction. Before, it
+  got a four-line banner.
+- Tested in one Claude Code 2.1.295 session on a fixture seat. Not tested: Codex, later
+  Claude Code versions. Not changed: the product seat's script.
+
+**Action:** every component seat and arch seat, on the operator's go for the release that
+carries this: re-copy your seat scripts with `atlas_init.py --force`, by the steps in the
+migration note for that release. Until a seat does, its briefing is cut as before.
+
 ## v1.35.8 — 2026-11-17
 
 **TL;DR:** a vault has one branch. An Atlas vault lives on `dev` and has no `main`. A Nav

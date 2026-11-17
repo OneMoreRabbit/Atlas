@@ -349,6 +349,20 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+#   1.35.9 (2026-11-17, operator's go): the session-start hook prints a HEAD, and the
+#   briefing is in files. Claude Code carries 10,000 characters from one hook; over that
+#   it keeps the first 2,000 and a path, and does not ask the agent to read the rest.
+#   Briefings are 34,000 to 81,000 characters, so a seat saw 2,000 characters of its
+#   briefing (proved on two seats, Claude Code 2.1.295). Now the hook prints a head held
+#   under 9,000 characters: the list of files first, then warnings, mode, house style,
+#   the reorientation steps, and one line per unanswered need, proposal in flight and
+#   moved contract. The constitution, architecture, contracts, needs and proposals are
+#   written fresh at every start to files in ATLAS-CONTEXT.d/. The seat reads them: the
+#   reads are now an instruction, not an injection. atlas_validate --parts-dir and
+#   --compose-head; without them the output is unchanged. --verify fails a hook that
+#   prints over the limit. A component seat now gets templates/reorient.md after a
+#   compaction (its script tested the wrong variable and never printed it). §6;
+#   context-plane.md. MIGRATION: every seat re-copies its scripts (next-steps.md).
 #   1.35.8 (2026-11-17, operator ruling): a vault has one branch. An Atlas vault lives
 #   on dev and has no main; a Nav vault lives on main and has no dev. Before, the vault
 #   had a release branch "merged at periodic review" with no interval; in nine vaults it
@@ -1716,15 +1730,25 @@ perform them by browsing. The validator's `--emit-context <slug>[,<slug>...]` mo
 compiles all five, in that order, into a single **`ATLAS-CONTEXT.md`** — one seat, one
 briefing: a seat holding several slugs lists them all and shared sections are emitted
 once — each section headed with its source path and version, plus a drift summary. A
-`SessionStart` hook in the code repo syncs the vault and injects this artefact
-automatically — the protocol is mechanical, not
-trust-based; a session that starts has already "done the reads." The hook carries **no
+`SessionStart` hook in the code repo syncs the vault and compiles this artefact at every
+start, so the reading list is mechanical, not trust-based. The hook carries **no
 matcher, so it fires on compact, resume and clear as well as startup**: after a
-compaction the briefing is re-injected, headed by a reorientation directive, so a seat
+compaction the briefing is rebuilt, headed by a reorientation directive, so a seat
 re-orients itself rather than waiting to be asked (1.23). An **arch seat**, which has no
 slug and works the vault directly, gets the same via `--emit-arch-context` and the
 `templates/arch-seat/` hook — otherwise a compacted arch seat loses its bearings with
 nothing to restore them.
+
+> **The hook prints a head; the briefing is in files (1.35.9).** A runtime carries a
+> limited amount of text from one hook. Claude Code carries 10,000 characters; over that
+> it keeps the first 2,000 and does not ask the agent to read the rest. A briefing is
+> several times that size. So the hook prints a **head** that fits: the list of files
+> first, then the mode, the house style, the reorientation steps, and one line for each
+> unanswered need, proposal in flight and contract that has moved. The five reads
+> themselves are written to files in `ATLAS-CONTEXT.d/`, fresh at every start. **The
+> seat's first act is to read every file the head lists.** Compiling the reads is
+> mechanical; reading them is an instruction the seat follows. The file names and the
+> fallbacks are in `context-plane.md`, "The head and the files".
 
 > **The alignment gate (1.24): an arch update reaches a running seat by the end of its
 > current turn.** The briefing records which vault commit it was compiled from; the Stop

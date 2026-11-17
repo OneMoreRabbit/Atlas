@@ -1,8 +1,10 @@
 > ⟳ REORIENT — your context was just compacted. What you remember is a lossy summary:
-> it can state intentions as done, drop constraints, and merge separate items. The
-> briefing below is fresh; your memory is not. Re-orient from durable state before
-> doing anything:
+> it can state intentions as done, drop constraints, and merge separate items. Your
+> briefing is fresh; your memory is not. Re-orient from durable state before doing
+> anything:
 >
+> 0. Your briefing: if it lists files at its top, read every one now, in full. This
+>    text is only its head.
 > 1. Repos: for every clone in your launch dir, `git status`, `git pull --ff-only`,
 >    `git log --oneline -8`. Uncommitted changes are your unfinished work; recent
 >    commits are what actually happened.

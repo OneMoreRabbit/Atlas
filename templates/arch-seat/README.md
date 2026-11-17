@@ -7,6 +7,10 @@ briefing (`atlas_validate.py --emit-arch-context`), and a `Stop` alignment gate
 (`atlas-arch-guard.sh`) — quiet when local is equal or ahead, blocking the turn end
 when origin holds commits the checkout lacks.
 
+The `SessionStart` hook prints the head of the briefing and writes the rest to files in
+`ATLAS-CONTEXT.d/` in the launch dir. The head lists the files; the seat reads every one
+(1.35.9; context-plane.md, "The head and the files").
+
 **Install with one command:** run `python .atlas-method/tools/atlas_init.py --arch
 --launch-dir "$HOME/work"` from the vault checkout. The installer refuses to write
 hooks into the vault working tree — an arch seat launches beside its vault, so

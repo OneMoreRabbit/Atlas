@@ -6,7 +6,10 @@ updated: 2026-11-17
 
 # Next steps
 
-**TL;DR:** 1.35.8 is prepared on `dev` and NOT released (operator ruling 2026-11-17): a vault
+**TL;DR:** 1.35.9 is prepared on `dev` and NOT released (operator's go to build, 2026-11-17): the
+session-start hook prints a short head and the briefing is in files the head lists, because
+Claude Code cut every briefing to 2,000 characters; every seat re-copies its scripts at the release
+(see "Migration at the next estate release" and "Briefing head"). 1.35.8 is prepared on `dev` and NOT released (operator ruling 2026-11-17): a vault
 has one branch, Atlas vaults `dev` and Nav vaults `main`; the release that carries it deletes
 `main` in every Atlas vault (see "Migration at the next estate release"). 1.35.7 is prepared on `dev` and NOT released (orchestrator, hub #14571): a failed
 read of the needs register puts a dated line at the top of the list and exits 1. 1.35.6 is prepared on `dev` and NOT released (sync-compile fault report, hub #14459):
@@ -116,15 +119,49 @@ Not built: a project that declares `work: main` for its code keeps its Atlas vau
 `main`, because the scripts take the vault's branch from `work`. No estate project does.
 Build a separate vault branch only when a project needs it.
 
+**Briefing head (1.35.9).** Goes in that release's migration note. Per seat, after the
+vault's pin moves:
+
+1. Component seat, in each code repo:
+   `python3 .atlas-method/tools/atlas_init.py --component <slug> --force --launch-dir <launch dir>`,
+   commit the scripts, then the same command with `--verify` in place of `--force`.
+2. Arch seat, in the vault checkout:
+   `python3 .atlas-method/tools/atlas_init.py --arch --launch-dir <launch dir>`.
+3. Both: the verify line "prints no more than the hook carries" reads PASS.
+4. Both: start a new session. The briefing's first line is
+   `# ATLAS-CONTEXT: read these files before you act`.
+
+A seat that moves its pin and does not re-copy keeps the old script: its briefing is cut
+as before, and the SYNC DEGRADED warning leads it.
+
+## Briefing head (1.35.9, built, not released)
+
+Built on `dev`. Tested: `tools/tests/test_briefing_head.py`; a fixture seat as component,
+arch and both roles, at pins 1.35.9, 1.35.2 and 1.28.6; one real Claude Code 2.1.295
+session, which received the head whole, read the files unasked and answered from them.
+The real AgentEco vault gives heads of 3,600 to 4,800 characters. Open:
+
+1. **Not tested:** Codex, and Claude Code versions after 2.1.295.
+2. **Real-seat test** (orchestrator, after the release): one component seat and one arch
+   seat re-copy, start a session, and report whether the seat read the files.
+3. **Largest head measured:** a seat holding three AgentEco components and the arch role,
+   after a compaction, is 9,638 characters. It is cut to 8,942, the head says so, and the
+   whole head is saved as `0-head-in-full.md`. No estate seat is that shape today.
+4. **Not built:** the product seat's script prints its briefing whole. It is one line per
+   requirement and per ask, so it is short; change it when one passes 10,000 characters.
+5. **Not built:** a check that a seat has read the files before its first write. Build it
+   only if seats are seen to skip the files.
+6. `method-ci.yml` (orchestrator's file) does not run `test_briefing_head.py` until it
+   runs every `tools/tests/test_*.py` (Codex seats, item 3). Its fixture seat pins 1.28.6,
+   so CI runs the new scripts against an old method and checks the size line.
+7. `context-plane.pdf` is not regenerated and still says the whole briefing is injected.
+   No browser here can print it. `context-plane.md` and `context-plane.html` are current.
+
 ## Blocked on @nav
 
-- **IMPORTANT, briefing cut at 10,000 characters** (found 2026-11-17): Claude Code
-  replaces hook output over 10,000 characters with a 2,000 character preview and a file
-  path. Briefings measured at 34,000 to 61,000 characters; proved on this seat, Claude
-  Code 2.1.295. Fix is a short briefing head that fits the cap, says what is not loaded
-  and names the file to read. Not built; waits for the operator's go. Raised with the
-  orchestrator on the hub 2026-11-17. Detail: `Nav-Atlas/_bridge/threads/operational-atlas-research.md`
-  section 9.
+- **Release of 1.35.3 to 1.35.9**: waits for the operator's word. 1.35.9 is the fix for
+  the briefing cut at 10,000 characters; until it is released and seats re-copy their
+  scripts, every seat still sees only the first 2,000 characters of its briefing.
 - **Root `.gitignore` ownership**: arch seats cannot change their vault's root
   `.gitignore` (guard refuses root files; outboxes grant directories only). Rule needed:
   an exact-file grant, and who owns Nav vault roots (arch writes `_bridge/` only).

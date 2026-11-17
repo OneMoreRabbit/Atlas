@@ -1,8 +1,10 @@
 # The context plane — how Atlas fills and guards an agent's window
 
 Atlas holds what is true; three hooks put the right slice of it in front of the agent at
-the moment it's needed — and keep the rest out. **The reads are compiled and injected,
-never trusted to happen.** This is the full lifecycle for a component seat.
+the moment it's needed — and keep the rest out. **The reads are compiled for the seat,
+never left for it to find.** The head of the briefing goes into the window; the rest goes
+into files the head lists, and the seat reads them first (1.35.9). This is the full
+lifecycle for a component seat.
 
 > A richly-designed version of this diagram ships beside this file as
 > [`context-plane.html`](context-plane.html) — open it in a browser (GitHub shows HTML
@@ -13,10 +15,12 @@ flowchart TD
     START(["Session starts, resumes, /clears — or compacts"]) --> SS
 
     SS["<b>SessionStart</b> hook<br/>atlas-context.sh"]
-    SS -->|"stdout → added to context"| BRIEF["<b>ATLAS-CONTEXT.md</b> briefing injected<br/>constitution · inputs I build against · consumers' needs<br/>architecture index · proposals · drift"]
+    SS -->|"stdout, under 10,000 characters → added to context"| BRIEF["<b>Briefing head</b><br/>the files to read · mode · house style<br/>what is open: needs, proposals, moved contracts"]
+    SS -->|"written fresh at every start"| FILES["<b>ATLAS-CONTEXT.d/</b> briefing files<br/>constitution · architecture index · inputs I build against<br/>consumers' needs · proposals · drift"]
+    BRIEF -->|"the seat reads every file listed"| FILES
     COMPACT["Context compaction / resume / /clear<br/>(no separate hook)"] -.->|"re-fires with source: compact<br/>+ REORIENT directive"| SS
 
-    BRIEF --> TURN{"Work turn"}
+    FILES --> TURN{"Work turn"}
     TURN -->|"Write / Edit / MultiEdit attempted"| PTU["<b>PreToolUse</b> hook<br/>atlas-guard-write.sh"]
     PTU -->|"ALLOW — own outbox, own proposal, own edges"| TURN
     PTU -->|"DENY — anything else (fails closed)"| TURN
@@ -27,6 +31,7 @@ flowchart TD
 
     style SS fill:#dbe6f1,stroke:#275e8e,color:#161b21
     style BRIEF fill:#dbe6f1,stroke:#275e8e,color:#161b21
+    style FILES fill:#dbe6f1,stroke:#275e8e,color:#161b21
     style COMPACT fill:#f2e8cf,stroke:#9c7016,color:#161b21
     style PTU fill:#f6f7f9,stroke:#566472,color:#161b21
     style STOP fill:#f6f7f9,stroke:#566472,color:#161b21
@@ -40,7 +45,7 @@ what it prints and the code it exits with are how Atlas reaches into the session
 
 | Hook | Script | Fires | Does |
 |---|---|---|---|
-| **SessionStart** | `atlas-context.sh` | startup · resume · `/clear` · **compaction** (no matcher) | Compiles the whole reading list and prints it to stdout — the runtime adds it to the context window. The main injection, and the only one. |
+| **SessionStart** | `atlas-context.sh` | startup · resume · `/clear` · **compaction** (no matcher) | Compiles the whole reading list. Prints its head to stdout — the runtime adds it to the context window — and writes the rest to files in `ATLAS-CONTEXT.d/` that the head lists first. The main injection, and the only one. |
 | **PreToolUse** | `atlas-guard-write.sh` | before every file write (Claude Code: `Write` / `Edit` / `MultiEdit` / `NotebookEdit`; Codex: `apply_patch`) | Decides per file whether the write may land. Allows the seat's own outbox, an additive proposal, and edges naming it; refuses everything else (exit 2, the reason on stderr); fails closed. |
 | **Stop** | `atlas-guard-publish.sh` | end of every turn | Two checks that can exit 2 to refuse the turn's end: the **alignment gate** (vault moved since the briefing? re-brief) and the **publish nag** (vault clone dirty? `/atlas-publish`). Fails open offline. |
 
@@ -57,24 +62,68 @@ re-fires with its `source`, rebuilds the briefing from scratch, and prepends a d
 
 | `source` | What it means | Reorientation? |
 |---|---|---|
-| `startup` | a fresh session | briefing injected plainly; agent also reads `AGENTS.md` |
+| `startup` | a fresh session | briefing head injected plainly; agent also reads `AGENTS.md` |
 | `compact` | context was summarised to fit | **yes** — REORIENT prepended |
 | `resume` | a session picked back up | **yes** — REORIENT prepended |
 | `clear` | the window was deliberately wiped | **yes** — REORIENT prepended |
 
-The prepended banner, verbatim:
+The directive is the text of [`templates/reorient.md`](templates/reorient.md), the same
+for every kind of seat. It opens:
 
-> ⟳ **REORIENT — session was compacted.** Your working context was just rebuilt. Before
-> your next action: read the briefing below in full, confirm which component you are and
-> what you were doing, and resume from it. This is your complete orientation — do **not**
-> ask the operator to re-orient you.
+> ⟳ REORIENT — your context was just compacted. What you remember is a lossy summary: it
+> can state intentions as done, drop constraints, and merge separate items. Your briefing
+> is fresh; your memory is not. Re-orient from durable state before doing anything:
+>
+> 0. Your briefing: if it lists files at its top, read every one now, in full. This text
+>    is only its head.
+
+Six more steps follow: repos, the seat, contracts, the bridge, reconcile, order of work.
+(Until 1.35.9 a component seat got a four-line banner instead; its script tested the
+wrong variable.)
 
 Atlas rebuilds the whole briefing rather than trying to preserve fragments through the
 summary — the durable orientation is the compiled file, not whatever survived compaction.
 
+## The head and the files (1.35.9)
+
+A runtime carries a limited amount of text from one hook. Claude Code carries 10,000
+characters. Over that it keeps the first 2,000 and a path to a saved copy, and it does
+not ask the agent to read the copy. A briefing is 34,000 to 81,000 characters. Until
+1.35.9 a seat therefore saw the first 2,000 characters of its briefing and no more.
+
+So the hook prints a **head**, held under 9,000 characters, and writes the rest to files.
+
+| Where | What |
+|---|---|
+| the head, in the context window | the list of files, inside the first 2,000 characters; warnings; the mode and the house style; the reorientation steps after a compaction; who the seat is; one line for each unanswered need, each proposal in flight and each contract that has moved |
+| `ATLAS-CONTEXT.d/1-constitution.md` | the constitution, in full |
+| `ATLAS-CONTEXT.d/2-architecture.md` | architecture in force, the reference library, addresses, the hub |
+| `ATLAS-CONTEXT.d/3-contracts.md` | the contracts the seat builds against, in full |
+| `ATLAS-CONTEXT.d/4-needs.md` | the needs addressed to the seat, in full |
+| `ATLAS-CONTEXT.d/5-proposals-and-drift.md` | proposals in flight, in full, and the drift table |
+
+An arch seat's files are `1-constitution.md`, `2-architecture.md`, `3-estate-and-drift.md`,
+`4-needs-and-proposals.md` and `5-next-steps.md`, in `ATLAS-CONTEXT.d/` in its launch dir.
+A seat that holds both roles gets the component files and three more for the arch role,
+numbered 6 to 8. `~/.atlas/needs-open.md` is listed with them when it has content.
+
+- **The seat reads every listed file before it acts.** The hook cannot do that for it.
+- The folder is removed and written fresh at every start. It is local, never committed.
+- A head that would be over 9,000 characters is cut at a line end. The head says so, and
+  the whole head is saved as `0-head-in-full.md`, listed first.
+- A seat whose scripts are newer than its pinned method gets the whole briefing in one
+  file, `0-briefing.md`, and a head that names it.
+- `atlas_init --verify` fails a hook that prints more than 10,000 characters.
+- `atlas_validate.py --emit-context` without `--parts-dir` still prints the whole
+  briefing as one text.
+
+Tested 2026-11-17 on Claude Code 2.1.295, in one session on a fixture seat: the head
+arrived whole, and the session read the files unasked and answered from them. Not tested:
+Codex, and later Claude Code versions.
+
 ## What the briefing carries — and what it doesn't
 
-Injected, in emit order: the **constitution** (full); the **architecture-in-force** index
+Carried, in this order across the files: the **constitution** (full); the **architecture-in-force** index
 and **reference-library** index (read on demand — listing them makes reading retrieval,
 not browsing); cross-vault **inputs** routed to this consumer; the seat's **shared needs**
 once; per component, the **inputs it builds against** and its consumers' **open needs**;

@@ -76,6 +76,11 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 > the briefing in `ATLAS-CONTEXT.d/`. What a session does **not** do is browse the vault
 > beyond the briefing's reach. If the context proves insufficient, that is a defect in
 > `registry/io-graph.yml`: fix the graph, don't browse.
+>
+> **The briefing arrives as a head and files (1.35.9).** The head is in your context at
+> session start. It lists files in `ATLAS-CONTEXT.d/`. Read every one, in full, before you
+> act: the constitution, your contracts and the needs you owe are in those files, not in
+> the head.
 
 ---
 
@@ -263,7 +268,7 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    | Piece | Role |
    |---|---|
    | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); note for periodic review when the remote has a newer minor/major release than the pin; self-drift check on these scripts |
-   | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
+   | `scripts/atlas-context.sh` | sync, ensure PyYAML, compile the briefing; print its head (no more than 10,000 characters, the most a hook carries) and write the rest to files in `ATLAS-CONTEXT.d/`; refuses to inject anything that isn't a context artefact |
    | `scripts/atlas-payload.py` | reads each runtime's write payload for the write guard |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |
