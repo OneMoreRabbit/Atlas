@@ -1,7 +1,7 @@
 ---
 title: Skills
 status: active
-version: "1.0"
+version: "1.1"
 owner: atlas.arch
 updated: 2026-11-18
 about: where a skill is written, who owns it, how it reaches a seat and how it changes
@@ -14,11 +14,20 @@ the estate skills repo and is owned by the estate-skills seat. The estate direct
 says which seat gets which skill, and the operator switches each one on or off there.
 The estate installs them. Atlas does not install skills.
 
-**What exists, 2026-11-18.** The directory's skills register exists. The skills repo,
-the estate-skills seat and the install play are the orchestrator's. They are planned
-and not built (`Atlas-Orchestrator`,
-`components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`). Until
-they are, follow "Until the skills repo exists" at the foot of this page.
+**What exists, 2026-11-18.**
+
+- The skills repo exists: `OneMoreRabbit/estate-skills`, private, one branch, `main`.
+  It holds no skill and has no tag yet.
+- The estate-skills seat exists and is signed in.
+- The register and the operator's switches are on the development directory only.
+- The install play is not built.
+
+So today the estate installs nothing and switches nothing on a seat. A seat can offer a
+skill and have it merged now. The skill reaches seats only when the install play is
+proven and the operator has approved. The estate's plan is in `Atlas-Orchestrator`,
+`components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`. Until
+the orchestrator says the estate-skills seat answers on the hub, follow "Until the
+estate-skills seat answers" at the foot of this page.
 
 ## What a skill is
 
@@ -29,9 +38,12 @@ frontmatter and then gives the instructions.
 ---
 name: new-seat            # the same as the folder name
 description: Use whenever a seat is to be created, installed or retired.
-version: "0.1"
+version: "0.1"           # optional, and the author's own
 ---
 ```
+
+The estate's version of a skill is the tag of the skills repo, `v1`, `v2` and so on.
+The register holds that tag.
 
 The agent program reads every installed skill's `description` at session start. It
 loads the skill when a task matches that description. So the description says when to
@@ -56,7 +68,7 @@ folder without it is the seat's own.
 4. Publish it as you publish any document. The validator warns about a skill folder an
    agent program would not load, or the skills repo would refuse: no `SKILL.md`, a
    `name:` that is not the folder name, no `description:`, a folder name outside the
-   rule above.
+   rule above, or a copied `.estate-skill` file.
 5. To use it on your own seat, copy the folder into the agent program's folder above.
    The estate leaves it alone.
 
@@ -75,15 +87,17 @@ gets it.
 
 The skills repo's check refuses, besides what the validator warns about: a symbolic
 link, a binary file, a file over 1 MB, anything that looks like a secret, and an email
-address or an IP address that is not an example one. The check is
-`tools/check_skills.py` in the skills repo. You can run it on your `skills/` folder
-before you propose.
+address or an IPv4 address that is not an example one and not on the repo's allow
+list. The estate-skills seat runs that check and returns the faults in its answer. The
+validator's warnings are your own check.
 
 ## Changing an estate skill
 
 1. Any seat may propose a change, not only the seat that wrote the skill.
-2. Copy the skill from the skills repo into your own vault folder,
-   `components/<slug>/skills/<name>/`. Make the change there and publish it.
+2. Copy the installed folder from your own seat into your own vault folder,
+   `components/<slug>/skills/<name>/`. Leave out the file `.estate-skill`. Make the
+   change there and publish it. If the skill is not installed on your seat, raise the
+   need with no files.
 3. Raise a need to `orchestrator.component.estate-skills`. Name the folder and the
    vault commit.
 4. The estate-skills seat opens the pull request, and merges or rejects it.
@@ -92,8 +106,9 @@ before you propose.
 Raise the same need with no files when you have no change to offer: "we need a skill
 for X", or "this skill gave a wrong step".
 
-A seat cannot push to the skills repo today, so it cannot open the pull request itself.
-Every seat can read the repo and comment on a pull request.
+A seat cannot push to the skills repo, so it cannot open the pull request itself. On
+2026-11-18 most seats cannot read the repo either. Reading it from every seat is not
+built.
 
 ## How a skill reaches a seat
 
@@ -102,17 +117,18 @@ Every seat can read the repo and comment on a pull request.
    adds the skill's row to the directory's register, or moves it to the new tag.
 3. The operator switches the skill on for a role or an agent in the directory. For a
    skill already in the register, that switch is the go.
-4. The estate's install play copies each seat's assigned skills into the agent
-   program's folder on the seat. It removes the ones it installed that are no longer
-   assigned.
+4. The estate's install play copies each seat's assigned skills into the folder of the
+   agent program the skill is for. It removes the ones it installed that are no longer
+   assigned. It runs on the operator's request or on a schedule he agrees.
 5. The agent program picks the skill up at its next session start.
 
-A merge is not a deployment. Nothing changes on any seat before steps 2 to 4.
+A merge is not a deployment. Nothing changes on any seat before steps 2 to 4. A switch
+in the directory does not reach a seat at once: it waits for the next run of the play.
 
 ## Rules
 
 - **Never edit an installed copy.** The next install replaces it.
-- **No secret and no personal data in a skill.** Every seat can read the skills repo.
+- **No secret and no personal data in a skill.** A skill is copied to many seats.
 - **An estate skill carries its own steps.** A seat in another project cannot read
   your runbook. A skill used only inside one project may point at a runbook in
   `docs/manual/` and hold nothing else.
@@ -125,13 +141,25 @@ Skills that come with the agent program or from the operator's account are in th
 register too. The operator switches them on or off per role or agent, and the estate
 sets the switch on the seat. Do not switch them yourself.
 
+The estate writes these on a seat. Leave them alone:
+
+| File on the seat | What the estate writes |
+|---|---|
+| `~/.claude/settings.json` | the keys `skillOverrides` and `enabledPlugins` |
+| `~/.codex/config.toml` | the block between the lines `# BEGIN estate skills` and `# END estate skills` |
+
 | Kind | Where it is on the seat |
 |---|---|
 | Skill from the operator's account, Claude Code only | `~/.claude/skills/synced/<account>/` |
 | Plugin from the operator's account, Claude Code only | `~/.claude/plugins/synced/` |
 | Built into Codex | `~/.codex/skills/.system/` |
 
-Account skills and plugins update by themselves and carry no version.
+Account skills and plugins update by themselves. An account skill carries no version.
+A plugin carries its own, and the register holds it.
+
+Proof on 2026-11-18: `skillOverrides` is proven on two test seats. The plugin switch is
+from the Claude Code documentation only. The Codex switch is tested with Codex 0.160.0,
+not in a live session.
 
 ## Who does what
 
@@ -146,10 +174,12 @@ Account skills and plugins update by themselves and carry no version.
 
 In the directory, a role is a group of agents that skills are switched on for. An
 agent holds a role for each kind of address it owns, and any role the operator grants
-it. It is not the `role:` in a vault's `registry/io-graph.yml`.
+it. It is not the `role:` in a vault's `registry/io-graph.yml`. The operator can
+switch a skill off for one agent even when its role has it. Off wins.
 
-## Until the skills repo exists
+## Until the estate-skills seat answers
 
-Keep the skill in your own vault folder. To offer it or to ask for one, raise the need
-to `orchestrator.component.estate-manage`. This section is deleted when the
-orchestrator says the skills repo and its seat are live.
+Temporary. Raise every need this page sends to
+`orchestrator.component.estate-skills` to `orchestrator.component.estate-manage`
+instead. This section is deleted when the orchestrator says the estate-skills seat
+answers on the hub.

@@ -29,13 +29,15 @@ vault holds. Three rules join the house style in every briefing.
   without it is the seat's own and is left alone.
 - Off-the-shelf skills of Claude Code and Codex are in the register too and are
   switched the same way.
-- **Not built, and not Atlas's to build:** the skills repo, the estate-skills seat and
-  the install play. They are the orchestrator's, planned on 2026-11-18. Until they
-  exist, a seat keeps its skill in its own folder and asks by need to
+- **The estate's part is the orchestrator's.** On 2026-11-18 the skills repo and the
+  estate-skills seat exist. The install play is not built, so the estate installs
+  nothing and switches nothing on a seat yet. Until the orchestrator says the
+  estate-skills seat answers on the hub, a need about a skill goes to
   `orchestrator.component.estate-manage`.
 - The validator warns about a skill folder an agent program would not load, or the
   skills repo would refuse: no `SKILL.md`, a `name:` that is not the folder name, no
-  `description:`, a folder name that is not a lowercase slug or starts `codex-`.
+  `description:`, a folder name that is not a lowercase slug or starts `codex-`, a
+  copied `.estate-skill` file.
 - A vault holds what an agent is told. What an agent learns while working, and what it
   did, go to a memory folder mounted into the seat. That part is a later release. A
   vault holds no notes about a named person.

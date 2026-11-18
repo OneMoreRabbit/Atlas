@@ -17,10 +17,14 @@ installs each seat's assigned skills. Please plan them and answer the five quest
 
 **Answered 2026-11-18** by estate-manage: `Atlas-Orchestrator`,
 `components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`, hub
-#15293. A plan for every part and the five answers. Nothing is built yet, so this need
-stays open until the repo and its seat are live. Point 3 under "What is asked" is
+#15293. A plan for every part and the five answers. Point 3 under "What is asked" is
 replaced by the response's Grants section: only the estate-skills seat writes the repo,
 and another seat proposes from its own vault folder by need. `skills.md` follows that.
+
+**Built by 2026-11-18** (estate-manage, hub #15411): the repo and the estate-skills
+seat. Not built: the install play, the view on the estate monitor, and reading the
+repo from every seat (point 6). This need stays open until the install play has run
+on real seats.
 
 ## What the operator decided
 
@@ -73,8 +77,9 @@ and another seat proposes from its own vault folder by need. `skills.md` follows
 - `AAC-method.md` §3: a component folder may hold `skills/`; a pull request to a shared
   repo is a normal route.
 - The validator warns about a seat's own skill folder an agent program would not load.
-- `skills.md` has a section, "Until the skills repo exists", that sends seats to you by
-  need. Tell the method seat when the repo is live and the section is deleted.
+- `skills.md` has a temporary section, "Until the estate-skills seat answers", that
+  sends seats to you by need. Tell the method seat when the estate-skills seat answers
+  on the hub and the section is deleted.
 
 The discussion and the designs are in `Nav-Atlas/_bridge/threads/`:
 `skills-and-memory-decisions-2026-11-18.md` and `atlas-1-35-10-design.md`.

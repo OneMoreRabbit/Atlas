@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A seat's own skills are checked, warn-only (1.35.10; skills.md). An agent runtime
 loads a skill by the frontmatter of its SKILL.md and skips one it cannot read without
-saying so. This builds a scratch vault with one good skill and six broken ones and
+saying so. This builds a scratch vault with one good skill and eight broken ones and
 checks that the validator names each broken one, says nothing about the good one or an
 archived one, and does not change its exit code or report a frontmatter error."""
 import subprocess
@@ -61,11 +61,14 @@ edges: []
           "---\nname: Bad_Name\ndescription: Use when the folder name is not a slug.\n---\n\n# Bad name\n")
     write(skills / "codex-thing" / "SKILL.md",
           "---\nname: codex-thing\ndescription: Use when the name is kept for Codex.\n---\n\n# Kept\n")
+    write(skills / "copied-back" / "SKILL.md",
+          "---\nname: copied-back\ndescription: Use when a seat copied an installed skill.\n---\n\n# Copied\n")
+    write(skills / "copied-back" / ".estate-skill", "v1\n")
     after = validate(vault)
     out = after.stdout
     block = out.split("SKILLS", 1)[1] if "SKILLS" in out else ""
 
-    expect("SKILLS — 7 skill folder(s)" in out, f"expected seven warnings, got: {block[:400]!r}")
+    expect("SKILLS — 8 skill folder(s)" in out, f"expected eight warnings, got: {block[:400]!r}")
     expect("good-one" not in block, "the good skill was warned about")
     expect("old-one" not in block and "skills/archive:" not in block, "an archived skill was warned about")
     expect("wrong-name/SKILL.md: name: is 'another-name'" in block, "wrong name not named")
@@ -75,6 +78,7 @@ edges: []
     expect("skills/no-file: no SKILL.md" in block, "folder without SKILL.md not named")
     expect("skills/Bad_Name: the folder name is not a lowercase slug" in block, "bad folder name not named")
     expect("skills/codex-thing: a name starting codex-" in block, "codex- name not named")
+    expect("skills/copied-back: holds .estate-skill" in block, "copied install marker not named")
     expect(after.returncode == before.returncode,
            f"skill warnings changed the exit code: {before.returncode} -> {after.returncode}")
     expect("bad-yaml" not in out.split("SKILLS", 1)[0], "a bad skill was reported as a frontmatter error")

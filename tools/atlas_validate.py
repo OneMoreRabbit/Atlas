@@ -190,6 +190,8 @@ def skill_warnings() -> list[str]:
             warns.append(f"{rel}: the folder name is not a lowercase slug (a to z, 0 to 9, hyphen)")
         elif d.name.startswith("codex-"):
             warns.append(f"{rel}: a name starting codex- is kept for Codex's built-in skills")
+        if (d / ".estate-skill").exists():
+            warns.append(f"{rel}: holds .estate-skill, the estate's install marker; delete the file")
         f = d / "SKILL.md"
         if not f.is_file():
             warns.append(f"{rel}: no SKILL.md")
