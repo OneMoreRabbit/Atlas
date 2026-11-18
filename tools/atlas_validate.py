@@ -178,12 +178,18 @@ def skill_warnings() -> list[str]:
     """A seat's own skills, `components/<slug>/skills/<name>/SKILL.md` (1.35.10; skills.md).
     An agent runtime loads a skill by its frontmatter and skips one it cannot read
     without saying so. Warn-only: the folder must hold SKILL.md, `name:` must equal the
-    folder name, and `description:` must say when to use it."""
+    folder name, and `description:` must say when to use it. The folder name is a
+    lowercase slug and does not start `codex-`: the estate skills repo's check refuses
+    both (orchestrator, hub #15311), so a seat hears it before it proposes."""
     warns = []
     for d in sorted(ROOT.glob("components/*/skills/*")):
         if not d.is_dir() or NAME_SKIP_DIRS & set(d.relative_to(ROOT).parts):
             continue
         rel = d.relative_to(ROOT).as_posix()
+        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", d.name):
+            warns.append(f"{rel}: the folder name is not a lowercase slug (a to z, 0 to 9, hyphen)")
+        elif d.name.startswith("codex-"):
+            warns.append(f"{rel}: a name starting codex- is kept for Codex's built-in skills")
         f = d / "SKILL.md"
         if not f.is_file():
             warns.append(f"{rel}: no SKILL.md")

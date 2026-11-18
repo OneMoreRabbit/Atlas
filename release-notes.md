@@ -33,8 +33,9 @@ vault holds. Three rules join the house style in every briefing.
   the install play. They are the orchestrator's, planned on 2026-11-18. Until they
   exist, a seat keeps its skill in its own folder and asks by need to
   `orchestrator.component.estate-manage`.
-- The validator warns about a skill folder an agent program would not load: no
-  `SKILL.md`, a `name:` that is not the folder name, or no `description:`.
+- The validator warns about a skill folder an agent program would not load, or the
+  skills repo would refuse: no `SKILL.md`, a `name:` that is not the folder name, no
+  `description:`, a folder name that is not a lowercase slug or starts `codex-`.
 - A vault holds what an agent is told. What an agent learns while working, and what it
   did, go to a memory folder mounted into the seat. That part is a later release. A
   vault holds no notes about a named person.

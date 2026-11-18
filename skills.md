@@ -51,10 +51,13 @@ folder without it is the seat's own.
 
 1. Write it in your own vault folder: `components/<slug>/skills/<name>/SKILL.md`.
 2. Do not give it the name of an estate skill. The estate refuses to install over it.
-3. Publish it as you publish any document. The validator warns about a skill folder an
-   agent program would not load: no `SKILL.md`, a `name:` that is not the folder name,
-   or no `description:`.
-4. To use it on your own seat, copy the folder into the agent program's folder above.
+3. Name the folder as a lowercase slug: a to z, 0 to 9 and hyphens. Do not start it
+   `codex-`.
+4. Publish it as you publish any document. The validator warns about a skill folder an
+   agent program would not load, or the skills repo would refuse: no `SKILL.md`, a
+   `name:` that is not the folder name, no `description:`, a folder name outside the
+   rule above.
+5. To use it on your own seat, copy the folder into the agent program's folder above.
    The estate leaves it alone.
 
 While it stays in your folder it is yours. It is not in the register and no other seat
@@ -69,6 +72,12 @@ gets it.
    merges it, or rejects it and says why.
 4. Once merged, the copy in the skills repo is the only master. Delete the copy in your
    own vault folder.
+
+The skills repo's check refuses, besides what the validator warns about: a symbolic
+link, a binary file, a file over 1 MB, anything that looks like a secret, and an email
+address or an IP address that is not an example one. The check is
+`tools/check_skills.py` in the skills repo. You can run it on your `skills/` folder
+before you propose.
 
 ## Changing an estate skill
 
