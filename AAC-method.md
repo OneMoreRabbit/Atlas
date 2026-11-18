@@ -355,7 +355,12 @@ updated: 2026-09-13
 #   folder, and atlas_init warns when the launch dir is not trusted (five seats
 #   listed no hooks, hub #15948). A component re-install without --launch-dir keeps
 #   the launch dir recorded in .atlas.conf. context-plane.md, "Runtimes";
-#   tools/atlas_init.py; templates/seat-hooks.json. No seat script changed.
+#   tools/atlas_init.py; templates/seat-hooks.json. New tools/codex_trust.py: reports,
+#   and with --record has Codex record, trust for the Atlas hooks at a launch dir, so
+#   no person visits a Codex seat (operator, 2026-11-18). It trusts only a hook that
+#   runs a script equal to the method's; folder trust stays seat provisioning's. Not
+#   yet run on a real seat. Release notes rule 5: an Action that needs a person at a
+#   seat says so with the count. No seat script changed.
 # 1.36.2 (2026-11-18): two faults reported in the 1.36 rollout. (1) The release notes
 #   check skips a tag with a suffix: on the work branch, after a release that had a
 #   candidate, the nearest tag is the candidate and the briefing asked for its heading

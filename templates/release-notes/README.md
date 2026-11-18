@@ -12,3 +12,5 @@
 4. The validator warns when a vault's newest tag has no such entry; the component
    briefing warns the same for the code repo it runs in. A tag with a suffix (`rc1`,
    `dev`) is not a release: it needs no entry and the check skips it (1.36.2).
+5. An Action that needs a person at a seat says so and says how many seats. An Action a
+   tool can run from the host is written as that command (1.36.3).

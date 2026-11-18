@@ -88,7 +88,8 @@
       "folder_trust": {"home_env": "CODEX_HOME", "home": "~/.codex", "file": "config.toml",
                        "table": "projects", "key": "trust_level", "value": "trusted",
                        "how": "Start Codex in <launch dir> and answer yes when it asks whether to trust the folder."},
-      "after_install": "Codex reads the hook file only in a trusted folder, and runs a new or changed hook only after the hook is trusted. It gives no warning for either. Start Codex in <launch dir>. Answer yes when it asks whether to trust the folder. Open /hooks and trust the Atlas hooks. If /hooks lists none, the folder is not trusted."
+      "trust_tool": "tools/codex_trust.py",
+      "after_install": "Codex reads the hook file only in a trusted folder, and runs a new or changed hook only after the hook is trusted. It gives no warning for either. Seat provisioning trusts the folder. Then run, from a shell on the seat: python3 <method>/tools/codex_trust.py --launch-dir <launch dir> --record. Then restart every session on the seat from a shell outside the session. By hand instead: start Codex in <launch dir>, answer yes to trust the folder, open /hooks and trust the Atlas hooks."
     }
   }
 }

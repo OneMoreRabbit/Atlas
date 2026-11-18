@@ -164,28 +164,42 @@ request.
 
 **Codex trust.** Codex needs two kinds of trust and gives no warning when either is
 missing. It reads `.codex/hooks.json` only in a folder it trusts. It skips a new or
-changed hook until the hook is trusted. After an install, and after any upgrade that
-changes `.codex/hooks.json`:
+changed hook until the hook is trusted. A seat started by the seat tool is never asked
+for either. After an install, and after any upgrade that changes `.codex/hooks.json`,
+from a shell on the seat and outside any session:
 
-1. Start Codex in the launch dir. When it asks whether to trust the folder, answer yes.
-2. Open `/hooks` and trust the Atlas hooks. If `/hooks` lists none, the folder is not
-   trusted: `~/.codex/config.toml` has no `[projects."<launch dir>"]` section with
-   `trust_level = "trusted"` (seen on five seats, 2026-11-18).
+1. Seat provisioning has trusted the launch dir: `~/.codex/config.toml` has a
+   `[projects."<launch dir>"]` section with `trust_level = "trusted"`. The method does
+   not write it.
+2. Run `python3 <method>/tools/codex_trust.py --launch-dir <launch dir> --record`. It
+   must end `codex_trust: ready`.
 3. Stop every session running on the seat and start it again. That includes the session
-   that receives hub messages. The briefing must be in the context of each one.
+   that receives hub messages.
+4. Check that the seat answers and that its briefing is in its context.
+
+`<method>` is the method checkout the seat's scripts were copied from. The tool asks
+Codex for the hooks it sees and has Codex record the trust, as Codex's `/hooks` screen
+does. It trusts a hook only when the hook is in the launch dir's hook file and runs a
+script that is the same as the method's. It leaves any other hook untrusted and says
+so. Without `--record` it only reports. Exit 0 is ready, 1 is not ready, 2 is Codex
+could not be asked.
+
+By hand, where the tool cannot run: start Codex in the launch dir, answer yes to trust
+the folder, open `/hooks`, trust the Atlas hooks, quit, then step 3. If `/hooks` lists
+none, the folder is not trusted (seen on five seats, 2026-11-18).
 
 A session started before step 2 runs without the hooks: it has no briefing and its writes
 are not checked (seen on a real seat, 2026-11-18). Until it is restarted it writes
-nothing.
-
-A person does steps 1 to 3, from a shell on the seat. A session never restarts itself:
-one that tried ended and no new one started. After step 3 check that the seat answers.
+nothing. A session never restarts itself: one that tried ended and no new one started.
 A restart may archive the old conversation; it is not deleted.
+
+Tested 2026-11-18 on Codex CLI 0.160.0 with a scratch Codex home. Not tested: a real
+seat that the seat tool starts.
 
 **Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
 those seats) fires each runtime's write guard as wired, at one path it must allow and one
 it must refuse. It warns when Codex does not trust the launch dir (1.36.3). It cannot see
-whether the hooks are trusted; step 3 above does.
+whether the hooks are trusted; `codex_trust.py` without `--record` does.
 
 **To add a runtime:**
 
@@ -193,6 +207,10 @@ whether the hooks are trusted; step 3 above does.
 2. If its write payload has a new shape, add one branch to
    `templates/component-repo/scripts/atlas-payload.py`.
 3. Run `python3 tools/tests/test_seat_hooks.py`.
-4. Install on a real seat of that runtime and run `--verify`.
-5. In a live session there, check: the briefing is in context, a write outside the scope
+4. If the runtime must be told to trust the hooks, add a tool that does it without a
+   person and name it as `trust_tool` in the entry.
+5. Install on a real seat of that runtime, started the way the estate starts it, and
+   run `--verify`.
+6. In a live session there, check: the briefing is in context, a write outside the scope
    is refused, a write inside the scope lands.
+7. Do not release until steps 5 and 6 have passed with no person at the seat.

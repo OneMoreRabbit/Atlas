@@ -187,7 +187,8 @@ def print_runtime_notes(launch_dir: Path) -> None:
                   "does not read the hook file there and lists no hooks to trust. "
                   + rt["folder_trust"]["how"].replace("<launch dir>", str(launch_dir)))
         if rt.get("after_install"):
-            print(f"  note   {name}: " + rt["after_install"].replace("<launch dir>", str(launch_dir)))
+            print(f"  note   {name}: " + rt["after_install"].replace("<launch dir>", str(launch_dir))
+                  .replace("<method>", str(Path(__file__).resolve().parent.parent)))
 
 
 def portable_launch_dir(launch_dir: Path) -> str:
