@@ -27,7 +27,7 @@ declared it.
 ## 3. The lane to the human — `_gps/` (1.28.10)
 
 1. Operator grants a Nav PAT scoped to `Nav-<Project>` (write).
-2. `git clone <nav-remote> "$HOME/work/Nav-<Project>"`.
+2. `git clone <nav-remote> "$HOME/work/Nav-<Project>"`. The Nav vault has one branch, `dev`.
 3. Re-run step 2.3 adding `--nav "$HOME/work/Nav-<Project>"` — the guard then permits
    `_gps/**` there and nothing else.
 4. `mkdir -p "$HOME/work/Nav-<Project>/_gps"` — direction and drafts live there;

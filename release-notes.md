@@ -11,6 +11,77 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.36.1 — 2026-11-18
+
+**TL;DR:** every vault is on `dev` and no vault has a `main`. A Nav vault now follows
+the same rule as an Atlas vault. Operator ruling, 2026-11-18. No seat script changed.
+
+- A vault is never released, so it has no release branch. That holds for
+  `Atlas-<Project>` and for `Nav-<Project>`.
+- The specification (§9 and the glossary), `bridge-init.md`, `arch-seat.md`,
+  `product-init.md` and the operating manual say so. The arch briefing says so.
+- The dashboard's branch table reads a Nav vault listed as a component by this rule:
+  "one branch, `dev`"; red while it has a `main`; red while it has no `dev`.
+- The Nav vault step in the v1.36.0 entry is withdrawn. No Nav vault was moved by it.
+- Everything else in v1.36.0 stands. Its steps for an arch seat, a component seat, a
+  product seat and a test seat do not change.
+
+Measured 2026-11-18. Eleven Nav vaults have only `main`: Nav-AgentEco, Nav-ArcPlatform,
+Nav-ArcWeb, Nav-Atlas, Nav-Blocks, Nav-DiscoCat, Nav-FrogYeti, Nav-Labs,
+Nav-MathsPractise, Nav-Orchestrator, Nav-Orient. Four have `dev` as the default branch
+and an old `main` that holds nothing `dev` lacks: Nav-AiTutor, Nav-ArcGIS, Nav-Idea,
+Nav-MicoManager.
+
+**Action:** on the operator's go, which the orchestrator passes on.
+
+**A vault already pinned 1.36.0**, arch seat, in the vault checkout:
+
+1. `git checkout dev`, `git pull --ff-only`, `git checkout -b atlas/migration/1.36.1`.
+2. In `registry/io-graph.yml` set `pinned: '1.36.1'` under `method:`. Keep the quotes.
+3. `git -C <method checkout> fetch --tags origin`, then
+   `git -C <method checkout> checkout v1.36.1`.
+4. `python3 <method checkout>/tools/atlas_validate.py .` exits 0. The drift report reads
+   `method  pinned 1.36.1 — aligned`.
+5. Commit, push the branch, open the pull request against `dev`, wait for green CI,
+   merge.
+6. Tell your component seats the pin has moved. They re-copy nothing: their next
+   `sh scripts/atlas-sync.sh` prints `method pin 1.36.1`. A product seat and a test seat
+   do nothing.
+
+**A vault with its 1.36.0 pull request open** stays on that branch,
+`atlas/migration/1.36.0`: do steps 2 to 4 there, commit, push, wait for green CI, merge.
+Then finish the v1.36.0 steps you had not reached. Scripts already re-copied from
+1.36.0 stay: they are the same files.
+
+**A vault not yet on 1.36.0** follows the steps of the v1.36.0 entry with `1.36.1` in
+place of `1.36.0` everywhere: the branch name, the pin and the tag.
+
+**An Atlas vault's `main`** is deleted as the v1.36.0 entry says. One already deleted
+stays deleted.
+
+**Nav vault that has only `main`.** The orchestrator does these steps, one vault at a
+time, each on the operator's word, because his own copy of the vault changes branch:
+
+1. Check that nothing outside the method names `main` for a Nav vault: the estate's
+   mirror of the vaults, the daily copy, and whatever writes into a vault's `_inbox/`.
+2. In a fresh clone: `git push origin origin/main:refs/heads/dev`.
+3. Set the default branch to `dev` in the repo's settings on GitHub.
+4. `git push origin --delete main`.
+5. Tell the operator and the project's arch and product seats. Each, in every copy of
+   the Nav vault, the same day:
+   `git branch -m main dev`, `git fetch --prune origin`, `git branch -u origin/dev dev`,
+   `git remote set-head origin dev`.
+   Unpushed commits and uncommitted changes stay. A copy left on `main` that pushes
+   makes a new `main` on GitHub; delete it again.
+
+**Nav vault that has `dev` and an old `main`.** The orchestrator, on the operator's
+word:
+
+1. `git fetch origin`, then `git log --oneline origin/dev..origin/main` prints nothing.
+2. `git push origin --delete main`.
+3. Every copy: `git fetch --prune origin`. A copy that is on `main` follows step 5
+   above.
+
 ## v1.36.0 — 2026-11-18 (estate release)
 
 **TL;DR:** everything since 1.35.0, rolled up for the whole estate. Every seat re-copies
@@ -22,8 +93,8 @@ migration note their entries point to.
 - **Briefing head.** The session-start hook prints a short head, and the briefing is in
   files the head lists. A seat that has not re-copied its scripts sees only the first
   2,000 characters of its briefing. (1.35.9)
-- **One branch per vault.** An Atlas vault lives on `dev` and has no `main`. A Nav vault
-  lives on `main` and has no `dev`. (1.35.8)
+- **One branch per vault.** An Atlas vault lives on `dev` and has no `main`. For a Nav
+  vault see v1.36.1. (1.35.8)
 - **Codex seats** get the briefing and the guards. (1.35.4)
 - **`development-and-release.md`** is the one page for the path from development to
   production. House style rule 8 states it. (1.35.3)
@@ -33,8 +104,7 @@ migration note their entries point to.
   `/atlas-publish` step 6b is one script (1.35.5). A failed needs refresh says so and
   exits 1 (1.35.7).
 - New in this release: the dashboard's branch table reads a vault listed as a component
-  as a vault. A Nav vault on `main` with no `dev` is no longer red. A Nav vault that has
-  a `dev` is red.
+  as a vault. For the Nav vault's row see v1.36.1.
 - `templates/vault-ci/` has not changed since v1.35.0. A vault that copied it then
   copies nothing now.
 
@@ -106,16 +176,8 @@ moved:
 3. Codex seat only: trust the Atlas hooks in `/hooks`.
 4. Start a new session. Report the last line of step 2 to your arch seat.
 
-**Nav vault that has a `dev`.** On 2026-11-18 four do: Nav-AiTutor, Nav-ArcGIS, Nav-Idea
-and Nav-MicoManager. In all four `main` is behind `dev` and holds nothing `dev` lacks.
-The orchestrator does these steps, one vault at a time, each on the operator's word,
-because the operator's own copy of the vault is on `dev`:
-
-1. In a fresh clone: `git push origin origin/dev:main`.
-2. Set the default branch to `main` in the repo's settings on GitHub.
-3. `git push origin --delete dev`.
-4. Tell the operator and the project's arch and product seats. Each, in its copy of the
-   Nav vault: `git fetch --prune origin`, `git checkout main`, `git pull --ff-only`.
+**Nav vaults.** The step that stood here was withdrawn on 2026-11-18, before any Nav
+vault was touched. The steps for a Nav vault are in v1.36.1.
 
 **A vault pinned below 1.35.0** first follows `README.md`, "Upgrading an existing vault
 to a new method version", and the Action lines of the entries between its pin and this
@@ -185,8 +247,8 @@ migration note for that release. Until a seat does, its briefing is cut as befor
 
 ## v1.35.8 — 2026-11-17
 
-**TL;DR:** a vault has one branch. An Atlas vault lives on `dev` and has no `main`. A Nav
-vault lives on `main` and has no `dev`. Operator ruling, 2026-11-17.
+**TL;DR:** a vault has one branch. An Atlas vault lives on `dev` and has no `main`.
+Operator ruling, 2026-11-17. A Nav vault follows the same rule from v1.36.1.
 
 - Before: the Atlas vault had a `main` that the arch seat merged "at periodic review".
   No interval was set, `main` sat months old, and seats and people read it by mistake.

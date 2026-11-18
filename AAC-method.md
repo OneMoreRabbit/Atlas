@@ -349,10 +349,15 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.36.1 (2026-11-18, operator ruling): every vault is on dev and no vault has a main.
+#   A Nav vault follows the same rule as an Atlas vault: a vault is never released, so
+#   it has no release branch. §9, the glossary and bridge-init.md say so; the dashboard
+#   reads a Nav vault listed as a component by that rule. No seat script changed: a
+#   vault on 1.36.0 only moves its pin. Steps: release-notes.md. Pin '1.36.1'.
 # 1.36.0 (2026-11-18): ESTATE RELEASE — rolls up 1.35.1-1.35.10. 1.35.3 to 1.35.10 were
 #   never tagged: this tag is their release. The session-start hook prints a head and the
-#   briefing is in files the head lists; a vault has one branch (Atlas vaults dev, Nav
-#   vaults main); seat hooks for every agent runtime, Codex added; development-and-release.md,
+#   briefing is in files the head lists; a vault has one branch (see 1.36.1 for Nav
+#   vaults); seat hooks for every agent runtime, Codex added; development-and-release.md,
 #   the one page for the path to production; skills.md, and what a vault holds; house
 #   style rules 8 to 11; atlas-sync leaves uncommitted work on its branch; publish step 6b
 #   is one script; a failed needs refresh says so and exits 1; a vault listed as a
@@ -388,7 +393,7 @@ updated: 2026-09-13
 #   compaction (its script tested the wrong variable and never printed it). §6;
 #   context-plane.md. MIGRATION: every seat re-copies its scripts (next-steps.md).
 #   1.35.8 (2026-11-17, operator ruling): a vault has one branch. An Atlas vault lives
-#   on dev and has no main; a Nav vault lives on main and has no dev. Before, the vault
+#   on dev and has no main (Nav vaults: the same, from 1.36.1). Before, the vault
 #   had a release branch "merged at periodic review" with no interval; in nine vaults it
 #   had not moved for one to three months, two vaults had none, and seats and people
 #   read the old copy. Nothing in the method reads a vault's release branch. §9 states
@@ -2130,18 +2135,21 @@ test realities), but it is **declared, never assumed**: a `branching:` block in
 `release` branch is merged **only by the architecture session, at periodic review**. A
 trunk-only project declares `work: main` and omits `release`.
 
-**A vault has one branch (1.35.8, operator ruling 2026-11-17).** The `release` branch is
-for code repos. The two vaults of a project never have one:
+**A vault has one branch, `dev`, and no `main` (operator rulings 2026-11-17 and
+2026-11-18; 1.35.8, 1.36.1).** A vault is never released, so it has no release branch.
+The `release` branch is for code repos. Both vaults of a project follow the same rule:
 
 | Vault | Its one branch | Never has |
 |---|---|---|
 | Atlas vault, `Atlas-<Project>` | `dev` | `main` |
-| Nav vault, `Nav-<Project>` | `main` | `dev` |
+| Nav vault, `Nav-<Project>` | `dev` | `main` |
 
-Every seat reads and writes the Atlas vault on `dev`. Nothing is merged from it to
-anywhere, on any schedule: a second branch is only an old copy that somebody reads by
-mistake. The scripts take the Atlas vault's branch from `work`, which is `dev` on the
-default policy. The dashboard shows red while an Atlas vault still has a release branch.
+Everyone reads and writes a vault on `dev`: every seat, and the operator in a Nav vault.
+Nothing is merged from a vault to anywhere, on any schedule: a second branch is only an
+old copy that somebody reads by mistake. The scripts take the Atlas vault's branch from
+`work`, which is `dev` on the default policy. No script switches the branch of a Nav
+vault: a copy stays on the branch it was cloned on, and `dev` is the default branch. The
+dashboard shows red while a vault still has a release branch, or has no `dev`.
 
 Why this must be mechanical: the current branch is *invisible ambient state* — the
 working tree looks identical on every branch, nothing in a session's loop surfaces it,
@@ -2162,7 +2170,7 @@ every point where a session meets a repo:
   recoverably — instead of landing silently.
 - **The dashboard reports per-repo branch status** (validator, §8): each repo's default
   branch against policy, work-vs-release divergence (unreleased changes awaiting the
-  periodic review), and the latest release tag. The vault's row says "one branch", or
+  periodic review), and the latest release tag. A vault's row says "one branch", or
   red when it still has a release branch. Misalignment is visible red, but
   branch status never fails the run — it is seat configuration, not contract truth.
 
@@ -2599,6 +2607,6 @@ briefings, CI) never calls out to any of them.
 - **Constitution** — the inviolable, global principles every component reads first.
 - **ADR** — Architecture Decision Record; the unit of the vertical proposal flow.
 - **Nav vault** — `Nav-<Project>`: the human's idea space beside the Atlas vault.
-  Human-edited only, one branch (`main`, no `dev`), exempt from canon and ceremony.
+  Human-edited only, one branch (`dev`, no `main`), exempt from canon and ceremony.
 - **Bridge** — `_bridge/` in the Nav vault: the human/AI interface (owner-tagged
   tasks + threads); the one place the AI writes in a Nav vault. See [[bridge-init]].

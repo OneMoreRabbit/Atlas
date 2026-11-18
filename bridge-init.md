@@ -31,8 +31,8 @@ where that discussion lives, durably — sessions evaporate; files persist.
 ## Where
 
 `_bridge/` at the root of the project's Nav vault — `Nav-<Project>` (formerly
-`Dev-<Project>`). The underscore sorts it first in Obsidian. Nav vaults are trunk-only
-on `main`, with no `dev` branch, and messy by right: no naming canon, no branch policy, no ceremony —
+`Dev-<Project>`). The underscore sorts it first in Obsidian. A Nav vault has one
+branch, `dev`, and no `main` (AAC-method §9), and is messy by right: no naming canon, no ceremony —
 hygiene `.gitignore` (`.trash/`, workspace cruft) only.
 
 ```
