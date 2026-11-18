@@ -41,7 +41,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
     import atlas_init  # noqa: E402
 except ImportError:
-    sys.exit("codex_trust: CANNOT ASK  run this from a method checkout: it needs tools/atlas_init.py and templates/")
+    print("codex_trust: CANNOT ASK  run this from a method checkout: it needs tools/atlas_init.py and templates/")
+    sys.exit(2)
 
 RUNTIME = "codex"
 ATLAS_CMD = re.compile(r'^(?:[A-Z_]+=\S+ )*sh "([^"]+/(atlas-[a-z-]+\.sh))"(?: 2>/dev/null \|\| true)?$')
