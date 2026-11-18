@@ -351,7 +351,11 @@ updated: 2026-09-13
 #   every briefing. §6; component-init; arch-seat.
 # 1.36.3 (PREPARED, NOT RELEASED): Codex trust steps are done by a person from a
 #   shell; a session never restarts itself (estate-directory, hub #15932).
-#   context-plane.md, "Runtimes". Text only.
+#   Codex reads the hook file only in a trusted folder: step 1 says to trust the
+#   folder, and atlas_init warns when the launch dir is not trusted (five seats
+#   listed no hooks, hub #15948). A component re-install without --launch-dir keeps
+#   the launch dir recorded in .atlas.conf. context-plane.md, "Runtimes";
+#   tools/atlas_init.py; templates/seat-hooks.json. No seat script changed.
 # 1.36.2 (2026-11-18): two faults reported in the 1.36 rollout. (1) The release notes
 #   check skips a tag with a suffix: on the work branch, after a release that had a
 #   candidate, the nearest tag is the candidate and the briefing asked for its heading

@@ -162,11 +162,15 @@ is in its context: run the briefing script, keep the write scope by hand, run th
 turn-end gate before finishing, and tell the operator. Vault CI still checks every pull
 request.
 
-**Codex trust.** Codex skips a new or changed hook until it is trusted, and gives no
-warning. After an install, and after any upgrade that changes `.codex/hooks.json`:
+**Codex trust.** Codex needs two kinds of trust and gives no warning when either is
+missing. It reads `.codex/hooks.json` only in a folder it trusts. It skips a new or
+changed hook until the hook is trusted. After an install, and after any upgrade that
+changes `.codex/hooks.json`:
 
-1. Start Codex in the launch dir. The launch dir must be a trusted project.
-2. Open `/hooks` and trust the Atlas hooks.
+1. Start Codex in the launch dir. When it asks whether to trust the folder, answer yes.
+2. Open `/hooks` and trust the Atlas hooks. If `/hooks` lists none, the folder is not
+   trusted: `~/.codex/config.toml` has no `[projects."<launch dir>"]` section with
+   `trust_level = "trusted"` (seen on five seats, 2026-11-18).
 3. Stop every session running on the seat and start it again. That includes the session
    that receives hub messages. The briefing must be in the context of each one.
 
@@ -180,7 +184,8 @@ A restart may archive the old conversation; it is not deleted.
 
 **Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
 those seats) fires each runtime's write guard as wired, at one path it must allow and one
-it must refuse. It cannot see Codex trust; step 3 above does.
+it must refuse. It warns when Codex does not trust the launch dir (1.36.3). It cannot see
+whether the hooks are trusted; step 3 above does.
 
 **To add a runtime:**
 

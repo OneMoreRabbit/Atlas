@@ -152,8 +152,40 @@ def write_seat_block(role: str, launch_dir: Path, root: str, written: list) -> N
     print(f"  write  {dst} (Atlas {role}-seat block; the rest of the file is untouched)")
 
 
+def folder_trust(rt: dict, launch_dir: Path):
+    """Whether the runtime trusts the launch dir, read from the runtime's own config
+    (1.36.3). None when the runtime has no config on this seat or the table says
+    nothing about folder trust. A folder above the launch dir counts. An untrusted
+    folder is silent: the runtime does not read the hook file there and lists no hooks
+    to trust (five Codex seats, 2026-11-18)."""
+    ft = rt.get("folder_trust")
+    if not ft:
+        return None
+    home = os.environ.get(ft["home_env"]) or ft["home"].replace("~", str(Path.home()), 1)
+    cfg = Path(home) / ft["file"]
+    if not cfg.exists():
+        return None
+    head = re.compile(r'^\[' + re.escape(ft["table"]) + r'\.(?:"([^"\n]+)"|\'([^\'\n]+)\')\]\s*$')
+    want = re.compile(r'^\s*' + re.escape(ft["key"]) + r'\s*=\s*["\']' + re.escape(ft["value"]) + r'["\']')
+    current, trusted = None, []
+    for line in read(cfg).splitlines():
+        m = head.match(line.strip())
+        if m:
+            current = Path(m.group(1) or m.group(2))
+        elif line.lstrip().startswith("["):
+            current = None
+        elif current is not None and want.match(line):
+            trusted.append(current)
+    here = launch_dir.resolve()
+    return any(here == t or t in here.parents for t in trusted)
+
+
 def print_runtime_notes(launch_dir: Path) -> None:
     for name, rt in seat_hooks()["runtimes"].items():
+        if folder_trust(rt, launch_dir) is False:
+            print(f"  WARN   {name}: {launch_dir} is not a trusted folder in its config, so it "
+                  "does not read the hook file there and lists no hooks to trust. "
+                  + rt["folder_trust"]["how"].replace("<launch dir>", str(launch_dir)))
         if rt.get("after_install"):
             print(f"  note   {name}: " + rt["after_install"].replace("<launch dir>", str(launch_dir)))
 
@@ -831,6 +863,17 @@ def main() -> int:
     if not args.vault_remote:
         ap.error("--vault-remote is required (except with --verify)")
     launch_dir = Path(args.launch_dir).resolve() if args.launch_dir else repo
+    if not args.launch_dir:
+        # A re-install without --launch-dir keeps the recorded launch dir (1.36.3). It
+        # used to write the hook files in the repo only, so a runtime started at the
+        # launch dir found no new hook file there.
+        _rec = conf_launch_dir(repo)
+        if _rec and _rec != repo and _rec.is_dir():
+            launch_dir = _rec
+            print(f"  conf   launch dir {launch_dir} (from ATLAS_LAUNCH_DIR in .atlas.conf)")
+        elif _rec and _rec != repo:
+            print(f"  WARN   ATLAS_LAUNCH_DIR in .atlas.conf is {_rec}, which is not a directory "
+                  "here — hooks written in the repo only; re-run with --launch-dir")
     project = args.project or derive_project(args.vault_remote)
     written: list = []
     print(f"atlas_init: installing '{args.slug}' (project {project}) into {repo}")

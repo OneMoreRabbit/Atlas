@@ -85,7 +85,10 @@
       },
       "sample_write": {"hook_event_name": "PreToolUse", "tool_name": "apply_patch",
                        "tool_input": {"command": "*** Begin Patch\n*** Add File: <path>\n+x\n*** End Patch\n"}},
-      "after_install": "Codex runs a new or changed hook only after it is trusted, and skips an untrusted hook without a warning. Start Codex in <launch dir>, open /hooks and trust the Atlas hooks. The directory must also be a trusted project."
+      "folder_trust": {"home_env": "CODEX_HOME", "home": "~/.codex", "file": "config.toml",
+                       "table": "projects", "key": "trust_level", "value": "trusted",
+                       "how": "Start Codex in <launch dir> and answer yes when it asks whether to trust the folder."},
+      "after_install": "Codex reads the hook file only in a trusted folder, and runs a new or changed hook only after the hook is trusted. It gives no warning for either. Start Codex in <launch dir>. Answer yes when it asks whether to trust the folder. Open /hooks and trust the Atlas hooks. If /hooks lists none, the folder is not trusted."
     }
   }
 }
