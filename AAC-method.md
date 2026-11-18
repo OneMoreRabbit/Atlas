@@ -349,9 +349,14 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
-# 1.36.2 (PREPARED, NOT RELEASED): Codex trust step says to restart every running
-#   session, the hub-connected one included; one started before the trust runs without
-#   the hooks (ai-tutor.arch, hub #15629). context-plane.md, "Runtimes". Text only.
+# 1.36.2 (2026-11-18): two faults reported in the 1.36 rollout. (1) The release notes
+#   check skips a tag with a suffix: on the work branch, after a release that had a
+#   candidate, the nearest tag is the candidate and the briefing asked for its heading
+#   (arc-platform.arch, hub #15695). atlas-context.sh and atlas_validate.py. (2) Codex
+#   trust step says to restart every running session, the hub-connected one included;
+#   one started before the trust runs without the hooks (ai-tutor.arch, hub #15629).
+#   context-plane.md, "Runtimes". Component seats re-copy one script when their vault
+#   pins it; no pin moves for this release alone. Pin '1.36.2'.
 # 1.36.1 (2026-11-18, operator ruling): every vault is on dev and no vault has a main.
 #   A Nav vault follows the same rule as an Atlas vault: a vault is never released, so
 #   it has no release branch. §9, the glossary and bridge-init.md say so; the dashboard

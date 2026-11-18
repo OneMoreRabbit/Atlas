@@ -6,7 +6,9 @@ updated: 2026-11-18
 
 # Next steps
 
-**TL;DR:** **v1.36.0 and v1.36.1 released 2026-11-18** (the operator's instructions).
+**TL;DR:** **v1.36.0, v1.36.1 and v1.36.2 released 2026-11-18** (the operator's
+instructions). The estate's pin is 1.36.1. 1.36.2 fixes two faults found in the rollout
+and rides with the next estate release: no pin moves for it alone.
 1.36.0 is the estate release: it rolls up 1.35.1 to 1.35.10. 1.36.1 puts every vault on
 `dev` with no `main`, Nav vaults included, and changes no seat script. The orchestrator
 has the steps for every kind of seat. Every seat re-copies its scripts and every Atlas
@@ -41,25 +43,15 @@ operator's rotation.
 
 ## Reported in the 1.36 rollout (2026-11-18, hub #15695)
 
-1. **Codex trust step** (ai-tutor.arch): a session started before the hooks were trusted
-   ran without them and wrote to the vault. Text corrected as 1.36.2 on `dev`, not
-   released: `context-plane.md`, "Runtimes". Still open: many Codex seats cannot open
-   `/hooks` or restart themselves, so a person does it at each seat; a test seat has no
-   briefing, so nothing shows that its hooks are trusted.
-2. **Release notes warning names an `rc` tag** (arc-platform.arch): the process seat's
-   briefing asks for a heading `## v0.8.0rc1` although `v0.8.0` is tagged and has its
-   heading. The check asks git for the nearest tag on the checked-out branch
-   (`git describe --tags --abbrev=0`). Cause confirmed (hub #15777): the seat is on
-   `dev`, `v0.8.0` is the merge commit on `main`, and nothing merges `main` back, so the
-   nearest tag on `dev` is the candidate. Every repo shows this after a release that had
-   a candidate. Fix, tried on a scratch repo: add `--exclude '*[!0-9.v]*'`, so a tag
-   with a suffix is skipped, in `atlas-context.sh` and in `atlas_validate.py`. Not
-   built: it changes a seat script, so every component seat re-copies at the release
-   that carries it. Waits for the operator's go.
-3. **Product and test seat text** (ai-tutor.arch): my hub text gave the component
-   seat's first briefing line. A product seat's first line is
-   `# ATLAS-PRODUCT-CONTEXT`; a test seat has no briefing. Corrected on the hub. The
-   steps in `release-notes.md` were right.
+1. ~~Codex trust step~~ (ai-tutor.arch): text corrected in 1.36.2, `context-plane.md`,
+   "Runtimes". Still open: a Codex seat cannot trust its own hooks or restart itself, so
+   a person does it at each seat; a test seat has no briefing, so nothing shows that its
+   hooks are trusted.
+2. ~~Release notes warning names an `rc` tag~~ (arc-platform.arch): fixed in 1.36.2, the
+   check skips a tag with a suffix. Component seats get it when their vault next moves
+   its pin.
+3. ~~Product and test seat text~~ (ai-tutor.arch): my hub text gave the component seat's
+   first briefing line. Corrected on the hub. The steps in `release-notes.md` were right.
 
 ## Owed by the method seat (in order)
 

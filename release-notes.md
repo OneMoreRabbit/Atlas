@@ -11,6 +11,29 @@ about: one short entry per method release, newest first — what changed and wha
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
 
+## v1.36.2 — 2026-11-18
+
+**TL;DR:** two faults found in the 1.36 rollout are fixed. No vault moves its pin for
+this release alone. It rides with the next estate release.
+
+- **Release notes warning.** A component seat's briefing asked for a heading for a
+  candidate tag, `## v0.8.0rc1`, after the final `v0.8.0` was tagged and had its
+  heading. The check reads the nearest tag on the checked-out branch. The final tag is
+  the merge commit on `main`, so on `dev` the nearest tag was the candidate. The check
+  now skips a tag with a suffix. Reported by arc-platform.arch.
+- **Codex trust.** A Codex session started before the hooks were trusted runs without
+  them: no briefing, and its writes are not checked. `context-plane.md`, "Runtimes",
+  now says to restart every session on the seat after the trust, the session that
+  receives hub messages included. Reported by ai-tutor.arch.
+- One seat script changed: `scripts/atlas-context.sh` in a component seat's code repo.
+  The arch, product and test seat scripts did not change.
+- Until a seat has this release, the warning for a candidate tag is wrong and stops
+  nothing. Ignore it. Do not write a heading for a candidate.
+
+**Action:** none now. When a vault next moves its pin, each component seat runs
+`sh scripts/atlas-sync.sh`, then the refresh command it prints, and commits
+`scripts/atlas-context.sh`.
+
 ## v1.36.1 — 2026-11-18
 
 **TL;DR:** every vault is on `dev` and no vault has a `main`. A Nav vault now follows

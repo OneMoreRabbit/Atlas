@@ -10,4 +10,5 @@
    estate release log (`registry/release-log.md`, orchestrator) reads that heading, so
    a day-summary may sit alongside but does not replace the per-tag entry.
 4. The validator warns when a vault's newest tag has no such entry; the component
-   briefing warns the same for the code repo it runs in.
+   briefing warns the same for the code repo it runs in. A tag with a suffix (`rc1`,
+   `dev`) is not a release: it needs no entry and the check skips it (1.36.2).
