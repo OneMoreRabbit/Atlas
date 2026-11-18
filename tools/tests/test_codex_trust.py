@@ -112,7 +112,7 @@ with tempfile.TemporaryDirectory() as tmp:
 
         ctx.write_bytes(saved + b"\n# changed\n")
         rc, out = trust(launch, home, "--record")
-        expect(rc == 1 and "recorded   trust for 4 hook(s)" in out and "differs from this method checkout" in out,
+        expect(rc == 1 and "recorded   trust for 4 hook(s)" in out and "differs from the method's template" in out,
                f"a changed script's hook must be left for a person: {rc} {out[-500:]}")
         ctx.write_bytes(saved)
 
@@ -131,6 +131,19 @@ with tempfile.TemporaryDirectory() as tmp:
         (home / "config.toml").write_text(f'[projects."{launch}"]\ntrust_level = "trusted"\n')
         rc, out = trust(launch, home, "--record")
         expect(rc == 0, f"record again after the config was replaced: {rc} {out[-300:]}")
+
+        # a seat on another method version: the tool is pointed at that checkout
+        other = tmp / "other-method"
+        shutil.copytree(ROOT / "templates", other / "templates")
+        old = other / "templates" / "component-repo" / "scripts" / "atlas-context.sh"
+        old.write_bytes(saved + b"\n# an older version\n")
+        ctx.write_bytes(old.read_bytes())
+        (home / "config.toml").write_text(f'[projects."{launch}"]\ntrust_level = "trusted"\n')
+        rc, out = trust(launch, home, "--record")
+        expect(rc == 1 and "recorded   trust for 4 hook(s)" in out, f"an older script must not match this checkout: {rc} {out[-300:]}")
+        rc, out = trust(launch, home, "--record", "--method", str(other))
+        expect(rc == 0 and "recorded   trust for 1 hook(s)" in out, f"--method must match the seat's own version: {rc} {out[-300:]}")
+        ctx.write_bytes(saved)
 
         text = hook_file.read_text()
         hook_file.write_text(text.replace("atlas-guard-publish.sh\\\"", "atlas-guard-publish.sh\\\" --x", 1))

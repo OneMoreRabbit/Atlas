@@ -13,8 +13,9 @@ trust. That is what Codex's own `/hooks` screen does, so Codex stays the one wri
 config. Folder trust is seat provisioning's and is only reported here.
 
 `--record` trusts a hook only when it is in `<launch dir>/.codex/hooks.json` and runs a
-script that is byte for byte this method checkout's template. Any other hook is left for a
-person.
+script that is byte for byte a template in the method checkout. Any other hook is left for
+a person. `--method <checkout>` names the checkout the seat's scripts were copied from,
+when that is not the one this tool runs from.
 
 Exit 0: the folder is trusted and every Atlas hook there is trusted. Exit 1: not ready,
 the lines say why. Exit 2: Codex could not be asked.
@@ -41,16 +42,11 @@ RUNTIME = "codex"
 ATLAS_CMD = re.compile(r'^(?:[A-Z_]+=\S+ )*sh "([^"]+/(atlas-[a-z-]+\.sh))"(?: 2>/dev/null \|\| true)?$')
 
 
-def templates() -> dict:
-    """Script name -> the method's template, for every kind of seat."""
-    table = atlas_init.seat_hooks()
+def templates(method: Path = atlas_init.TEMPLATES.parent.parent) -> dict:
+    """Script name -> the templates of that name in a method checkout."""
     out = {}
-    for role, r in table["roles"].items():
-        for _, script in r["hooks"]:
-            if role == "component":
-                out.setdefault(script, []).append(atlas_init.TEMPLATES / "scripts" / script)
-            else:
-                out.setdefault(script, []).append(dict(atlas_init.seat_scripts(role))[script])
+    for f in sorted((method / "templates").rglob("atlas-*.sh")):
+        out.setdefault(f.name, []).append(f)
     return out
 
 
@@ -68,7 +64,7 @@ def classify(hook: dict, hook_file: Path, tpl: dict) -> tuple:
         return False, f"{script} is missing"
     body = script.read_bytes()
     if not any(t.is_file() and t.read_bytes() == body for t in tpl.get(m.group(2), [])):
-        return False, f"{script} differs from this method checkout's template"
+        return False, f"{script} differs from the method's template"
     return True, ""
 
 
@@ -121,6 +117,8 @@ def main() -> int:
     ap.add_argument("--launch-dir", required=True)
     ap.add_argument("--record", action="store_true",
                     help="trust the hooks that run this method checkout's scripts")
+    ap.add_argument("--method", default=str(atlas_init.TEMPLATES.parent.parent),
+                    help="the method checkout the seat's scripts were copied from (default: this one)")
     ap.add_argument("--codex", default=RUNTIME, help="the Codex binary (default: codex on PATH)")
     args = ap.parse_args()
 
@@ -142,7 +140,11 @@ def main() -> int:
         return 1
     print("  ok         the folder is trusted")
 
-    tpl = templates()
+    method = Path(args.method).expanduser().resolve()
+    tpl = templates(method)
+    if not tpl:
+        print(f"  CANNOT ASK  no script templates under {method}/templates")
+        return 2
     try:
         cx = Codex(binary, launch)
     except (OSError, RuntimeError) as e:

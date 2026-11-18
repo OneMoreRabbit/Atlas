@@ -177,7 +177,8 @@ from a shell on the seat and outside any session:
    that receives hub messages.
 4. Check that the seat answers and that its briefing is in its context.
 
-`<method>` is the method checkout the seat's scripts were copied from. The tool asks
+`<method>` is the method checkout the seat's scripts were copied from. Run from a newer
+checkout, add `--method <the seat's checkout>`. The tool asks
 Codex for the hooks it sees and has Codex record the trust, as Codex's `/hooks` screen
 does. It trusts a hook only when the hook is in the launch dir's hook file and runs a
 script that is the same as the method's. It leaves any other hook untrusted and says
