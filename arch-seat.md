@@ -81,7 +81,8 @@ and you oversee via PR review and the hub). Declared in each component's `.atlas
 
 **The vault is not released** (§9, "Which release is which"): the `Atlas-<Project>`
 vault has one branch, `dev`, no `main`, and no product tags. Never merge it anywhere
-(1.35.8). Component seats release their own code (dev
+(1.35.8). The Nav vault is the same: one branch, `dev`, no `main` (1.36.1).
+Component seats release their own code (dev
 iterates the patch position; a release zeroes patch, bumps minor, tags annotated on
 `release`); you approve any exceptional patch tag on a released line, and you gate
 nothing else of theirs. **A component's `provides/` contracts carry its release's
@@ -97,7 +98,7 @@ Your own unpushed work never triggers it.
 
 ## Every session
 
-1. **Sync.** Pull the vault (work branch) and the Nav vault.
+1. **Sync.** Pull the vault and the Nav vault. Both are on `dev`.
 2. **Sweep component asks.** `ls components/*/docs/needs/nav-*.md` — for each not already
    linked from `_bridge/tasks.md`, add a bridge line:
    `- [ ] @nav — <ask> (from <slug>, <date>) — components/<slug>/docs/needs/<file>`

@@ -50,7 +50,8 @@ tag, or red rows. Not on a calendar.
 4. Green-light the release on the bridge. The arch session merges `dev → main`
    across the project's code repos; **the annotated `vX.Y.Z` tag on the shipped commit
    is the release** — not the branch. Consumers go live only when their pin rolls.
-   The vault is never merged: it stays on `dev` and has no `main`.
+   A vault is never merged. The Atlas vault and the Nav vault each stay on `dev` and
+   have no `main`.
 
 ## 3. What you discuss with the arch seat
 

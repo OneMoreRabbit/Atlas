@@ -6,11 +6,13 @@ updated: 2026-11-18
 
 # Next steps
 
-**TL;DR:** **v1.36.0 released 2026-11-18** (estate release, the operator's instruction).
-It rolls up 1.35.1 to 1.35.10. The orchestrator has the steps for every kind of seat and
-moves no pin before the operator's go. Every seat re-copies its scripts and every Atlas
-vault deletes `main`: `release-notes.md`, entry v1.36.0. Open after the release: four
-Nav vaults still have a `dev`; the skills repo has no `dev` and the project's policy says
+**TL;DR:** **v1.36.0 and v1.36.1 released 2026-11-18** (the operator's instructions).
+1.36.0 is the estate release: it rolls up 1.35.1 to 1.35.10. 1.36.1 puts every vault on
+`dev` with no `main`, Nav vaults included, and changes no seat script. The orchestrator
+has the steps for every kind of seat. Every seat re-copies its scripts and every Atlas
+vault deletes `main`: `release-notes.md`, entries v1.36.0 and v1.36.1. Open after the
+release: eleven Nav vaults have only `main` and four have an old `main` to delete, each
+moved on the operator's word; the skills repo has no `dev` and the project's policy says
 `dev`; the estate's install play for skills is not built. Three needs and two hub asks
 are owed; three more asks need an operator ruling.
 
@@ -25,10 +27,11 @@ are owed; three more asks need an operator ruling.
 | 1.35.5 | `/atlas-publish` step 6b is one script, `scripts/atlas-discard-views.sh` |
 | 1.35.6 | `atlas-sync.sh` leaves a code repo with uncommitted changes on its branch; the briefing states the branch |
 | 1.35.7 | a failed needs refresh puts a dated line at the top of the list and exits 1 |
-| 1.35.8 | one branch per vault: Atlas vaults `dev`, Nav vaults `main` |
+| 1.35.8 | one branch per vault: Atlas vaults `dev`, no `main` |
 | 1.35.9 | the session-start hook prints a head; the briefing is in files the head lists |
 | 1.35.10 | `skills.md`; what a vault holds; house style rules 9 to 11 |
 | 1.36.0 | the dashboard's branch table reads a vault listed as a component as a vault |
+| 1.36.1 | Nav vaults follow the same rule: `dev`, no `main`. Released after 1.36.0, the same day |
 
 1.35.3 to 1.35.10 were never tagged.
 
@@ -82,23 +85,32 @@ operator's rotation.
    (arc-platform): answered at 1.36.0 by
    `components/method/docs/provides/atlas-development-and-release-response-v0_1.md`.
 
-## Migration to 1.36.0
+## Migration to 1.36.0 and 1.36.1
 
 The steps for the orchestrator and for each kind of seat are in `release-notes.md`,
-entry v1.36.0. Rehearsed 2026-11-18 on a copy of the orchestrator's vault from pin
+entries v1.36.0 and v1.36.1. The rollout of 1.36.0 started at 09:35 UTC on 2026-11-18
+and was held a minute later for 1.36.1. By then three vaults were pinned 1.36.0
+(Orchestrator, AiTutor, Labs) and three had the pull request open (Idea, ArcPlatform,
+Blocks). Nothing is undone: each moves its pin to 1.36.1. The Nav vault move was
+rehearsed on a scratch repo, with a copy holding an unpushed commit and an uncommitted
+change: both survived. Rehearsed 2026-11-18 on a copy of the orchestrator's vault from pin
 1.35.0: arch seat, component seat, product seat and test seat. Not rehearsed: GitHub's
 branch protection, the vault CI run on the migration pull request, a Codex seat.
 
 Measured 2026-11-18 at every vault's remote head:
 
-- **Atlas vaults with a `main` to delete, twelve:** AgentEco, AiTutor, ArcGIS,
-  ArcPlatform, Blocks, DiscoCat, FrogYeti, Idea, MathsPractise, MicoManager,
-  Orchestrator, Orient. ArcWeb and Labs have none. All fourteen have `dev` as the
-  default branch.
-- **Nav vaults with a `dev`, four:** Nav-AiTutor, Nav-ArcGIS, Nav-Idea, Nav-MicoManager.
-  `dev` is the default branch in all four, and `main` holds nothing `dev` lacks. The
-  orchestrator moves each to `main` on the operator's word, because his own copy of the
-  vault is on `dev`.
+- **Atlas vaults with a `main` to delete, eight:** AgentEco, DiscoCat, FrogYeti, Idea,
+  MathsPractise, MicoManager, Orchestrator, Orient. The other six have none. All
+  fourteen have `dev` as the default branch. `main` is protected in Atlas-AgentEco and
+  Atlas-Orchestrator: the operator removes the protection.
+- **Nav vaults with only `main`, eleven:** Nav-AgentEco, Nav-ArcPlatform, Nav-ArcWeb,
+  Nav-Atlas, Nav-Blocks, Nav-DiscoCat, Nav-FrogYeti, Nav-Labs, Nav-MathsPractise,
+  Nav-Orchestrator, Nav-Orient. The orchestrator moves each to `dev` on the operator's
+  word, because his own copy of the vault changes branch. Steps: `release-notes.md`,
+  entry v1.36.1.
+- **Nav vaults with `dev` and an old `main`, four:** Nav-AiTutor, Nav-ArcGIS, Nav-Idea,
+  Nav-MicoManager. `dev` is the default branch in all four, and `main` holds nothing
+  `dev` lacks. The orchestrator deletes each `main` on the operator's word.
 - **Pins** (orchestrator's `registry/audit.md`): eleven vaults at 1.35.0; MathsPractise
   1.34.0, DiscoCat 1.28.0, FrogYeti 1.26.0. Those three first follow `README.md`,
   "Upgrading an existing vault to a new method version".
@@ -182,10 +194,10 @@ The real AgentEco vault gives heads of 3,600 to 4,800 characters. Open:
 
 ## Blocked on @nav
 
-- **The estate rollout of 1.36.0**: the operator's go, through the orchestrator. Until a
+- **The estate rollout of 1.36.1**: the operator's go, through the orchestrator. Until a
   seat re-copies its scripts it sees only the first 2,000 characters of its briefing.
-- **Four Nav vaults on `dev`** (Nav-AiTutor, Nav-ArcGIS, Nav-Idea, Nav-MicoManager): the
-  operator's word for each, and his own copies switch to `main`.
+- **Fifteen Nav vaults to bring to `dev` only** (1.36.1): the operator's word for each.
+  In the eleven that have only `main`, his own copy switches to `dev`.
 - **`method-ci.yml`**: the change that runs every test file waits for the operator's key
   (`Nav-Atlas/_bridge/threads/method-ci-all-tests.md`).
 - **Root `.gitignore` ownership**: arch seats cannot change their vault's root

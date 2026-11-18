@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """A vault listed as a component is still a vault in the dashboard's branch table
-(1.36.0; AAC-method section 9). The project's own Atlas vault has one branch, the work
-branch. Its Nav vault has one branch, main. A code repo keeps the work and release
-pair. The remote is faked: this checks the rows, not the network."""
+(1.36.0; AAC-method section 9). Every vault has one branch, the work branch, and no
+release branch: the project's own Atlas vault and its Nav vault alike (1.36.1). A code
+repo keeps the work and release pair. The remote is faked: this checks the rows, not
+the network."""
 import sys
 from pathlib import Path
 
@@ -43,29 +44,35 @@ def remote(default, *heads):
     return {"default": default, "heads": {h: "0" * 40 for h in heads}, "tag": None}
 
 
-# after the migration: every vault has its one branch
-table, console = rows({VAULT: remote("dev", "dev"), NAV: remote("main", "main"),
+# every vault on its one branch
+table, console = rows({VAULT: remote("dev", "dev"), NAV: remote("dev", "dev"),
                        CODE: remote("dev", "dev", "main")})
 expect("one branch, `dev`" in table["vault"], f"vault row: {table['vault']}")
 expect("one branch, `dev`" in table["atlas"], f"the vault as a component: {table['atlas']}")
-expect("one branch, `main`" in table["nav"] and "🔴" not in table["nav"], f"nav row: {table['nav']}")
+expect("one branch, `dev`" in table["nav"] and "🔴" not in table["nav"], f"nav row: {table['nav']}")
 expect("in sync" in table["app"], f"code repo row: {table['app']}")
 expect(not [c for c in console if "🔴" in c], f"red on a clean estate: {console}")
 
-# before it: the Atlas vault still has main, the Nav vault has a dev
-table, console = rows({VAULT: remote("dev", "dev", "main"), NAV: remote("main", "main", "dev"),
+# both vaults still have a main
+table, console = rows({VAULT: remote("dev", "dev", "main"), NAV: remote("dev", "dev", "main"),
                        CODE: remote("dev", "dev", "main")})
 expect("🔴 has a `main` branch" in table["vault"], f"vault with main: {table['vault']}")
 expect("🔴 has a `main` branch" in table["atlas"], f"vault as a component, with main: {table['atlas']}")
-expect("🔴 has a `dev` branch" in table["nav"], f"nav with dev: {table['nav']}")
+expect("🔴 has a `main` branch" in table["nav"], f"nav with main: {table['nav']}")
 expect(len([c for c in console if "branch  vault" in c]) == 1, f"vault named once: {console}")
-expect(any("branch  nav" in c for c in console), f"nav not named: {console}")
+expect(any("branch  nav" in c and "delete 'main'" in c for c in console), f"nav not named: {console}")
+
+# a Nav vault that has only main is red: no work branch, wrong default
+table, console = rows({VAULT: remote("dev", "dev"), NAV: remote("main", "main"),
+                       CODE: remote("dev", "dev", "main")})
+expect("🔴 no `dev` branch" in table["nav"] and "policy: `dev`" in table["nav"], f"nav on main only: {table['nav']}")
+expect(any("branch  nav" in c for c in console), f"nav on main only not named: {console}")
 
 # a code repo with no work branch is still red
-table, console = rows({VAULT: remote("dev", "dev"), NAV: remote("main", "main"),
+table, console = rows({VAULT: remote("dev", "dev"), NAV: remote("dev", "dev"),
                        CODE: remote("main", "main")})
 expect("🔴 no `dev` branch" in table["app"], f"code repo with no work branch: {table['app']}")
 
 if fails:
     sys.exit("branch rows: " + "; ".join(fails))
-print("branch rows: an Atlas vault and a Nav vault listed as components read as one branch each, a code repo keeps the pair")
+print("branch rows: every vault reads as one branch, the work branch; a code repo keeps the pair")
