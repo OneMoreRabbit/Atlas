@@ -233,8 +233,18 @@ product seats. Open:
 1. **Real-seat test** (orchestrator): `bakehouse.arc-gis.arch` and
    `bakehouse.ai-tutor.product`. Not provable here: a write inside the scope landing
    (this container cannot start Codex's sandbox), and the briefing after a compaction.
-2. **Codex trust on unattended seats** (orchestrator): Codex skips untrusted hooks with no
-   warning. Seat provisioning has to trust them.
+2. **Codex trust on unattended seats** (waits for the operator's go, asked 2026-11-18):
+   Codex skips untrusted hooks with no warning, and reads the hook file only in a
+   trusted folder. Seat provisioning writes neither (ansible repo at `9ac729c`), and a
+   seat started by the seat tool is never asked. In the 1.36 rollout the operator did
+   both by hand at each seat. Both are lines in `~/.codex/config.toml`:
+   `[projects."<launch dir>"]` with `trust_level`, and one `[hooks.state."<key>"]` with
+   `trusted_hash` per hook. Codex's own `hooks/list` call gives the keys and hashes;
+   done that way in a scratch home on 2026-11-12. Proposed: the method ships one
+   command that records both for the Atlas hook file only, and the orchestrator runs
+   it from the host at install and upgrade, then restarts the session. It removes
+   Codex's check that a person reads each new hook, so it is the operator's decision.
+   Nothing built.
 3. **`method-ci.yml`** (orchestrator's file): parse `templates/seat-hooks.json`; run every
    `tools/tests/test_*.py` (`test_seat_hooks.py` is not in CI until then); `sh -n` the
    product-seat and test-seat scripts; stop parsing the two files in item 4.
