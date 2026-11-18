@@ -167,7 +167,12 @@ warning. After an install, and after any upgrade that changes `.codex/hooks.json
 
 1. Start Codex in the launch dir. The launch dir must be a trusted project.
 2. Open `/hooks` and trust the Atlas hooks.
-3. Start a new session. The briefing must be in its context.
+3. Stop every session running on the seat and start it again. That includes the session
+   that receives hub messages. The briefing must be in the context of each one.
+
+A session started before step 2 runs without the hooks: it has no briefing and its writes
+are not checked (seen on a real seat, 2026-11-18). Until it is restarted it writes
+nothing. A seat that cannot do steps 1 to 3 itself says so and waits for a person.
 
 **Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
 those seats) fires each runtime's write guard as wired, at one path it must allow and one

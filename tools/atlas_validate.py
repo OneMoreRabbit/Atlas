@@ -1232,8 +1232,10 @@ def inbox_key_warnings(graph) -> list[str]:
 def release_notes_warnings() -> list[str]:
     """Warn-only (1.33.14): a repo that cuts releases keeps release-notes.md at the top
     level, one entry per tag, written in the tagging commit. Warn when the newest tag
-    has no entry (or the file is missing while tags exist)."""
-    tag = (run_git(["-C", str(ROOT), "describe", "--tags", "--abbrev=0"]) or "").strip()
+    has no entry (or the file is missing while tags exist). A tag with a suffix
+    (v0.8.0rc1) is not a release and is skipped (1.36.2)."""
+    tag = (run_git(["-C", str(ROOT), "describe", "--tags", "--abbrev=0",
+                    "--exclude", "*[!0-9.v]*"]) or "").strip()
     if not tag:
         return []
     rn = ROOT / "release-notes.md"

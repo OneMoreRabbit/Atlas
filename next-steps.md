@@ -6,7 +6,9 @@ updated: 2026-11-18
 
 # Next steps
 
-**TL;DR:** **v1.36.0 and v1.36.1 released 2026-11-18** (the operator's instructions).
+**TL;DR:** **v1.36.0, v1.36.1 and v1.36.2 released 2026-11-18** (the operator's
+instructions). The estate's pin is 1.36.1. 1.36.2 fixes two faults found in the rollout
+and rides with the next estate release: no pin moves for it alone.
 1.36.0 is the estate release: it rolls up 1.35.1 to 1.35.10. 1.36.1 puts every vault on
 `dev` with no `main`, Nav vaults included, and changes no seat script. The orchestrator
 has the steps for every kind of seat. Every seat re-copies its scripts and every Atlas
@@ -38,6 +40,18 @@ are owed; three more asks need an operator ruling.
 Also: the public-readiness scan (estate review, 63 repos, full history) is merged — no
 credentials in any public repo; three live credentials in private Nav-AgentEco await the
 operator's rotation.
+
+## Reported in the 1.36 rollout (2026-11-18, hub #15695)
+
+1. ~~Codex trust step~~ (ai-tutor.arch): text corrected in 1.36.2, `context-plane.md`,
+   "Runtimes". Still open: a Codex seat cannot trust its own hooks or restart itself, so
+   a person does it at each seat; a test seat has no briefing, so nothing shows that its
+   hooks are trusted.
+2. ~~Release notes warning names an `rc` tag~~ (arc-platform.arch): fixed in 1.36.2, the
+   check skips a tag with a suffix. Component seats get it when their vault next moves
+   its pin.
+3. ~~Product and test seat text~~ (ai-tutor.arch): my hub text gave the component seat's
+   first briefing line. Corrected on the hub. The steps in `release-notes.md` were right.
 
 ## Owed by the method seat (in order)
 

@@ -74,8 +74,10 @@ fi
 
 # Release notes in THIS code repo (1.34.14): one entry per tag, headed "## <tag> — <date>",
 # in the tagging commit. The estate release log reads that heading. No network.
+# A tag with a suffix (v0.8.0rc1) is not a release and is skipped (1.36.2): on the work
+# branch it is the nearest tag after a release that had a candidate.
 for _r in $SEAT_ROOTS; do
-  _t=$(git -C "$_r" describe --tags --abbrev=0 2>/dev/null || true)
+  _t=$(git -C "$_r" describe --tags --abbrev=0 --exclude '*[!0-9.v]*' 2>/dev/null || true)
   [ -n "$_t" ] || continue
   if [ ! -f "$_r/release-notes.md" ]; then
     warn "> ⚠ **release-notes.md missing** in $(basename "$_r") though it is tagged ($_t) — copy .atlas-method/templates/release-notes/release-notes.md to its top level, one entry per tag."
