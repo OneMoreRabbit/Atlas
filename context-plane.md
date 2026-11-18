@@ -172,7 +172,11 @@ warning. After an install, and after any upgrade that changes `.codex/hooks.json
 
 A session started before step 2 runs without the hooks: it has no briefing and its writes
 are not checked (seen on a real seat, 2026-11-18). Until it is restarted it writes
-nothing. A seat that cannot do steps 1 to 3 itself says so and waits for a person.
+nothing.
+
+A person does steps 1 to 3, from a shell on the seat. A session never restarts itself:
+one that tried ended and no new one started. After step 3 check that the seat answers.
+A restart may archive the old conversation; it is not deleted.
 
 **Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
 those seats) fires each runtime's write guard as wired, at one path it must allow and one

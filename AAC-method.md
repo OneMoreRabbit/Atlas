@@ -349,6 +349,9 @@ updated: 2026-09-13
 #   issue before building; test against the REAL environment, never a fixture. Plus a
 #   standing house-style directive (plain English, concise, no coined terms) injected in
 #   every briefing. §6; component-init; arch-seat.
+# 1.36.3 (PREPARED, NOT RELEASED): Codex trust steps are done by a person from a
+#   shell; a session never restarts itself (estate-directory, hub #15932).
+#   context-plane.md, "Runtimes". Text only.
 # 1.36.2 (2026-11-18): two faults reported in the 1.36 rollout. (1) The release notes
 #   check skips a tag with a suffix: on the work branch, after a release that had a
 #   candidate, the nearest tag is the candidate and the briefing asked for its heading

@@ -44,8 +44,8 @@ operator's rotation.
 ## Reported in the 1.36 rollout (2026-11-18, hub #15695)
 
 1. ~~Codex trust step~~ (ai-tutor.arch): text corrected in 1.36.2, `context-plane.md`,
-   "Runtimes". Still open: a Codex seat cannot trust its own hooks or restart itself, so
-   a person does it at each seat; a test seat has no briefing, so nothing shows that its
+   "Runtimes". 1.36.3 on `dev`, not released, adds: a person does it from a shell, and a
+   session never restarts itself (hub #15932). Still open: a person does it at each seat; a test seat has no briefing, so nothing shows that its
    hooks are trusted.
 2. ~~Release notes warning names an `rc` tag~~ (arc-platform.arch): fixed in 1.36.2, the
    check skips a tag with a suffix. Component seats get it when their vault next moves

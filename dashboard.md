@@ -9,7 +9,7 @@
 
 | Repo | Default branch | Work vs release | Latest tag | Wired |
 |---|---|---|---|---|
-| vault | `main` 🟢 | unreleased changes on work | v1.36.1 | – |
+| vault | `main` 🟢 | unreleased changes on work | v1.36.2 | – |
 
 | Edge (provider → consumer) | Interface | Pinned | Latest | State |
 |---|---|---|---|---|
