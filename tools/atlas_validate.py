@@ -742,31 +742,55 @@ def gen_branch_section(graph, wiring: dict | None = None) -> tuple[str, list[str
     repos = [("vault", (run_git(["-C", str(ROOT), "remote", "get-url", "origin"]) or "").strip())]
     repos += [(comp_name(c), component_source(graph, c)) for c in graph.get("components") or []
               if is_repo_component(c)]
+
+    def repo_key(u):
+        return re.sub(r"\.git$", "", u.strip().rstrip("/")).lower()
+
     for name, url in repos:
         if not ("://" in url or url.startswith("git@")):
             md.append(f"| {name} | — | _no source URL_ | — | {wired_cell(name)} |")
             continue
-        info = remote_repo_info(url, work, release)
+        # A vault listed as a component is still a vault (1.36.0): the project's own
+        # Atlas vault has one branch, the work branch; its Nav vault, `Nav-<Project>`,
+        # has one branch, `main`, and no work branch (§9, operator 2026-11-17).
+        own = name == "vault" or repo_key(url) == repo_key(repos[0][1])
+        nav = not own and repo_key(url).rsplit("/", 1)[-1].startswith("nav-")
+        info = remote_repo_info(url, work, release, *(["main"] if nav else []))
         if info is None:
             md.append(f"| {name} | — | _unreachable at regen_ | — | {wired_cell(name)} |")
             continue
         d = info["default"] or "?"
         # a repo may DECLARE a deliberate default other than work (1.33.16: the method
         # repo's default is main, where its outbox is read; branching.default states it)
-        want = pol.get("default") or work
+        want = "main" if nav else pol.get("default") or work
         d_cell = f"`{d}` 🟢" if d == want else f"`{d}` 🔴 policy: `{want}`"
         w, r = info["heads"].get(work), info["heads"].get(release) if release else None
+        if nav:
+            extra = work if work != "main" and w is not None else None
+            if info["heads"].get("main") is None:
+                wr = "🔴 no `main` branch"
+            elif extra:
+                wr = f"🔴 has a `{extra}` branch — delete it: a Nav vault has one branch, `main`"
+            else:
+                wr = "one branch, `main`"
+            md.append(f"| {name} | {d_cell} | {wr} | {info['tag'] or '—'} | {wired_cell(name)} |")
+            if d != want or wr.startswith("🔴"):
+                console.append(f"  🔴 branch  {name}: a Nav vault has one branch, 'main' "
+                               f"(AAC-method §9); default '{d}'"
+                               + (f", has a '{extra}' branch" if extra else ""))
+            continue
         # The vault has one branch, the work branch (1.35.8, §9): nothing reads a vault's
         # release branch, so one that exists is a stale copy somebody will read by
         # mistake.
-        stale = name == "vault" and r is not None and one_branch
+        stale = own and r is not None and one_branch
         if w is None:
             wr = f"🔴 no `{work}` branch"
         elif stale:
             wr = f"🔴 has a `{release}` branch — delete it: the vault has one branch, `{work}`"
-            console.append(f"  🔴 branch  vault: has a '{release}' branch; the vault has one "
-                           f"branch, '{work}' (AAC-method §9) — delete '{release}'")
-        elif name == "vault" and release and one_branch:
+            if name == "vault":
+                console.append(f"  🔴 branch  vault: has a '{release}' branch; the vault has one "
+                               f"branch, '{work}' (AAC-method §9) — delete '{release}'")
+        elif own and release and one_branch:
             wr = f"one branch, `{work}`"
         elif release is None or r is None:
             wr = "—" if release is None else f"no `{release}` branch"
