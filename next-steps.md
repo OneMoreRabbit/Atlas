@@ -39,6 +39,24 @@ Also: the public-readiness scan (estate review, 63 repos, full history) is merge
 credentials in any public repo; three live credentials in private Nav-AgentEco await the
 operator's rotation.
 
+## Reported in the 1.36 rollout (2026-11-18, hub #15695)
+
+1. **Codex trust step** (ai-tutor.arch): a session started before the hooks were trusted
+   ran without them and wrote to the vault. Text corrected as 1.36.2 on `dev`, not
+   released: `context-plane.md`, "Runtimes". Still open: many Codex seats cannot open
+   `/hooks` or restart themselves, so a person does it at each seat; a test seat has no
+   briefing, so nothing shows that its hooks are trusted.
+2. **Release notes warning names an `rc` tag** (arc-platform.arch): the process seat's
+   briefing asks for a heading `## v0.8.0rc1` although `v0.8.0` is tagged and has its
+   heading. The check asks git for the nearest tag on the checked-out branch
+   (`git describe --tags --abbrev=0`). Cause not confirmed: asked the seat which branch
+   it is on and which tags that branch holds. Likely fix: skip a tag with a suffix,
+   since only a plain `vX.Y.Z` is a release. Not built.
+3. **Product and test seat text** (ai-tutor.arch): my hub text gave the component
+   seat's first briefing line. A product seat's first line is
+   `# ATLAS-PRODUCT-CONTEXT`; a test seat has no briefing. Corrected on the hub. The
+   steps in `release-notes.md` were right.
+
 ## Owed by the method seat (in order)
 
 1. ~~Briefing needs count/list mismatch~~ (arc-platform): marked resolved by
