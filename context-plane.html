@@ -225,12 +225,12 @@
   <div class="wrap">
     <p class="eyebrow">Atlas · the context plane</p>
     <h1>What goes into context, and how</h1>
-    <p class="thesis">Atlas holds what is true; three hooks put the right slice of it in front of the agent at the moment it's needed — and keep the rest out. <b>The reads are compiled and injected, never trusted to happen.</b> This is the full lifecycle, for a component seat.</p>
+    <p class="thesis">Atlas holds what is true; three hooks put the right slice of it in front of the agent at the moment it's needed — and keep the rest out. <b>The reads are compiled for the seat, never left for it to find.</b> The head of the briefing goes into the window; the rest goes into files the head lists, and the seat reads them first. This is the full lifecycle, for a component seat.</p>
 
     <div class="map" role="list" aria-label="session lifecycle">
       <div class="map-seg" role="listitem">
         <p class="map-k">Session begins — or is rebuilt</p>
-        <p class="map-v"><span class="dot a"></span>Briefing compiled &amp; <b>injected</b> <span class="hk">SessionStart</span></p>
+        <p class="map-v"><span class="dot a"></span>Briefing compiled; its <b>head injected</b>, the rest in files <span class="hk">SessionStart</span></p>
       </div>
       <div class="map-seg" role="listitem">
         <p class="map-k">Each work turn</p>
@@ -248,7 +248,7 @@
 <section>
   <div class="wrap">
     <div class="sec-h"><span class="sec-n">01</span><h2>Three hooks on the session lifecycle</h2></div>
-    <p class="sec-lead">Every seat's <code class="mono">.claude/settings.json</code> wires exactly these. A hook is a shell script Claude Code runs at a lifecycle moment; what it prints and the code it exits with are how Atlas reaches into the session.</p>
+    <p class="sec-lead">Every seat's hook file wires exactly these, one file per agent runtime (<code class="mono">.claude/settings.json</code>, <code class="mono">.codex/hooks.json</code>; see Runtimes in <code class="mono">context-plane.md</code>). A hook is a shell script the runtime runs at a lifecycle moment; what it prints and the code it exits with are how Atlas reaches into the session.</p>
 
     <div class="spine">
       <!-- SessionStart -->
@@ -262,16 +262,17 @@
             <span class="script">atlas-context.sh</span>
           </div>
           <div class="card-bd">
-            <p class="lede">Compiles the session's whole reading list into one file and <b>prints it to stdout — which Claude Code adds verbatim to the context window.</b> This is the main injection — and the <b>only</b> one: it also serves compaction and resume.</p>
+            <p class="lede">Compiles the session's whole reading list. <b>Prints its head to stdout, which the runtime adds to the context window, and writes the rest to files the head lists.</b> A hook carries 10,000 characters and a briefing is several times that (1.35.9). This is the main injection — and the <b>only</b> one: it also serves compaction and resume.</p>
             <ol class="steps">
               <li>Read the hook payload from stdin (2 s-bounded) for its <code>source</code> — startup, resume, clear or compact.</li>
               <li>Discover every wired sibling repo in the launch dir → <b>one briefing per seat</b>, not per repo.</li>
               <li>Run <code>atlas-sync.sh</code>: resolve the method pin to its exact tag, apply branch policy, self-drift check.</li>
               <li>Compile the briefing with <code>atlas_validate.py --emit-context</code> from a worktree of <code>origin/&lt;work&gt;</code> — always the work branch, never whatever's checked out.</li>
               <li>Deliver raw contract artifacts (OpenAPI, schemas) to <code>ATLAS-CONTEXT.d/</code> as files — <b>referenced by path, not inlined.</b></li>
-              <li>Record the compiled vault SHA (the Stop gate reads it) and print the byte/token size to stderr.</li>
+              <li>Write the briefing files to <code>ATLAS-CONTEXT.d/</code>, fresh at every start, and print the head: the list of files first, held under 9,000 characters.</li>
+              <li>Record the compiled vault SHA (the Stop gate reads it) and print the sizes to stderr.</li>
             </ol>
-            <div class="foot-note"><span class="into">→ INTO CONTEXT</span> &nbsp;the full <b>ATLAS-CONTEXT.md</b> briefing (see §02), with a provenance line naming the branch and commit it was built from.</div>
+            <div class="foot-note"><span class="into">→ INTO CONTEXT</span> &nbsp;the <b>head</b> of the briefing: the files to read, the mode, the house style, one line for each open need, proposal and moved contract, and a provenance line naming the branch and commit it was built from. The seat reads the files (see §02) before it acts.</div>
             <div class="foot-note"><b>Compaction &amp; reorientation live here, not in a hook of their own.</b> When the window is summarised, this hook re-fires with <code>source: compact</code>, rebuilds the briefing from scratch, and prepends the REORIENT directive (§03). Atlas rebuilds rather than trying to survive the summary.</div>
           </div>
         </div>
@@ -293,7 +294,7 @@
               <div class="vrow"><span class="vtag deny">Deny</span><span class="vbody">Anything else in the vault — returned with a reason that <b>names the remedy</b> (file it in <code>docs/needs/</code>, or open a proposal). Not an obstacle to route around.</span></div>
               <div class="vrow"><span class="vtag hold">Closed</span><span class="vbody">A payload the guard <b>can't parse is denied</b>, never waved through. Guards fail closed.</span></div>
             </div>
-            <div class="foot-note"><b>Mechanism:</b> emits a JSON <code>permissionDecision</code>; the write never reaches the tool unless allowed.</div>
+            <div class="foot-note"><b>Mechanism:</b> exits 2 with the reason on stderr; the write never reaches the tool unless allowed.</div>
           </div>
         </div>
       </div>
@@ -324,12 +325,12 @@
 
 <section>
   <div class="wrap">
-    <div class="sec-h"><span class="sec-n">02</span><h2>Anatomy of the injected briefing</h2></div>
-    <p class="sec-lead">What <code>SessionStart</code> actually puts in the window, in emit order. It opens with the development cycle and the retrieval invariant, then the sections below. The point of the design is thrift: the things that bind everyone appear <b>once</b>, and anything a task can fetch on demand is an <b>index line</b>, not a body.</p>
+    <div class="sec-h"><span class="sec-n">02</span><h2>Anatomy of the briefing</h2></div>
+    <p class="sec-lead">What <code>SessionStart</code> compiles, in order. The header and the development cycle are in the head, in the window. Rows 1 to 9 are in the files in <code>ATLAS-CONTEXT.d/</code>: <code>1-constitution.md</code>, <code>2-architecture.md</code>, <code>3-contracts.md</code>, <code>4-needs.md</code>, <code>5-proposals-and-drift.md</code>. The point of the design is thrift: the things that bind everyone appear <b>once</b>, and anything a task can fetch on demand is an <b>index line</b>, not a body.</p>
 
     <div class="brief">
       <div class="brief-hd">
-        <span class="fname">ATLAS-CONTEXT.md</span>
+        <span class="fname">ATLAS-CONTEXT.d/</span>
         <span class="tag">compiled · one per seat · size reported every emit</span>
       </div>
       <div class="brow"><span class="bi">§</span><span class="bn">Header + the development cycle<span>reading-list rules · review architecture → examine edges → develop → test → publish</span></span><span class="bmode once">always</span></div>
@@ -354,7 +355,7 @@
     <div class="sources">
       <div class="src">
         <h4>startup</h4>
-        <p>A brand-new session. The briefing is injected plainly; the agent reads its standing orders (AGENTS.md) alongside.</p>
+        <p>A brand-new session. The briefing head is injected plainly; the agent reads its standing orders (AGENTS.md) alongside.</p>
       </div>
       <div class="src reorient">
         <h4>compact</h4>
@@ -366,13 +367,13 @@
       </div>
       <div class="src reorient">
         <h4>/clear</h4>
-        <p>The window was deliberately wiped. The hook re-injects the whole reading list, so a cleared session is never a blank one.</p>
+        <p>The window was deliberately wiped. The hook rebuilds the whole reading list, so a cleared session is never a blank one.</p>
       </div>
     </div>
 
     <div class="reorient-banner">
       <div class="rb-hd">prepended on compact · resume · clear</div>
-      <div class="rb-bd"><span class="glyph">⟳ REORIENT — session was compacted.</span> Your working context was just rebuilt. Before your next action: read the briefing below in full, confirm which component you are and what you were doing, and resume from it. This is your complete orientation — do <b>not</b> ask the operator to re-orient you.</div>
+      <div class="rb-bd"><span class="glyph">⟳ REORIENT — your context was just compacted.</span> What you remember is a lossy summary. Your briefing is fresh; your memory is not. Step 0: if your briefing lists files at its top, read every one now, in full. Then repos, the seat, contracts, the bridge, reconcile, order of work. The whole text is <code>templates/reorient.md</code>.</div>
     </div>
   </div>
 </section>

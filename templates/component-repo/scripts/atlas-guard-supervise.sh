@@ -1,10 +1,13 @@
 #!/bin/sh
-# atlas-guard-supervise — PreToolUse (Bash) guard for SUPERVISED mode (method 1.26.10).
+# atlas-guard-supervise — shell guard for SUPERVISED mode (method 1.26.10; the "shell"
+# moment in templates/seat-hooks.json).
 # A supervised seat develops and tests freely, but the act of PUBLISHING or RELEASING
-# pauses for the operator: this routes publish/release-shaped Bash commands to the
-# harness's interactive approve/deny prompt (permissionDecision "ask"). Autonomous mode
-# does nothing here — oversight is the write model, CI and the hub. Never gates
-# development; only the git/gh operations that reach other seats.
+# pauses for the operator. Where the runtime can put a question to the operator, this
+# routes publish/release-shaped commands to its approve/deny prompt. Where it cannot
+# (the installer sets ATLAS_NO_ASK=1 in the hook command), the command is refused once
+# with the instruction to confirm with the operator, and goes through when run again.
+# Autonomous mode does nothing here — oversight is the write model, CI and the hub.
+# Never gates development; only the git/gh operations that reach other seats.
 set -e
 # shellcheck source=atlas-common.sh disable=SC1091
 . "$(dirname -- "$0")/atlas-common.sh"
@@ -26,6 +29,14 @@ print((d.get("tool_input") or {}).get("command", ""))
 [ -n "$CMD" ] || exit 0
 
 if printf '%s' "$CMD" | grep -Eq 'git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|gh[[:space:]]+release[[:space:]]+create|git[[:space:]]+tag[[:space:]]+(-a|-s|-m|v[0-9])'; then
+  if [ -n "${ATLAS_NO_ASK:-}" ]; then
+    _M="${TMPDIR:-/tmp}/atlas-ask.$(printf '%s %s' "$ATLAS_REPO_ROOT" "$CMD" | cksum | cut -d' ' -f1)"
+    # the refusal counts for an hour: a repeat inside it goes through
+    if [ -n "$(find "$_M" -mmin -60 2>/dev/null)" ]; then rm -f "$_M"; exit 0; fi
+    : > "$_M" 2>/dev/null || true
+    echo "Atlas supervised mode ($SLUG): this publishes or releases. Stop and confirm with the operator first - is the issue agreed, and was this tested against the REAL environment (not a fixture)? When they confirm, run the same command again and it goes through. Declare ATLAS_MODE=autonomous in .atlas.conf to lift supervision." >&2
+    exit 2
+  fi
   "$PY" - "$SLUG" <<'PYEOF'
 import json, sys
 slug = sys.argv[1]

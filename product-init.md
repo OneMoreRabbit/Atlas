@@ -20,7 +20,9 @@ declared it.
    python3 "$HOME/work/.atlas-method/tools/atlas_init.py" --product \
      --repo "$HOME/work/Atlas-<Project>" --launch-dir "$HOME/work"
    ```
-4. Confirm it prints `verify the product reorientation hook fires ... PASS`.
+4. Confirm the last line is `atlas_init --product --verify: all checks passed`.
+5. Codex seat only: start Codex in `$HOME/work`, open `/hooks`, trust the Atlas hooks,
+   start a new session. The briefing must be in its context.
 
 ## 3. The lane to the human — `_gps/` (1.28.10)
 

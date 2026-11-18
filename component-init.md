@@ -76,6 +76,11 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 > the briefing in `ATLAS-CONTEXT.d/`. What a session does **not** do is browse the vault
 > beyond the briefing's reach. If the context proves insufficient, that is a defect in
 > `registry/io-graph.yml`: fix the graph, don't browse.
+>
+> **The briefing arrives as a head and files (1.35.9).** The head is in your context at
+> session start. It lists files in `ATLAS-CONTEXT.d/`. Read every one, in full, before you
+> act: the constitution, your contracts and the needs you owe are in those files, not in
+> the head.
 
 ---
 
@@ -139,8 +144,8 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    ```
    **If the agent does not launch with this repo as its project directory** — a devagent
    seat starting in the clone parent, for example — add `--launch-dir "$HOME/work"`.
-   Otherwise the repo's `.claude/settings.json` is never loaded and every hook is
-   silently inert: no context injection, and **no local write guard** (decisions/0002).
+   Otherwise the repo's hook files (`.claude/settings.json`, `.codex/hooks.json`) are
+   never loaded and every hook is silently inert: no context injection, and **no local write guard** (decisions/0002).
    `--launch-dir` is persisted into `.atlas.conf` ($HOME-relative — the file is
    committed), so later verifies check the real launch dir automatically. Then prove
    it, on the seat, before trusting the guard:
@@ -161,8 +166,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    release surface is your own code repo — method re-pins, vault merges and estate
    rolls are never yours. On `work`, iterate the patch position freely (`1.3.1`,
    `1.3.2` — development states, never tagged, never consumed). **A release zeroes the
-   patch and bumps the minor**: `1.2.2` releases as `1.3.0` — merge `work` →
-   `release`, lay the annotated tag `v1.3.0`. Breaking changes bump the major; `0.x`
+   patch and bumps the minor**: `1.2.2` releases as `1.3.0`, merged and tagged `v1.3.0`
+   by the path in `development-and-release.md` (the one page for branches, tags and
+   what staging and production run). Breaking changes bump the major; `0.x`
    is pilot-only; `1.0.0` is the first generally consumable release. An untagged
    commit is not a release, and no consumer may be told to install from a branch.
    (Your `provides/` contracts carry your release's `MAJOR.MINOR`, one-to-one (§4): cut
@@ -188,7 +194,8 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    `sh scripts/atlas-context.sh` and reconcile — an arch update reaches you at the end
    of the turn it lands in, not at your next session.
    `atlas_init.py` copies the scripts, fills `.atlas.conf` and `AGENTS.md`, appends the
-   gitignore entries, and merges the hooks into any existing `.claude/settings.json`;
+   gitignore entries, and merges the hooks into each runtime's hook file (`.claude/settings.json`,
+   `.codex/hooks.json` — context-plane.md, "Runtimes");
    re-running skips existing files (`--force` re-copies drifted scripts). Installing by
    hand is the same set of moves — all scripts are POSIX sh and run identically under
    git-bash on Windows and on a fresh Ubuntu VM:
@@ -221,7 +228,9 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
      breaks in a Linux container) and `.atlas.conf` (a `\r` in `ATLAS_VAULT` used to
      fail the write guard open; the scripts now strip `\r` defensively, but the
      attributes stop the mangling at the source);
-   - copy `.claude/` — vendor-specific shims with no logic of their own.
+   - copy `.claude/` — vendor-specific shims with no logic of their own. The hook files
+     are rendered from `templates/seat-hooks.json`, so for any other runtime use the
+     installer.
 
 5. **Set the repo's default branch to the project's `work` branch** (the `branching:`
    policy in the vault's `io-graph.yml` — AAC-method §9). This is what makes every fresh
@@ -248,8 +257,10 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
 
    **Credentials are a prerequisite, not a step:** `atlas-sync.sh` clones a *private*
    vault, so it needs an authenticated git wherever the session runs. On a desk that is
-   your existing git config; in a container or CI, inject a token (`GH_TOKEN` plus a
-   credential helper) or mount an SSH agent socket. A session with no credential fails
+   your existing git config. On an estate seat the estate's credential helper mints a
+   token per repository: do nothing, and never export `GH_TOKEN` or run `gh auth login`
+   there (the orchestrator's seat manual, 2026-11-11). Elsewhere, in a container or CI,
+   inject a token plus a credential helper, or mount an SSH agent socket. A session with no credential fails
    at the first clone, not at publish.
 
    What the pieces do:
@@ -257,10 +268,12 @@ Read [[AAC-method]] in full once; this brief is the operational checklist.
    | Piece | Role |
    |---|---|
    | `scripts/atlas-sync.sh` | clone/ff the vault; apply the vault's `branching:` policy (switch this repo + the vault clone to the `work` branch); check out the method repo at the vault's `method:` pin (tag `v<pinned>`); note for periodic review when the remote has a newer minor/major release than the pin; self-drift check on these scripts |
-   | `scripts/atlas-context.sh` | sync, ensure PyYAML, emit `ATLAS-CONTEXT.md` to stdout; refuses to inject anything that isn't a context artefact |
+   | `scripts/atlas-context.sh` | sync, ensure PyYAML, compile the briefing; print its head (no more than 10,000 characters, the most a hook carries) and write the rest to files in `ATLAS-CONTEXT.d/`; refuses to inject anything that isn't a context artefact |
+   | `scripts/atlas-payload.py` | reads each runtime's write payload for the write guard |
    | `scripts/atlas-guard-write.sh` | `PreToolUse` — denies vault writes outside `components/<slug>/**`, `architecture/proposals/`, own io-graph edges (golden rule 2, locally; CI is the backstop) |
    | `scripts/atlas-guard-publish.sh` | `Stop` — refuses (once per session) to end with uncommitted vault work |
-   | `.claude/settings.json` | wires the three hooks; SessionStart injects the context script's stdout |
+   | `scripts/atlas-discard-views.sh` | `/atlas-publish` step 6b — discards the generated views in the vault clone, keeps your own `component.md` |
+   | `.claude/settings.json`, `.codex/hooks.json` | one per runtime; each wires the same hooks; SessionStart injects the context script's stdout. Codex runs them only once trusted (context-plane.md, "Runtimes") |
    | `.claude/commands/atlas-publish.md` | `/atlas-publish` — the outbox half of the protocol |
 
 ---
@@ -345,6 +358,7 @@ hand you something to guess from; that is the correct outcome.
 | An ask for **another component** | `needs/` addressed to **that component's slug** | delivered into *its* briefing — this is how one seat reaches another, human never involved |
 | An ask that needs the **human's** judgment | `needs/` addressed to **`nav`** | mirrored to the bridge for @nav; use it only for direction/decisions, never to reach another seat |
 | A one-off instruction | — none, deliberately | say it in the session; the vault records rules and decisions, not orders |
+| A **skill** other seats should use | your own `skills/` folder, then a need to `orchestrator.component.estate-skills` ([[skills]]) | lists the need; the estate installs a merged skill on the seats the operator switches it on for |
 
 > **`nav` is a person, not a message bus.** A seat reaching another seat addresses that
 > **slug** — the ask lands in the other component's briefing directly. Addressing `nav`
@@ -384,7 +398,7 @@ bottom of it (Orchestrator `decisions/0005-dev-loop-ladder`):
 |---|---|---|
 | **Seat** | code, unit tests, transient runs of your own processes against the project's platform containers | you, freely |
 | **Dev container** | your runtime, built by the estate, running your repo from a **shared checkout mounted into both your seat and the container**, in watch/reload mode | you iterate freely; ask the orchestrator only when your **requirements** change |
-| **Staging / production** | an immutable estate-built image, promoted deliberately | orchestrator |
+| **Staging / production** | a tagged release fetched from GitHub, and nothing else (`development-and-release.md`) | orchestrator, on the operator's word |
 
 So the rule is not "ask before you run anything" — it is *ask when the environment must
 change*, not when your code does. Immutability tightens as you climb: the dev rung trades
@@ -422,8 +436,8 @@ ADRs, `updated:` stamp, recompile, and pushes the vault branch for review.
 
 1. `sh scripts/atlas-sync.sh` — must print the new pin (NOT ADOPTED means step 2 fixes it).
 2. `python3 .atlas-method/tools/atlas_init.py --component <you> --vault-remote <vault-url> --launch-dir "$HOME/work" --force`
-3. `git add AGENTS.md .atlas.conf scripts/ .claude/ && git commit -m "atlas <pin>" && git push`
-   — the installer prints the exact list; `.claude/` holds the hooks and `/atlas-publish`,
+3. `git add AGENTS.md .atlas.conf scripts/ .claude/ .codex/ && git commit -m "atlas <pin>" && git push`
+   — the installer prints the exact list; `.claude/` and `.codex/` hold the hooks and `/atlas-publish`,
    which `--force` rewrites.
 4. `python3 .atlas-method/tools/atlas_init.py --component <you> --verify --launch-dir "$HOME/work"` — ALL PASS.
    Verify checks the files are COMMITTED, so step 3 comes first. Never mark any of them

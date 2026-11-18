@@ -1,53 +1,28 @@
 #!/bin/sh
-# atlas-guard-write — PreToolUse guard. Denies writes into the vault outside this
-# component's outbox: golden rule 2 made mechanical locally, mirroring the CI path
-# guard in templates/vault-ci/atlas-guard.yml.
+# atlas-guard-write — write guard (the "write" moment in templates/seat-hooks.json).
+# Refuses writes into the vault outside this component's outbox: golden rule 2 made
+# mechanical locally, mirroring the CI path guard in templates/vault-ci/atlas-guard.yml.
+# Refusal is exit 2 with the reason on stderr, the form every runtime understands.
 #
-# NOTE: the hook payload arrives on stdin, so the python below must be passed with
-# -c, never a heredoc — a heredoc would consume stdin and the guard would silently
-# allow everything.
+# NOTE: the hook payload arrives on stdin and atlas-payload.py reads it. Nothing before
+# that call may read stdin, or the guard would see an empty payload.
 set -e
 # shellcheck source=atlas-common.sh disable=SC1091
 . "$(dirname -- "$0")/atlas-common.sh"
 
 PY=$(command -v python3 || command -v python)
 
-_PL=$("$PY" -c '
-import json, sys
-try:
-    d = json.load(sys.stdin)
-except Exception:
-    print("__ATLAS_PARSE_ERROR__")
-    raise SystemExit
-ti = d.get("tool_input") or {}
-print(ti.get("file_path") or ti.get("notebook_path") or "")
-body = (ti.get("content") or ti.get("new_string") or "").replace("\r", "")
-import re
-m = re.search(r"^(?:to|addressed-to|addressed_to):\s*(.+)$", body, re.M)
-print(m.group(1).strip() if m else "")
-')
-P=$(printf '%s\n' "$_PL" | sed -n 1p)
-TO=$(printf '%s\n' "$_PL" | sed -n 2p)
+# Which files does this call write? One line per file: path, tab, `to:` value. The
+# helper knows each runtime's payload (one path for a Write or Edit, several for a patch).
+_PL=$("$PY" "$(dirname -- "$0")/atlas-payload.py" 2>/dev/null) || _PL=""
 
-# A guard that cannot parse its input denies, never allows (AAC-method §9).
-if [ "$P" = "__ATLAS_PARSE_ERROR__" ]; then
-  "$PY" -c '
-import json
-print(json.dumps({"hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "deny",
-    "permissionDecisionReason": "Atlas write guard could not parse the hook payload - failing closed. Retry the write; if it persists, the guard or harness is broken and needs fixing before vault writes resume.",
-}}))
-'
-  exit 0
-fi
-[ -n "$P" ] || exit 0   # parsed fine, no path field — not a file write
+# A guard that cannot parse its input refuses, never allows (AAC-method §9).
+case "$_PL" in ""|*__ATLAS_PARSE_ERROR__*)
+  echo "Atlas write guard could not read the hook payload - failing closed. Retry the write; if it persists, the guard or harness is broken and needs fixing before vault writes resume." >&2
+  exit 2 ;;
+esac
 
-# Normalise Windows paths: Claude Code passes backslash paths on Windows, and an
-# unnormalised path would silently match nothing — allowing every vault write.
-P=$(printf '%s' "$P" | tr '\\' '/')
 V=$(printf '%s' "$ATLAS_VAULT" | tr '\\' '/')
-R=$(printf '%s' "$ATLAS_REPO_ROOT" | tr '\\' '/')
 
 # Which checkouts are "the vault"? Not only $ATLAS_VAULT (the .atlas clone inside the
 # code repo): a both-hats or arch seat edits the SIBLING checkout in its launch dir
@@ -84,6 +59,8 @@ $_ss"
   done
 fi
 
+# One written path: P is the path, TO its `to:` value. exit 0 allows it, exit 2 refuses it.
+check_one() {
 # Find the vault this write lands in (if any). Writes outside every vault — the seat's
 # own code, other repos — are not the guard's business.
 REL=""
@@ -196,16 +173,12 @@ bad = [x for x in toks
 if not toks or not bad:
     sys.exit(0)
 valid = ", ".join(sorted(ok - {"arch", "nav"}))
-import json
-print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
-  "permissionDecision": "deny",
-  "permissionDecisionReason": (
-    "Atlas addressing (1.30.6): '" + ", ".join(bad) + "' resolves to nothing in this "
-    "vault's io-graph. Addressable from here: " + valid + ". A new external must be "
-    "declared by your arch seat before you can address it (AAC-method 5).")}}))
+print("Atlas addressing (1.30.6): '" + ", ".join(bad) + "' resolves to nothing in this "
+      "vault's io-graph. Addressable from here: " + valid + ". A new external must be "
+      "declared by your arch seat before you can address it (AAC-method 5).", file=sys.stderr)
 sys.exit(3)
 PYEOF2
-  [ "$_rc" = 3 ] && exit 0 || return 0
+  [ "$_rc" = 3 ] && exit 2 || return 0
 }
 for _s in $(printf '%s\n' "$SLUGS" | sort -u); do
   if [ -n "$_s" ] && [ "$_comp" = "$_s" ]; then
@@ -243,20 +216,23 @@ if [ "${ATLAS_ROLE:-component}" = "both" ]; then
   esac
 fi
 
-"$PY" -c '
-import json, sys
-slugs, rel = sys.argv[1], sys.argv[2]
-first = slugs.split(", ")[0]
-comp = "|".join(slugs.split(", ")) if ", " in slugs else slugs
-print(json.dumps({"hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "deny",
-    "permissionDecisionReason": (
-        f"Atlas golden rule 2 - this seat ({slugs}) writes only to components/{{{comp}}}/**, an additive "
-        f"architecture/proposals/NNNN-*.md, or its own edges in registry/io-graph.yml. "
-        f"Refused: {rel}. If you need something that lives here, do not widen the write: "
-        f"raise it in components/{first}/docs/needs/ with a `to:` naming the owner, or open "
-        f"an ADR if it is shared architecture."),
-}}))
-' "$(printf '%s\n' "$SLUGS" | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//;s/,/, /g')" "$REL"
+_sl=$(printf '%s\n' "$SLUGS" | sort -u | grep -v '^$' | tr '\n' ',' | sed 's/,$//;s/,/, /g')
+_first=${_sl%%,*}
+case "$_sl" in *", "*) _cm=$(printf '%s' "$_sl" | sed 's/, /|/g') ;; *) _cm=$_sl ;; esac
+echo "Atlas golden rule 2 - this seat ($_sl) writes only to components/{$_cm}/**, an additive architecture/proposals/NNNN-*.md, or its own edges in registry/io-graph.yml. Refused: $REL. If you need something that lives here, do not widen the write: raise it in components/$_first/docs/needs/ with a \`to:\` naming the owner, or open an ADR if it is shared architecture." >&2
+exit 2
+}
+
+# Every written path must pass: one refused file refuses the whole call.
+_TAB=$(printf '\t')
+while IFS="$_TAB" read -r P TO; do
+  [ -n "$P" ] || continue
+  set +e
+  ( set -e; check_one ) </dev/null
+  _rc=$?
+  set -e
+  [ "$_rc" = 0 ] || exit "$_rc"
+done <<ATLAS_PATHS
+$_PL
+ATLAS_PATHS
 exit 0

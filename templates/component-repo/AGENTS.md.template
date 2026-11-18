@@ -5,8 +5,8 @@ The architecture lives in the project's Atlas vault — a git repo resolved by
 `scripts/atlas-sync.sh` into `$ATLAS_VAULT` (default `./.atlas`), at the method version
 pinned in the vault's `registry/io-graph.yml`. Never reference the vault by a machine path.
 
-**Before working:** read `ATLAS-CONTEXT.md` — injected by the SessionStart hook on every
-session start (including resume, `/clear` and compaction). Regenerate any time with
+**Before working:** read `ATLAS-CONTEXT.md` — put in your context by the session-start hook
+on every session start (including resume, clear and compaction). Regenerate any time with
 `sh scripts/atlas-context.sh`. **If it is absent, your hooks are not live** — the write
 guard is not running either. Fix the install (`atlas_init --launch-dir`, then `--verify`);
 until then honour the write scope by hand. It is your complete reading list: constitution, pinned
@@ -22,7 +22,7 @@ only if the context is insufficient — and treat that as a defect in the vault'
 3. **Develop.**
 4. **Test.**
 5. **Update your own `provides/` and `needs/`** — what changed for consumers, what you
-   now need from providers — and publish. The Stop guard checks this step.
+   now need from providers — and publish. The turn-end guard checks this step.
 
 Two rules bind every step: **confirm the issue before you build it** (never develop
 against an assumed problem), and **test against the real environment and its real
@@ -38,9 +38,10 @@ existing terms, coin none; say less.
 
 **While working:** you may write only to `components/<component>/**`, an additive
 `architecture/proposals/NNNN-*.md`, and edges in `registry/io-graph.yml` that name you.
-A `PreToolUse` guard refuses anything else. That is not an obstacle to route around: if you
+A write guard refuses anything else. That is not an obstacle to route around: if you
 need something owned elsewhere, ask for it in `components/<component>/docs/needs/`.
 
 **After working:** run `/atlas-publish` (contracts to provides/, asks to needs/, ADRs for
 shared changes, bump `updated:`, recompile as a check, commit authored files only on
-`atlas/<component>/<topic>`, open the PR).
+`atlas/<component>/<topic>`, open the PR). If your runtime has no such command, follow
+the steps in `.claude/commands/atlas-publish.md`.

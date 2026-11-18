@@ -47,12 +47,15 @@ Works against the vault's work branch directly (it is the reviewer, not a PR aut
 **Reorientation is mechanical.** Install with
 `python .atlas-method/tools/atlas_init.py --arch --launch-dir "$HOME/work"` (name your
 launch dir — the parent of the vault, where hooks actually load; running from inside the
-vault installs hooks that never fire, 1.28.2) — it wires both arch hooks. Or by hand from
+vault installs hooks that never fire, 1.28.2) — it wires the arch hooks for every agent
+runtime (context-plane.md, "Runtimes"; on a Codex seat, trust them in `/hooks`). Or by hand from
 `templates/arch-seat/` in your launch dir: a `SessionStart` hook (no matcher) that emits your reorientation briefing via
 `atlas_validate.py --emit-arch-context` — constitution, architecture in force,
 estate/drift, your review queue, `registry/estate.md` (your project's runtime seats,
 orchestrator-generated; at `estate/registry.md` until the 1.28.8 move lands), `next-steps.md` as last stated (replace before
-ending if anything moved), and where the bridge is. Because it fires on **compact**
+ending if anything moved), and where the bridge is. The hook prints the head of that
+briefing and writes the rest to files in `ATLAS-CONTEXT.d/` in your launch dir; the head
+lists them, and you read every one before you act (1.35.9). Because it fires on **compact**
 as well as startup, a compaction re-injects your bearings with a directive to resume;
 you never need the operator to re-orient you. (Component seats get this from their own
 SessionStart hook; this is the arch equivalent, since you have no slug.)
@@ -76,9 +79,9 @@ runs `ATLAS_MODE="supervised"` (it pauses for you at publish/release); a compone
 drive over the hub runs `ATLAS_MODE="autonomous"` (it publishes through the write model
 and you oversee via PR review and the hub). Declared in each component's `.atlas.conf`.
 
-**Your release act is the vault merge, not a tag** (§9, "Which release is which"): the
-`Atlas-<Project>` vault carries no product tags — its release is your `work` →
-`release` merge at periodic review. Component seats release their own code (dev
+**The vault is not released** (§9, "Which release is which"): the `Atlas-<Project>`
+vault has one branch, `dev`, no `main`, and no product tags. Never merge it anywhere
+(1.35.8). Component seats release their own code (dev
 iterates the patch position; a release zeroes patch, bumps minor, tags annotated on
 `release`); you approve any exceptional patch tag on a released line, and you gate
 nothing else of theirs. **A component's `provides/` contracts carry its release's
@@ -130,7 +133,7 @@ Your own unpushed work never triggers it.
 ## Periodic review
 
 Pull-driven — run it when the dashboard shows it is due (open threads, unreleased
-`dev → main` delta, red rows), not on a fixed calendar.
+`dev → main` delta in a code repo, red rows), not on a fixed calendar.
 
 1. Walk open `_bridge/threads/`; resolve or reply, then move resolved ones to
    `_bridge/archive/`.
@@ -152,11 +155,13 @@ Pull-driven — run it when the dashboard shows it is due (open threads, unrelea
    You **record** direction; you never invent a release. If the roadmap and the bridge
    disagree, the bridge is the newer truth — reconcile it there first.
 6. Clear the validator's naming and doc-plane warnings.
-7. Merge work → release across the project's repos per the declared `branching:`
-   policy, then cut the release as its own deliberate act: tag the shipped commit
+7. Merge work → release across the project's code repos per the declared `branching:`
+   policy (never the vault: it has one branch), then cut the release as its own
+   deliberate act: tag the shipped commit
    `vX.Y.Z` (annotated). The merge alone is not a release, and nothing deploys
    until a consumer moves its pin; a trunk-only project just tags (§9). Replace
-   `next-steps.md` at every cut.
+   `next-steps.md` at every cut. For code that is deployed, the branches, the tag and
+   what staging and production run are one page: `development-and-release.md`.
 
    **No broadcast to component seats on adopting a release** (1.26.3, from an AgentEco
    finding). Do not mint a per-release "re-copy your scripts" need: the self-drift
@@ -251,6 +256,7 @@ briefing next session. That makes it tempting to use for everything. Don't.
 | An ask for **another component** | `needs/` addressed to **that component's slug** | delivered into *its* briefing — this is how one seat reaches another, human never involved |
 | An ask that needs the **human's** judgment | `needs/` addressed to **`nav`** | mirrored to the bridge for @nav; use it only for direction/decisions, never to reach another seat |
 | A one-off instruction | — none, deliberately | say it in the session; the vault records rules and decisions, not orders |
+| A **skill** other seats should use | your own `skills/` folder, then a need to `orchestrator.component.estate-skills` ([[skills]]) | lists the need; the estate installs a merged skill on the seats the operator switches it on for |
 
 > **`nav` is a person, not a message bus.** A seat reaching another seat addresses that
 > **slug** — the ask lands in the other component's briefing directly. Addressing `nav`
@@ -313,7 +319,7 @@ before forming a theory.
 
 ## Release notes (1.33.14)
 
-Every time you merge dev to main and tag the vault, add an entry at the top of
+Every time you tag the vault, add an entry at the top of
 `release-notes.md` (top level; template `templates/release-notes/`) in the same commit:
 TL;DR line, three to six plain bullets, an Action line.
 

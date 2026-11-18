@@ -110,7 +110,13 @@ if [ -n "$BWORK" ]; then
   # a missing branch is never invented — that is a seat-setup problem, reported loudly.
   CUR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
   if [ "$CUR" != "$BWORK" ] && [ "$CUR" != "HEAD" ]; then
-    if git checkout -q "$BWORK" 2>/dev/null ||
+    # Uncommitted work is never carried to another branch (1.35.6, agent-eco's
+    # sync-compile: git takes it along when nothing conflicts, and an unfinished change
+    # on a feature branch ended up on the work branch). atlas-context puts the branch
+    # in the briefing either way.
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+      echo "atlas-sync: BRANCH POLICY — this repo is on '$CUR' with uncommitted changes; NOT switched to '$BWORK'. Commit them on '$CUR' first." >&2
+    elif git checkout -q "$BWORK" 2>/dev/null ||
        git checkout -q -b "$BWORK" --track "origin/$BWORK" 2>/dev/null; then
       echo "atlas-sync: switched $CUR -> $BWORK (branching policy in the vault's io-graph.yml)" >&2
     else
@@ -138,12 +144,17 @@ fi
 TPL="$ATLAS_METHOD/templates/component-repo/scripts"
 if [ -d "$TPL" ]; then
   _DRIFTED=0
-  for f in atlas-common.sh atlas-sync.sh atlas-context.sh atlas-guard-write.sh atlas-guard-publish.sh atlas-guard-supervise.sh atlas-needs.py; do
+  for f in atlas-common.sh atlas-sync.sh atlas-context.sh atlas-guard-write.sh atlas-guard-publish.sh atlas-guard-supervise.sh atlas-needs.py atlas-payload.py atlas-discard-views.sh; do
     [ -f "$TPL/$f" ] || continue
     [ -f "scripts/$f" ] || { echo "atlas-sync: WARN scripts/$f missing — method ${REF:-default} ships it" >&2; _DRIFTED=1; continue; }
     cmp -s "$TPL/$f" "scripts/$f" ||
       { echo "atlas-sync: WARN scripts/$f differs from method ${REF:-default} template — re-copy, or raise a proposal if the change is deliberate" >&2; _DRIFTED=1; }
   done
+  # The publish steps are a copy too (1.35.5, sync-compile): an old one keeps old commands.
+  _PUB=.claude/commands/atlas-publish.md
+  if [ -f "$TPL/../$_PUB" ] && [ -f "$_PUB" ] && ! cmp -s "$TPL/../$_PUB" "$_PUB"; then
+    echo "atlas-sync: WARN $_PUB differs from method ${REF:-default} template — re-copy, or raise a proposal if the change is deliberate" >&2; _DRIFTED=1
+  fi
   # The warning carries its own remedy (1.26.2, AgentEco ask): the exact refresh
   # command, filled in — so no arch seat ever needs to mint a per-release broadcast
   # (which reliably went stale and then named an OLDER version to install).

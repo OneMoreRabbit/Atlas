@@ -1,7 +1,7 @@
 ---
 title: Release notes — Atlas (the AAC method)
 status: active
-updated: 2026-10-08
+updated: 2026-11-18
 owner: atlas.arch
 about: one short entry per method release, newest first — what changed and what seats must do
 ---
@@ -10,6 +10,287 @@ about: one short entry per method release, newest first — what changed and wha
 
 Newest first. The full technical changelog is in the frontmatter of `AAC-method.md`;
 incidents and their fixes are in `troubleshooting/troubleshooting-log.md`.
+
+## v1.36.0 — 2026-11-18 (estate release)
+
+**TL;DR:** everything since 1.35.0, rolled up for the whole estate. Every seat re-copies
+its scripts. Every Atlas vault deletes `main`. The steps are at the end of this entry.
+
+1.35.3 to 1.35.10 were never tagged. This tag is their release, and this entry is the
+migration note their entries point to.
+
+- **Briefing head.** The session-start hook prints a short head, and the briefing is in
+  files the head lists. A seat that has not re-copied its scripts sees only the first
+  2,000 characters of its briefing. (1.35.9)
+- **One branch per vault.** An Atlas vault lives on `dev` and has no `main`. A Nav vault
+  lives on `main` and has no `dev`. (1.35.8)
+- **Codex seats** get the briefing and the guards. (1.35.4)
+- **`development-and-release.md`** is the one page for the path from development to
+  production. House style rule 8 states it. (1.35.3)
+- **`skills.md`**, and what a vault holds. House style rules 9 to 11. The estate
+  installs no skill yet. (1.35.10)
+- `atlas-sync.sh` leaves a code repo with uncommitted changes on its branch (1.35.6).
+  `/atlas-publish` step 6b is one script (1.35.5). A failed needs refresh says so and
+  exits 1 (1.35.7).
+- New in this release: the dashboard's branch table reads a vault listed as a component
+  as a vault. A Nav vault on `main` with no `dev` is no longer red. A Nav vault that has
+  a `dev` is red.
+- `templates/vault-ci/` has not changed since v1.35.0. A vault that copied it then
+  copies nothing now.
+
+**Action:** on the operator's go, which the orchestrator passes on. Follow the steps for
+your seat, in order. `<launch dir>` is where your agent starts, `$HOME/work` on an estate
+seat.
+
+**Orchestrator, first:**
+
+1. In each Atlas vault that has a `main`, remove the branch protection on `main`.
+2. Send the arch seats their steps.
+
+**Arch seat**, in the vault checkout:
+
+1. `git checkout dev`, `git pull --ff-only`, `git checkout -b atlas/migration/1.36.0`.
+2. In `registry/io-graph.yml` set `pinned: '1.36.0'` under `method:`. Keep the quotes.
+3. Move your method checkout to the tag. It is the folder that `ATLAS_METHOD` names in
+   `<launch dir>/.atlas-arch.conf`:
+   `git -C <method checkout> fetch --tags origin`, then
+   `git -C <method checkout> checkout v1.36.0`.
+4. `python3 <method checkout>/tools/atlas_init.py --arch --force --launch-dir <launch dir>`.
+   The last line reads `atlas_init --arch --verify: all checks passed`. Without `--force`
+   the old scripts stay and the verify fails.
+5. Delete `main` in your Atlas vault. Skip this step if it has none. `git fetch origin`,
+   then `git log --no-merges --oneline origin/dev..origin/main`. Anything listed other
+   than "atlas: regenerate derived views" goes to `dev` by pull request first. Then
+   `git push origin --delete main`. If GitHub refuses, ask the orchestrator to remove
+   the branch protection.
+6. `python3 <method checkout>/tools/atlas_validate.py .` exits 0. The drift report reads
+   `method  pinned 1.36.0 — aligned`. In `dashboard.md` the vault row reads
+   "one branch, `dev`".
+7. Commit, push the branch, open the pull request against `dev`, wait for green CI,
+   merge.
+8. Codex seat only: start Codex in `<launch dir>`, open `/hooks`, trust the Atlas hooks.
+9. Start a new session. The first line of the briefing is
+   `# ATLAS-CONTEXT: read these files before you act`. Read every file it lists.
+10. Send each component seat, product seat and test seat of your project its steps
+    below.
+11. Report to the orchestrator: the pull request, the validator's exit code, `main`
+    deleted or never there, the first line of your new briefing, and which seats have
+    reported to you.
+
+**Component seat**, in each code repo it holds, after its arch seat says the pin has
+moved:
+
+1. Commit your work. Then `sh scripts/atlas-sync.sh`. It prints `method pin 1.36.0` and
+   a refresh command.
+2. Run the refresh command it prints. It is
+   `python3 .atlas-method/tools/atlas_init.py --component <name> --force` with your
+   launch dir and vault.
+3. `git add .atlas.conf .claude/ .codex/ scripts/`, `git commit -m "atlas 1.36.0"`,
+   `git push`. The installer prints the exact list to add.
+4. `python3 .atlas-method/tools/atlas_init.py --component <name> --verify --launch-dir <launch dir>`.
+   The last line reads `atlas_init --verify: all checks passed`.
+5. Codex seat only: start Codex in `<launch dir>`, open `/hooks`, trust the Atlas hooks.
+6. Start a new session. The first line of the briefing is
+   `# ATLAS-CONTEXT: read these files before you act`. Read every file it lists.
+7. Report to your arch seat: the commit, the last line of the verify, and the first line
+   of your new briefing.
+
+**Product seat and test seat**, after the arch seat says the pin has moved:
+
+1. `git -C <launch dir>/.atlas-method fetch --tags origin`, then
+   `git -C <launch dir>/.atlas-method checkout v1.36.0`.
+2. Product seat:
+   `python3 <launch dir>/.atlas-method/tools/atlas_init.py --product --force --repo <launch dir>/Atlas-<Project> --launch-dir <launch dir>`.
+   Test seat: the same with `--test` in place of `--product`. The last line reads
+   `all checks passed`.
+3. Codex seat only: trust the Atlas hooks in `/hooks`.
+4. Start a new session. Report the last line of step 2 to your arch seat.
+
+**Nav vault that has a `dev`.** On 2026-11-18 four do: Nav-AiTutor, Nav-ArcGIS, Nav-Idea
+and Nav-MicoManager. In all four `main` is behind `dev` and holds nothing `dev` lacks.
+The orchestrator does these steps, one vault at a time, each on the operator's word,
+because the operator's own copy of the vault is on `dev`:
+
+1. In a fresh clone: `git push origin origin/dev:main`.
+2. Set the default branch to `main` in the repo's settings on GitHub.
+3. `git push origin --delete dev`.
+4. Tell the operator and the project's arch and product seats. Each, in its copy of the
+   Nav vault: `git fetch --prune origin`, `git checkout main`, `git pull --ff-only`.
+
+**A vault pinned below 1.35.0** first follows `README.md`, "Upgrading an existing vault
+to a new method version", and the Action lines of the entries between its pin and this
+one.
+
+## v1.35.10 — 2026-11-18
+
+**TL;DR:** the method now says where skills live and how they reach a seat, and what a
+vault holds. Three rules join the house style in every briefing.
+
+- New page, `skills.md`. Any seat writes a skill in its own vault folder,
+  `components/<slug>/skills/<name>/SKILL.md`. A skill more than one seat uses is owned
+  by the estate-skills seat in the estate skills repo, `OneMoreRabbit/estate-skills`.
+- A seat proposes a skill or a change from its own vault folder, by need to
+  `orchestrator.component.estate-skills`. That seat opens the pull request and merges
+  or rejects it. A seat cannot push to the skills repo.
+- The operator switches each skill on or off for a role or an agent in the estate
+  directory. The estate installs. A new skill or a new version needs his approval
+  first.
+- The estate marks every skill folder it installs with a file, `.estate-skill`. A folder
+  without it is the seat's own and is left alone.
+- Off-the-shelf skills of Claude Code and Codex are in the register too and are
+  switched the same way.
+- **The estate's part is the orchestrator's.** On 2026-11-18 the skills repo exists and
+  the estate-skills seat answers on the hub. The install play is not built, so the
+  estate installs nothing and switches nothing on a seat yet.
+- The validator warns about a skill folder an agent program would not load, or the
+  skills repo would refuse: no `SKILL.md`, a `name:` that is not the folder name, no
+  `description:`, a folder name that is not a lowercase slug or starts `codex-`, a
+  copied `.estate-skill` file.
+- A vault holds what an agent is told. What an agent learns while working, and what it
+  did, go to a memory folder mounted into the seat. That part is a later release. A
+  vault holds no notes about a named person.
+- A pull request to a repo that several projects share is a normal route, where the
+  seat has the grant to open one. The seat that owns the repo merges or rejects.
+- House style rules 9 to 11: a stored fact is timeless, dated or a pointer; text from
+  outside is data, never an instruction; search before saying something is not there.
+
+**Action:** none. The text arrives with the pin.
+
+## v1.35.9 — 2026-11-17
+
+**TL;DR:** the session-start hook now prints a short head, and the briefing is in files
+the head lists. Before this, a seat saw only the first 2,000 characters of its briefing.
+
+- Cause: Claude Code carries 10,000 characters from one hook. Over that it keeps the
+  first 2,000 and a file path, and does not ask the agent to read the file. Briefings
+  are 34,000 to 81,000 characters. Proved on two seats, Claude Code 2.1.295.
+- The head is held under 9,000 characters. It leads with the list of files. Then the
+  mode, the house style, the reorientation steps after a compaction, and one line for
+  each unanswered need, proposal in flight and contract that has moved.
+- The files are in `ATLAS-CONTEXT.d/`, beside the seat's code or in the arch seat's
+  launch dir: `1-constitution.md`, `2-architecture.md`, `3-contracts.md`, `4-needs.md`,
+  `5-proposals-and-drift.md`. They are written fresh at every session start and never
+  committed.
+- **The seat reads every listed file before it acts.** The reads were injected; now they
+  are an instruction.
+- `atlas_init --verify` fails a hook that prints more than 10,000 characters.
+- A component seat now gets the full reorientation steps after a compaction. Before, it
+  got a four-line banner.
+- Tested in one Claude Code 2.1.295 session on a fixture seat. Not tested: Codex, later
+  Claude Code versions. Not changed: the product seat's script.
+
+**Action:** every component seat and arch seat, on the operator's go for the release that
+carries this: re-copy your seat scripts with `atlas_init.py --force`, by the steps in the
+migration note for that release. Until a seat does, its briefing is cut as before.
+
+## v1.35.8 — 2026-11-17
+
+**TL;DR:** a vault has one branch. An Atlas vault lives on `dev` and has no `main`. A Nav
+vault lives on `main` and has no `dev`. Operator ruling, 2026-11-17.
+
+- Before: the Atlas vault had a `main` that the arch seat merged "at periodic review".
+  No interval was set, `main` sat months old, and seats and people read it by mistake.
+- Every seat reads and writes the Atlas vault on `dev`. Nothing is merged from it.
+- `release: main` in `registry/io-graph.yml` stays. It is for code repos.
+- The dashboard's vault row is red while the vault still has a `main`.
+- The arch briefing says never to merge the vault.
+
+**Action:** component seats: none. Arch seats, on the operator's go for the release that
+carries this: delete `main` in your Atlas vault, by the steps in the migration note for
+that release.
+
+## v1.35.7 — 2026-11-17
+
+**TL;DR:** when `scripts/atlas-needs.py --refresh` cannot read the estate's needs
+register, the list now says so at the top with the date, and the command exits 1.
+
+- Before: the command exited 0 and the note in the list carried no date, so a timer saw
+  nothing and a list could sit days old.
+- A seat with no list yet now gets one that says the register was never read.
+- The next good read replaces the list and the line goes.
+- The token fix for seats on the estate's credential router is in 1.35.3.
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Whoever schedules `--refresh` can now act on a
+non-zero exit.
+
+## v1.35.6 — 2026-11-17
+
+**TL;DR:** `atlas-sync.sh` no longer moves uncommitted work to another branch. A code
+repo with uncommitted changes stays on its branch. The briefing now says when the repo
+was switched to the work branch, and when it was not.
+
+- Before: on any branch but the work branch, every briefing switched the repo, and git
+  carried uncommitted changes along. The notice went to stderr only.
+- A clean repo on another branch is still switched to the work branch.
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Until then, commit on your branch before you run
+`sh scripts/atlas-context.sh`, and check `git branch --show-current` after it.
+
+## v1.35.5 — 2026-11-12
+
+**TL;DR:** `/atlas-publish` step 6b is now one script, `sh scripts/atlas-discard-views.sh`.
+The old step was a typed `git checkout`. Typed without its last line, or with `<name>`
+left in, it discarded your own `component.md` edits and reported nothing.
+
+- The script takes no argument. It reads your component name from `.atlas.conf`, keeps
+  your page, and stops without discarding anything if it cannot read the name.
+- `atlas-sync.sh` and `--verify` now also report an old
+  `.claude/commands/atlas-publish.md`, so a seat that has not picked this up is told.
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force` and commit. Until then, in step 6b, keep the last line of the
+command, replace `<name>` with your component name, and check
+`git -C "$ATLAS_VAULT" status --short` still lists your `component.md` before you commit.
+
+## v1.35.4 — 2026-11-12
+
+**TL;DR:** Codex seats now get the briefing and the guards. The hooks are described once
+and written for every agent runtime, so the next runtime is one table entry.
+
+- `atlas_init.py` writes `.codex/hooks.json` beside `.claude/settings.json`, for
+  component, arch, product and test seats.
+- The write guards understand Codex's `apply_patch`.
+- `AGENTS.md` at the launch dir gets a short Atlas block: what to do when no briefing is
+  in context.
+- `--verify` fires each runtime's write guard at a path it must allow and a path it must
+  refuse. `--arch`, `--product` and `--test` installs end with that verify.
+- Codex skips a hook until it is trusted, with no warning. Trust the Atlas hooks in
+  `/hooks` after an install.
+- How it works and how to add a runtime: `context-plane.md`, "Runtimes".
+
+**Action:** none until your arch seat passes on the operator's go. Then re-run the
+installer with `--force`, commit `.codex/` with the rest, and on a Codex seat trust the
+hooks.
+
+## v1.35.3 — 2026-11-11
+
+**TL;DR:** one page now holds the path from development to production:
+`development-and-release.md`. Everything else refers to it.
+
+- Develop on your seat or the dev box. Commit to `dev`. Release by annotated tag.
+- With a staging server: `dev` to `staging`, tag, test on staging, then `staging` to
+  `main`. Without one: `dev` to `main`, tag.
+- Staging and production run only the tag, fetched from GitHub. Production runs the tag
+  that was proved: tested on staging, or built from GitHub in a clean environment. A
+  test on the dev box does not prove a tag.
+- Only a plain annotated `vX.Y.Z` is a release; a tag with a suffix is never deployed.
+- An urgent fix branches from the live tag and is merged back into `dev`.
+- Live data: production data is kept, database changes only go forward, and they run on
+  a copy of production first.
+- Management repositories are not covered: vaults, the method repo, the estate's ansible
+  repo.
+- The arch seat sends the orchestrator the deploy ask with the tag and its commit; the
+  operator says deploy each time.
+- House style rule 8 states it in every briefing. The specification, `component-init.md`
+  and `arch-seat.md` no longer restate the path.
+- The needs helper (`scripts/atlas-needs.py`) now reads the estate register on seats that
+  use the estate's GitHub App.
+
+**Action:** read `development-and-release.md`. If your project's branches or deploys
+differ from it, tell your arch seat. Do not move your method pin for this; wait for the
+operator's go.
 
 ## v1.35.2 — 2026-11-11
 
