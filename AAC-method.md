@@ -356,10 +356,12 @@ updated: 2026-09-13
 #   agent is told. What an agent learns while working goes to a memory folder mounted
 #   into the seat, which is a later release. A component folder gains skills/. skills.md
 #   is the one page on skills: any seat writes one, a skill more than one seat uses is
-#   owned centrally in the estate skills repo, changes come by pull request, the
-#   directory assigns, the estate installs on the operator's go. The skills repo, its
-#   seat and the install play are the orchestrator's and are not built; the page says
-#   so and gives the route until they are. The validator warns about a skill folder an
+#   owned centrally by the estate-skills seat in the estate skills repo, a seat proposes
+#   a skill or a change from its own vault folder by need and that seat opens the pull
+#   request, the operator switches skills on and off in the directory, the estate
+#   installs. The skills repo, its seat and the install play are the orchestrator's,
+#   planned and not built (its response of 2026-11-18); the page says so and gives the
+#   route until they are. The validator warns about a skill folder an
 #   agent program would not load. §3 records that a pull request to a shared repo is a
 #   normal route. No migration: the text arrives with the pin.
 #   1.35.9 (2026-11-17, operator's go): the session-start hook prints a HEAD, and the
@@ -1105,9 +1107,9 @@ components/<slug>/
 > project's, and the operator's yes.
 >
 > **Skills (1.35.10).** A seat writes its own skills in `skills/`. A skill that more
-> than one seat uses is owned by the estate-skills seat in the estate skills repo, is
-> assigned in the estate directory and is installed by the estate on the operator's
-> go. The whole path is one page: [[skills]].
+> than one seat uses is owned by the estate-skills seat in the estate skills repo. The
+> operator switches it on or off for a role or an agent in the estate directory, and
+> the estate installs it. The whole path is one page: [[skills]].
 
 > **Root rule — two planes, two homes.** `docs/` root holds ONLY the component's
 > *design-plane* reference documents: the architecture doc and a development plan/status.
@@ -1238,8 +1240,8 @@ components/<slug>/
 > addressable cross-vault proposal; it would be the needs plane with a second name.
 
 > **A pull request to a shared repo is a normal route (1.35.10, operator 2026-11-18).**
-> When a repo holds work that several projects share (a shared component, the estate
-> skills repo), a seat from another project may open a pull request to it. The seat
+> When a repo holds work that several projects share (a shared component), a seat from
+> another project may open a pull request to it, where it has the grant to. The seat
 > that owns the repo merges it or rejects it. Golden rule 2 stands: the pull request
 > proposes, and only the owner writes the repo's branches. Vault documents still cross
 > a project boundary as needs. Use a need, not a pull request, when you have an ask

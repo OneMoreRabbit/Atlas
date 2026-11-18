@@ -6,7 +6,7 @@ updated: 2026-11-18
 
 # Next steps
 
-**TL;DR:** 1.35.10 is prepared on `dev` and NOT released (operator's decisions, 2026-11-18): `skills.md`, what a vault holds, three house style rules; the skills repo, its seat and the install play are asked of the orchestrator by need; the memory part is a later release (see "Skills and what a vault holds" and "Memory folders and operational seats"). 1.35.9 is prepared on `dev` and NOT released (operator's go to build, 2026-11-17): the
+**TL;DR:** 1.35.10 is prepared on `dev` and NOT released (operator's decisions, 2026-11-18): `skills.md`, what a vault holds, three house style rules; the skills repo, its seat and the install play are the orchestrator's, planned and not built, and `skills.md` follows its plan; the operator said hold until the skills work is done; the memory part is a later release (see "Skills and what a vault holds" and "Memory folders and operational seats"). 1.35.9 is prepared on `dev` and NOT released (operator's go to build, 2026-11-17): the
 session-start hook prints a short head and the briefing is in files the head lists, because
 Claude Code cut every briefing to 2,000 characters; every seat re-copies its scripts at the release
 (see "Migration at the next estate release" and "Briefing head"). 1.35.8 is prepared on `dev` and NOT released (operator ruling 2026-11-17): a vault
@@ -144,17 +144,26 @@ Built on `dev` on the operator's decisions of 2026-11-18. Design:
 vault, whose three skills pass. Open:
 
 1. **The orchestrator's, asked by need**
-   (`components/method/docs/needs/atlas-orchestrator-estate-skills-need-v0_1.md`): the
-   skills repo, the estate-skills seat, the grants, the install play, a view of what is
-   installed where. Five questions are in the need.
+   (`components/method/docs/needs/atlas-orchestrator-estate-skills-need-v0_1.md`),
+   answered 2026-11-18 with a plan and the five answers (`Atlas-Orchestrator`,
+   `components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`, hub
+   #15293). Nothing is built yet. `skills.md` follows that plan.
 2. **Temporary:** `skills.md`, "Until the skills repo exists". Delete the section when
-   the orchestrator says the repo is live.
-3. **Operator has not answered:** is a pull request alone enough for a change, with a
-   need only when there is no change to offer. `skills.md` says so now.
-4. **Operator has not answered:** skills from the operator's account update without a
-   go. Leave that, or have the estate switch off the ones the register does not assign.
-5. **Not checked:** how Codex loads and switches off skills. Licence terms of the
-   off-the-shelf skills; three of twelve say "Proprietary".
+   the orchestrator says the repo and its seat are live.
+3. **The proposal route.** The operator agreed on 2026-11-18 that a pull request alone
+   carries a change. A seat cannot push to the skills repo: every seat is one GitHub
+   account and pushing a branch is the same permission as merging. So `skills.md` says
+   a need naming the files in the seat's own vault, and the estate-skills seat opens
+   the pull request. The orchestrator has put the other way to the operator: every seat
+   pushes, and one more permission on the GitHub App. If he chooses it, `skills.md`
+   changes in two sections.
+4. **Hold.** The operator, 2026-11-18: hold the release while the orchestrator deploys
+   skills. The orchestrator's order of work rolls the method out after its first run on
+   real seats. Both on the operator's word.
+5. **Not checked by the method seat:** Codex was tested by estate-manage on 0.160.0 in
+   a scratch home, not on a live seat. Switching off one account plugin per seat is not
+   tested. Licence terms of the off-the-shelf skills; three of twelve say
+   "Proprietary".
 6. **Not built:** a briefing line that compares a seat's assigned skills with its
    installed ones. It needs the directory's selections and the install play first.
 7. **Not built:** the method's own skills. `/atlas-publish` stays a command file.

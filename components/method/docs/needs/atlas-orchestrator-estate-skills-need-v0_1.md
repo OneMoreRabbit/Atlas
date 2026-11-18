@@ -15,6 +15,13 @@ method's side is written as `skills.md`, in 1.35.10 on Atlas `dev`, not released
 parts are yours and do not exist: a skills repo, an estate-skills seat, and a play that
 installs each seat's assigned skills. Please plan them and answer the five questions.
 
+**Answered 2026-11-18** by estate-manage: `Atlas-Orchestrator`,
+`components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`, hub
+#15293. A plan for every part and the five answers. Nothing is built yet, so this need
+stays open until the repo and its seat are live. Point 3 under "What is asked" is
+replaced by the response's Grants section: only the estate-skills seat writes the repo,
+and another seat proposes from its own vault folder by need. `skills.md` follows that.
+
 ## What the operator decided
 
 1. The estate directory holds the list of skills and who is assigned each. It exists.

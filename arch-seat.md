@@ -256,7 +256,7 @@ briefing next session. That makes it tempting to use for everything. Don't.
 | An ask for **another component** | `needs/` addressed to **that component's slug** | delivered into *its* briefing — this is how one seat reaches another, human never involved |
 | An ask that needs the **human's** judgment | `needs/` addressed to **`nav`** | mirrored to the bridge for @nav; use it only for direction/decisions, never to reach another seat |
 | A one-off instruction | — none, deliberately | say it in the session; the vault records rules and decisions, not orders |
-| A **skill** other seats should use | a pull request to the estate skills repo ([[skills]]) | nothing; the estate installs it on the seats the operator assigns |
+| A **skill** other seats should use | your own `skills/` folder, then a need to `orchestrator.component.estate-skills` ([[skills]]) | lists the need; the estate installs a merged skill on the seats the operator switches it on for |
 
 > **`nav` is a person, not a message bus.** A seat reaching another seat addresses that
 > **slug** — the ask lands in the other component's briefing directly. Addressing `nav`
