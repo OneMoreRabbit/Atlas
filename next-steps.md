@@ -49,9 +49,13 @@ operator's rotation.
 2. **Release notes warning names an `rc` tag** (arc-platform.arch): the process seat's
    briefing asks for a heading `## v0.8.0rc1` although `v0.8.0` is tagged and has its
    heading. The check asks git for the nearest tag on the checked-out branch
-   (`git describe --tags --abbrev=0`). Cause not confirmed: asked the seat which branch
-   it is on and which tags that branch holds. Likely fix: skip a tag with a suffix,
-   since only a plain `vX.Y.Z` is a release. Not built.
+   (`git describe --tags --abbrev=0`). Cause confirmed (hub #15777): the seat is on
+   `dev`, `v0.8.0` is the merge commit on `main`, and nothing merges `main` back, so the
+   nearest tag on `dev` is the candidate. Every repo shows this after a release that had
+   a candidate. Fix, tried on a scratch repo: add `--exclude '*[!0-9.v]*'`, so a tag
+   with a suffix is skipped, in `atlas-context.sh` and in `atlas_validate.py`. Not
+   built: it changes a seat script, so every component seat re-copies at the release
+   that carries it. Waits for the operator's go.
 3. **Product and test seat text** (ai-tutor.arch): my hub text gave the component
    seat's first briefing line. A product seat's first line is
    `# ATLAS-PRODUCT-CONTEXT`; a test seat has no briefing. Corrected on the hub. The
