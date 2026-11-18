@@ -194,8 +194,11 @@ are not checked (seen on a real seat, 2026-11-18). Until it is restarted it writ
 nothing. A session never restarts itself: one that tried ended and no new one started.
 A restart may archive the old conversation; it is not deleted.
 
-Tested 2026-11-18 on Codex CLI 0.160.0 with a scratch Codex home. Not tested: a real
-seat that the seat tool starts.
+Tested 2026-11-18 on Codex CLI 0.160.0. With a scratch Codex home: the report, the
+record, and a record while a second Codex runs on the same home. On a real seat with
+its session running (estate-monitor, hub #15993): the report only. Not tested: the
+record on a real seat. The first Codex seat built or changed after today is that test:
+run the report after the record and after the restart.
 
 **Check an install.** `atlas_init.py --verify` (with `--arch`, `--product` or `--test` for
 those seats) fires each runtime's write guard as wired, at one path it must allow and one

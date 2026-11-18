@@ -132,6 +132,19 @@ with tempfile.TemporaryDirectory() as tmp:
         rc, out = trust(launch, home, "--record")
         expect(rc == 0, f"record again after the config was replaced: {rc} {out[-300:]}")
 
+        # a Codex already running on the same home, as a seat's session is: the record
+        # must leave it answering and the config whole
+        (home / "config.toml").write_text(f'model = "x"\n\n[projects."{launch}"]\ntrust_level = "trusted"\n')
+        os.environ["CODEX_HOME"] = str(home)
+        running = codex_trust.Codex("codex", launch)
+        rc, out = trust(launch, home, "--record")
+        expect(rc == 0 and "recorded   trust for 5 hook(s)" in out, f"record beside a running Codex: {rc} {out[-300:]}")
+        expect({h["trustStatus"] for h in running.hooks(launch)} == {"trusted"}, "the running Codex must still answer after the record")
+        running.close()
+        conf = (home / "config.toml").read_text()
+        expect('model = "x"' in conf and f'[projects."{launch}"]' in conf and conf.count("trusted_hash") == 5,
+               "the config must keep what it had and gain five hook entries")
+
         # a seat on another method version: the tool is pointed at that checkout
         other = tmp / "other-method"
         shutil.copytree(ROOT / "templates", other / "templates")

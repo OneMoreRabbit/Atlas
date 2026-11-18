@@ -241,8 +241,11 @@ product seats. Open:
    - Hook trust: `tools/codex_trust.py`, on `dev` as 1.36.3. It asks Codex for the hooks
      and has Codex record the trust, for hooks that run the method's own scripts only.
      Tested with the real Codex CLI 0.160.0 and a scratch Codex home.
-   - Open: the orchestrator runs it on one real seat that the seat tool starts, then the
-     restart, then checks the briefing arrived. No release of it before that passes.
+   - Real seat, 2026-11-18 (estate-monitor, hub #15993): the report works with the
+     seat's session running. The record was not tried: the operator had already
+     trusted every hook there by hand.
+   - Open: the record on a real seat. The first Codex seat built or changed is the
+     test. No release of it before that passes or the operator says otherwise.
    - Open: the estate's install and upgrade steps call it (orchestrator's play).
 3. **`method-ci.yml`** (orchestrator's file): parse `templates/seat-hooks.json`; run every
    `tools/tests/test_*.py` (`test_seat_hooks.py` is not in CI until then); `sh -n` the
