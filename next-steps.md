@@ -244,8 +244,12 @@ product seats. Open:
    - Real seat, 2026-11-18 (estate-monitor, hub #15993): the report works with the
      seat's session running. The record was not tried: the operator had already
      trusted every hook there by hand.
-   - Open: the record on a real seat. The first Codex seat built or changed is the
-     test. No release of it before that passes or the operator says otherwise.
+   - Report on nineteen Codex seats, 2026-11-18 (hub #15995): sixteen ready. Not
+     ready: agent-comms and agent-skeleton (folder trusted, five hooks untrusted),
+     arc-gis arch (folder not trusted).
+   - Open: the record on a real seat. agent-comms and agent-skeleton are the first two
+     it can run on. They are agent-eco's; the orchestrator waits for agent-eco.arch
+     and the operator. No release of the tool before the record passes on one.
    - Open: the estate's install and upgrade steps call it (orchestrator's play).
 3. **`method-ci.yml`** (orchestrator's file): parse `templates/seat-hooks.json`; run every
    `tools/tests/test_*.py` (`test_seat_hooks.py` is not in CI until then); `sh -n` the

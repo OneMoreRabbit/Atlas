@@ -20,6 +20,8 @@ when that is not the one this tool runs from.
 Exit 0: the folder is trusted and every Atlas hook there is trusted. Exit 1: not ready,
 the lines say why. Exit 2: Codex could not be asked.
 
+Run it from a method checkout: it needs `tools/atlas_init.py` and `templates/` beside it.
+
 After a `--record`, restart every session on the seat from a shell outside the session:
 a running session keeps the hooks it started with.
 """
@@ -36,7 +38,10 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import atlas_init  # noqa: E402
+try:
+    import atlas_init  # noqa: E402
+except ImportError:
+    sys.exit("codex_trust: CANNOT ASK  run this from a method checkout: it needs tools/atlas_init.py and templates/")
 
 RUNTIME = "codex"
 ATLAS_CMD = re.compile(r'^(?:[A-Z_]+=\S+ )*sh "([^"]+/(atlas-[a-z-]+\.sh))"(?: 2>/dev/null \|\| true)?$')
@@ -123,6 +128,9 @@ def main() -> int:
     args = ap.parse_args()
 
     launch = Path(args.launch_dir).expanduser().resolve()
+    if not atlas_init.SEAT_HOOKS.is_file():
+        print(f"codex_trust: CANNOT ASK  {atlas_init.SEAT_HOOKS} is missing: run this from a method checkout")
+        return 2
     rt = atlas_init.seat_hooks()["runtimes"][RUNTIME]
     hook_file = launch / rt["file"]
     print(f"codex_trust: launch dir {launch}")
