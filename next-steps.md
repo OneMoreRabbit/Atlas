@@ -1,12 +1,12 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-11-17
+updated: 2026-11-18
 ---
 
 # Next steps
 
-**TL;DR:** 1.35.9 is prepared on `dev` and NOT released (operator's go to build, 2026-11-17): the
+**TL;DR:** 1.35.10 is prepared on `dev` and NOT released (operator's decisions, 2026-11-18): `skills.md`, what a vault holds, three house style rules; the skills repo, its seat and the install play are asked of the orchestrator by need; the memory part is a later release (see "Skills and what a vault holds" and "Memory folders and operational seats"). 1.35.9 is prepared on `dev` and NOT released (operator's go to build, 2026-11-17): the
 session-start hook prints a short head and the briefing is in files the head lists, because
 Claude Code cut every briefing to 2,000 characters; every seat re-copies its scripts at the release
 (see "Migration at the next estate release" and "Briefing head"). 1.35.8 is prepared on `dev` and NOT released (operator ruling 2026-11-17): a vault
@@ -133,6 +133,38 @@ vault's pin moves:
 
 A seat that moves its pin and does not re-copy keeps the old script: its briefing is cut
 as before, and the SYNC DEGRADED warning leads it.
+
+**Skills and what a vault holds (1.35.10).** No step. The text arrives with the pin.
+
+## Skills and what a vault holds (1.35.10, built, not released)
+
+Built on `dev` on the operator's decisions of 2026-11-18. Design:
+`Nav-Atlas/_bridge/threads/atlas-1-35-10-design.md`. Tested:
+`tools/tests/test_skill_folders.py`; the validator over a copy of the orchestrator's
+vault, whose three skills pass. Open:
+
+1. **The orchestrator's, asked by need**
+   (`components/method/docs/needs/atlas-orchestrator-estate-skills-need-v0_1.md`): the
+   skills repo, the estate-skills seat, the grants, the install play, a view of what is
+   installed where. Five questions are in the need.
+2. **Temporary:** `skills.md`, "Until the skills repo exists". Delete the section when
+   the orchestrator says the repo is live.
+3. **Operator has not answered:** is a pull request alone enough for a change, with a
+   need only when there is no change to offer. `skills.md` says so now.
+4. **Operator has not answered:** skills from the operator's account update without a
+   go. Leave that, or have the estate switch off the ones the register does not assign.
+5. **Not checked:** how Codex loads and switches off skills. Licence terms of the
+   off-the-shelf skills; three of twelve say "Proprietary".
+6. **Not built:** a briefing line that compares a seat's assigned skills with its
+   installed ones. It needs the directory's selections and the install play first.
+7. **Not built:** the method's own skills. `/atlas-publish` stays a command file.
+
+## Memory folders and operational seats (designed, not built)
+
+The operator's direction, 2026-11-18: memory for every seat is a folder mounted from
+beaver. This part of the method is built and released when the mounts exist. Design:
+`Nav-Atlas/_bridge/threads/memory-and-operational-seats-design.md`. Nothing is built.
+It waits for AgentEco's mounts and the operator's go.
 
 ## Briefing head (1.35.9, built, not released)
 

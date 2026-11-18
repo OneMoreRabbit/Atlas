@@ -174,6 +174,32 @@ def naming_warnings() -> list[str]:
     return warns
 
 
+def skill_warnings() -> list[str]:
+    """A seat's own skills, `components/<slug>/skills/<name>/SKILL.md` (1.35.10; skills.md).
+    An agent runtime loads a skill by its frontmatter and skips one it cannot read
+    without saying so. Warn-only: the folder must hold SKILL.md, `name:` must equal the
+    folder name, and `description:` must say when to use it."""
+    warns = []
+    for d in sorted(ROOT.glob("components/*/skills/*")):
+        if not d.is_dir() or NAME_SKIP_DIRS & set(d.relative_to(ROOT).parts):
+            continue
+        rel = d.relative_to(ROOT).as_posix()
+        f = d / "SKILL.md"
+        if not f.is_file():
+            warns.append(f"{rel}: no SKILL.md")
+            continue
+        # no source: an unreadable skill is this warning, not a FRONTMATTER error
+        fm = parse_frontmatter_text(f.read_text(encoding="utf-8", errors="replace"))
+        if not isinstance(fm, dict) or not fm:
+            warns.append(f"{rel}/SKILL.md: no frontmatter that parses")
+            continue
+        if str(fm.get("name") or "") != d.name:
+            warns.append(f"{rel}/SKILL.md: name: is {fm.get('name')!r}, the folder is {d.name!r}")
+        if not str(fm.get("description") or "").strip():
+            warns.append(f"{rel}/SKILL.md: no description: (it is what makes the skill load)")
+    return warns
+
+
 def ref_stem(ref) -> str:
     """The document stem a `responds_to:` value points at.
 
@@ -2596,6 +2622,13 @@ def main(wiring_flag: bool = False) -> int:
     if warns:
         print(f"\nNAMING — {len(warns)} live-folder name(s) outside the canon "
               "(lowercase-kebab, version -vX_Y; AAC-method §4; warn-only):")
+        for w in warns:
+            print(f"  ⚠ {w}")
+
+    warns = skill_warnings()
+    if warns:
+        print(f"\nSKILLS — {len(warns)} skill folder(s) an agent runtime would not load "
+              "(skills.md; warn-only):")
         for w in warns:
             print(f"  ⚠ {w}")
     return worst
