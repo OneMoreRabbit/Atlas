@@ -18,16 +18,15 @@ The estate installs them. Atlas does not install skills.
 
 - The skills repo exists: `OneMoreRabbit/estate-skills`, private, one branch, `main`.
   It holds no skill and has no tag yet.
-- The estate-skills seat exists and is signed in.
+- The estate-skills seat exists and answers on the hub. It cannot merge yet: its first
+  merge was refused by its agent program's permission check. That is with the operator.
 - The register and the operator's switches are on the development directory only.
 - The install play is not built.
 
 So today the estate installs nothing and switches nothing on a seat. A seat can offer a
-skill and have it merged now. The skill reaches seats only when the install play is
-proven and the operator has approved. The estate's plan is in `Atlas-Orchestrator`,
-`components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`. Until
-the orchestrator says the estate-skills seat answers on the hub, follow "Until the
-estate-skills seat answers" at the foot of this page.
+skill now. The skill reaches seats only when the install play is proven and the
+operator has approved. The estate's plan is in `Atlas-Orchestrator`,
+`components/estate-manage/docs/provides/atlas-estate-skills-response-v0_1.md`.
 
 ## What a skill is
 
@@ -176,10 +175,3 @@ In the directory, a role is a group of agents that skills are switched on for. A
 agent holds a role for each kind of address it owns, and any role the operator grants
 it. It is not the `role:` in a vault's `registry/io-graph.yml`. The operator can
 switch a skill off for one agent even when its role has it. Off wins.
-
-## Until the estate-skills seat answers
-
-Temporary. Raise every need this page sends to
-`orchestrator.component.estate-skills` to `orchestrator.component.estate-manage`
-instead. This section is deleted when the orchestrator says the estate-skills seat
-answers on the hub.

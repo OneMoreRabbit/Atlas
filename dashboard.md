@@ -1,7 +1,7 @@
 # dashboard
 
 <!-- atlas:drift:begin -->
-**Method:** 🟢 pinned self — this repo IS the method (running 1.35)
+**Method:** 🟢 pinned self — this repo IS the method (running 1.36)
 
 **Branch policy:** work `dev` → release `main` (merged by the architecture session at periodic review)
 

@@ -77,9 +77,8 @@ on real seats.
 - `AAC-method.md` §3: a component folder may hold `skills/`; a pull request to a shared
   repo is a normal route.
 - The validator warns about a seat's own skill folder an agent program would not load.
-- `skills.md` has a temporary section, "Until the estate-skills seat answers", that
-  sends seats to you by need. Tell the method seat when the estate-skills seat answers
-  on the hub and the section is deleted.
+- `skills.md` had a temporary section that sent seats to you by need. Deleted on
+  2026-11-18, when you said the estate-skills seat answers on the hub (hub #15418).
 
 The discussion and the designs are in `Nav-Atlas/_bridge/threads/`:
 `skills-and-memory-decisions-2026-11-18.md` and `atlas-1-35-10-design.md`.
