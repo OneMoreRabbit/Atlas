@@ -1,7 +1,7 @@
 ---
 title: Next steps
 owner: atlas.arch
-updated: 2026-11-18
+updated: 2026-11-20
 ---
 
 # Next steps
@@ -12,9 +12,10 @@ and rides with the next estate release: no pin moves for it alone.
 1.36.0 is the estate release: it rolls up 1.35.1 to 1.35.10. 1.36.1 puts every vault on
 `dev` with no `main`, Nav vaults included, and changes no seat script. The orchestrator
 has the steps for every kind of seat. Every seat re-copies its scripts and every Atlas
-vault deletes `main`: `release-notes.md`, entries v1.36.0 and v1.36.1. Open after the
-release: eleven Nav vaults have only `main` and four have an old `main` to delete, each
-moved on the operator's word; the skills repo has no `dev` and the project's policy says
+vault deletes `main`: `release-notes.md`, entries v1.36.0 and v1.36.1. All fifteen Nav
+vaults are on `dev` with no `main` since 2026-11-18 (hub #16134). 1.36.3 is prepared on
+`dev` and not released: Codex hook trust with no person at the seat, and bridge threads
+named by date. Open: the skills repo has no `dev` and the project's policy says
 `dev`; the estate's install play for skills is not built. Three needs and two hub asks
 are owed; three more asks need an operator ruling.
 
@@ -127,6 +128,11 @@ Measured 2026-11-18 at every vault's remote head:
 - **Nav vaults with `dev` and an old `main`, four:** Nav-AiTutor, Nav-ArcGIS, Nav-Idea,
   Nav-MicoManager. `dev` is the default branch in all four, and `main` holds nothing
   `dev` lacks. The orchestrator deletes each `main` on the operator's word.
+- **Done 2026-11-18, 14:51 to 14:55 UTC (hub #16134):** all fifteen Nav vaults have `dev`
+  as the default branch and no `main`. `main` is deleted in Atlas-Orchestrator,
+  Atlas-Idea and Atlas-AgentEco. Still with `main`: Atlas-DiscoCat, Atlas-FrogYeti and
+  Atlas-MathsPractise, which go with their migration. Pins: eleven of fourteen on
+  1.36.1; those three behind.
 - **Pins** (orchestrator's `registry/audit.md`): eleven vaults at 1.35.0; MathsPractise
   1.34.0, DiscoCat 1.28.0, FrogYeti 1.26.0. Those three first follow `README.md`,
   "Upgrading an existing vault to a new method version".
@@ -142,7 +148,7 @@ Build a separate vault branch only when a project needs it.
 
 ## Skills and what a vault holds (released in 1.36.0)
 
-Design: `Nav-Atlas/_bridge/threads/atlas-1-35-10-design.md`. `skills.md` says what the
+Design: `Nav-Atlas/_bridge/threads/2026-11-18-atlas-1-35-10-design.md`. `skills.md` says what the
 orchestrator has built, from its briefings of 2026-11-18 (hub #15411, #15418) and from
 the skills repo itself. Open:
 
@@ -182,7 +188,7 @@ the skills repo itself. Open:
 
 The operator's direction, 2026-11-18: memory for every seat is a folder mounted from
 beaver. This part of the method is built and released when the mounts exist. Design:
-`Nav-Atlas/_bridge/threads/memory-and-operational-seats-design.md`. Nothing is built.
+`Nav-Atlas/_bridge/threads/2026-11-18-memory-and-operational-seats-design.md`. Nothing is built.
 It waits for AgentEco's mounts and the operator's go.
 
 ## Briefing head (released in 1.36.0)
@@ -212,10 +218,12 @@ The real AgentEco vault gives heads of 3,600 to 4,800 characters. Open:
 
 - **The estate rollout of 1.36.1**: the operator's go, through the orchestrator. Until a
   seat re-copies its scripts it sees only the first 2,000 characters of its briefing.
-- **Fifteen Nav vaults to bring to `dev` only** (1.36.1): the operator's word for each.
-  In the eleven that have only `main`, his own copy switches to `dev`.
+- **Three Codex seats not ready** (hub #15995): agent-comms and agent-skeleton need the
+  operator's go for `codex_trust.py --record`; arc-gis arch needs its folder trusted.
+- **Release of 1.36.3**: the operator's word. It then asks each arch seat to rename its
+  older bridge threads once (`bridge-init.md`).
 - **`method-ci.yml`**: the change that runs every test file waits for the operator's key
-  (`Nav-Atlas/_bridge/threads/method-ci-all-tests.md`).
+  (`Nav-Atlas/_bridge/threads/2026-11-17-method-ci-all-tests.md`).
 - **Root `.gitignore` ownership**: arch seats cannot change their vault's root
   `.gitignore` (guard refuses root files; outboxes grant directories only). Rule needed:
   an exact-file grant, and who owns Nav vault roots (arch writes `_bridge/` only).

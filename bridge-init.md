@@ -33,12 +33,13 @@ where that discussion lives, durably — sessions evaporate; files persist.
 `_bridge/` at the root of the project's Nav vault — `Nav-<Project>` (formerly
 `Dev-<Project>`). The underscore sorts it first in Obsidian. A Nav vault has one
 branch, `dev`, and no `main` (AAC-method §9), and is messy by right: no naming canon, no ceremony —
-hygiene `.gitignore` (`.trash/`, workspace cruft) only.
+hygiene `.gitignore` (`.trash/`, workspace cruft) only. The one naming rule is for
+thread files (rule 2).
 
 ```
 Nav-<Project>/_bridge/
   tasks.md        # ONE list, two owners — every item tagged @nav or @atlas
-  threads/        # one file per conversation topic, append-only turns
+  threads/        # one file per conversation topic, named YYYY-MM-DD-<topic>.md
   archive/        # resolved threads move here
 ```
 
@@ -50,9 +51,12 @@ Nav-<Project>/_bridge/
    - [ ] @nav — decide X (from @atlas, 2026-08-24)
    - [ ] @atlas — implement Y (from @nav, 2026-08-24)
    ```
-2. **Threads are append-only, one topic per file.** Turns are headed `## @nav — <date>`
-   / `## @atlas — <date>`. Frontmatter: `topic`, `status: open | resolved`, `opened`.
-   When resolved, move the file to `archive/`.
+2. **Threads are append-only, one topic per file.** The file is named
+   `YYYY-MM-DD-<topic>.md`. The date is the day the thread is created and never changes
+   when the thread is edited, so the newest threads sort last (1.36.3, operator
+   2026-11-20). Turns are headed `## @nav — <date>` / `## @atlas — <date>`.
+   Frontmatter: `topic`, `status: open | resolved`, `opened`. When resolved, move the
+   file to `archive/`.
 3. **The arch seat reads `_bridge/` every session and answers before it ends** —
    anything addressed `@atlas` gets a turn or a tick. It reads the wider Nav vault only
    where a task or thread points it (the human's idea space stays private by default).
@@ -113,7 +117,7 @@ is the `agent-comms` component's job, not the vault's.)
 2. Create `_bridge/tasks.md` (header + the two-owner rule in a comment), `threads/`,
    `archive/`. Open a first thread announcing the bridge and inviting the owner's
    first items.
-3. Thread template:
+3. Thread template, saved as `_bridge/threads/2026-08-24-<short-topic>.md`:
    ```markdown
    ---
    topic: <short-topic>
@@ -124,6 +128,17 @@ is the `agent-comms` component's job, not the vault's.)
    ## @atlas — 2026-08-24
    <turn>
    ```
+
+**Threads made before 1.36.3 (arch seat, one time).** For each file in
+`_bridge/threads/` whose name does not start with a date:
+
+1. Take the date from `opened` in its frontmatter. If it has none, take the day it was
+   first committed: `git log --diff-filter=A --follow --format=%as -- "<file>" | tail -1`.
+2. `git mv` it to `YYYY-MM-DD-<name>.md`. Drop a date from the end of the old name.
+3. Update the links to it in `_bridge/tasks.md` and in other threads.
+4. Leave `_bridge/archive/` as it is.
+
+Nothing checks thread names. A Nav vault has no CI, and the rule is for the reader.
 
 *Historical note — estates predating method 1.7 only:* the owner first renames
 `Dev-<Project>` → `Nav-<Project>` — GitHub redirects old URLs, so clones and GitSync

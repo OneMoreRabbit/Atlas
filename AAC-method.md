@@ -360,7 +360,10 @@ updated: 2026-09-13
 #   no person visits a Codex seat (operator, 2026-11-18). It trusts only a hook that
 #   runs a script equal to the method's; folder trust stays seat provisioning's. Not
 #   yet run on a real seat. Release notes rule 5: an Action that needs a person at a
-#   seat says so with the count. No seat script changed.
+#   seat says so with the count. Bridge threads are named YYYY-MM-DD-<topic>.md by
+#   the day they are created (operator, hub #16929): bridge-init.md rule 2 and a
+#   one-time rename of older threads by the arch seat; nothing checks it. No seat
+#   script changed.
 # 1.36.2 (2026-11-18): two faults reported in the 1.36 rollout. (1) The release notes
 #   check skips a tag with a suffix: on the work branch, after a release that had a
 #   candidate, the nearest tag is the candidate and the briefing asked for its heading
