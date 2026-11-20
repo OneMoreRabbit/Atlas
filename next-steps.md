@@ -130,9 +130,11 @@ Measured 2026-11-18 at every vault's remote head:
   `dev` lacks. The orchestrator deletes each `main` on the operator's word.
 - **Done 2026-11-18, 14:51 to 14:55 UTC (hub #16134):** all fifteen Nav vaults have `dev`
   as the default branch and no `main`. `main` is deleted in Atlas-Orchestrator,
-  Atlas-Idea and Atlas-AgentEco. Still with `main`: Atlas-DiscoCat, Atlas-FrogYeti and
-  Atlas-MathsPractise, which go with their migration. Pins: eleven of fourteen on
-  1.36.1; those three behind.
+  Atlas-Idea and Atlas-AgentEco.
+- **Read from GitHub 2026-11-20 (hub #16935):** Atlas-DiscoCat and Atlas-MathsPractise
+  have finished their migration: pinned 1.36.1, no `main`. Thirteen of fourteen Atlas
+  vaults have only `dev` and are pinned 1.36.1. Atlas-FrogYeti is parked: it keeps
+  `main` and is pinned 1.26.0.
 - **Pins** (orchestrator's `registry/audit.md`): eleven vaults at 1.35.0; MathsPractise
   1.34.0, DiscoCat 1.28.0, FrogYeti 1.26.0. Those three first follow `README.md`,
   "Upgrading an existing vault to a new method version".
